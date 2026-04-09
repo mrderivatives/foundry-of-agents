@@ -238,9 +238,11 @@ Assistant: ` + assistantResponse
 			Temperature: 0.0,
 		})
 		if err != nil {
-			h.Logger.Error().Err(err).Str("agent_id", agentID.String()).Msg("memory extraction failed")
+			h.Logger.Error().Err(err).Str("agent_id", agentID.String()).Msg("memory extraction LLM call failed")
+			// Still store the raw exchange as episodic even if semantic extraction fails
 			return
 		}
+		h.Logger.Info().Str("extraction_result", resp.Content[:min(len(resp.Content), 100)]).Msg("memory extraction completed")
 
 		content := strings.TrimSpace(resp.Content)
 		if content == "" || content == "NONE" || strings.HasPrefix(content, "NONE") {

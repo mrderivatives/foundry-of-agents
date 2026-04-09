@@ -10,6 +10,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/hibiken/asynq v0.25.1
 	github.com/jackc/pgx/v5 v5.7.4
+	github.com/mr-tron/base58 v1.3.0
 	github.com/rs/zerolog v1.34.0
 	github.com/shopspring/decimal v1.4.0
 )

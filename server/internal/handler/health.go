@@ -1,13 +1,9 @@
 package handler
 
-import (
-	"encoding/json"
-	"net/http"
-)
+import "net/http"
 
-func handleHealth(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+func (h *Handler) handleHealth(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"ok":      true,
 		"version": "0.1.0",
 	})

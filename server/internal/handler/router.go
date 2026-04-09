@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
 
-	"github.com/mrderivatives/foundry-of-agents/server/internal/realtime"
+	"github.com/mrderivatives/foundry-of-agents/server/internal/auth"
 )
 
 var upgrader = websocket.Upgrader{
@@ -16,30 +16,36 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func MountRoutes(r chi.Router, hub *realtime.Hub) {
-	r.Get("/health", handleHealth)
+func MountRoutes(r chi.Router, h *Handler) {
+	r.Get("/health", h.handleHealth)
 
+	// Public auth routes
 	r.Route("/api/auth", func(r chi.Router) {
-		r.Post("/magic-link", handleMagicLink)
-		r.Post("/verify", handleVerify)
-		r.Post("/siws", handleSIWS)
-		r.Post("/refresh", handleRefresh)
-		r.Delete("/session", handleLogout)
+		r.Post("/magic-link", h.handleMagicLink)
+		r.Post("/verify", h.handleVerify)
+		r.Post("/siws", h.handleSIWS)
+		r.Post("/refresh", h.handleRefresh)
+		r.Delete("/session", h.handleLogout)
 	})
 
-	r.Route("/api/agents", func(r chi.Router) {
-		r.Get("/", handleListAgents)
-		r.Post("/", handleCreateAgent)
-		r.Route("/{id}", func(r chi.Router) {
-			r.Get("/", handleGetAgent)
-			r.Patch("/", handleUpdateAgent)
-			r.Delete("/", handleDeleteAgent)
-			r.Route("/sessions", func(r chi.Router) {
-				r.Get("/", handleListSessions)
-				r.Post("/", handleCreateSession)
-				r.Route("/{sessionId}", func(r chi.Router) {
-					r.Get("/messages", handleListMessages)
-					r.Post("/messages", handleSendMessage)
+	// Protected routes — require JWT
+	r.Group(func(r chi.Router) {
+		r.Use(auth.Middleware(h.JWTSecret))
+
+		r.Route("/api/agents", func(r chi.Router) {
+			r.Get("/", h.handleListAgents)
+			r.Post("/", h.handleCreateAgent)
+			r.Route("/{id}", func(r chi.Router) {
+				r.Get("/", h.handleGetAgent)
+				r.Patch("/", h.handleUpdateAgent)
+				r.Delete("/", h.handleDeleteAgent)
+				r.Route("/sessions", func(r chi.Router) {
+					r.Get("/", h.handleListSessions)
+					r.Post("/", h.handleCreateSession)
+					r.Route("/{sessionId}", func(r chi.Router) {
+						r.Get("/messages", h.handleListMessages)
+						r.Post("/messages", h.handleSendMessage)
+					})
 				})
 			})
 		})
@@ -51,6 +57,7 @@ func MountRoutes(r chi.Router, hub *realtime.Hub) {
 			log.Error().Err(err).Msg("websocket upgrade failed")
 			return
 		}
-		hub.HandleConnection(conn)
+		token := r.URL.Query().Get("token")
+		h.Hub.HandleConnectionWithToken(conn, token, h.JWTSecret)
 	})
 }

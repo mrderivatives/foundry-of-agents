@@ -16,6 +16,10 @@ import (
 
 	"github.com/mrderivatives/foundry-of-agents/server/internal/handler"
 	"github.com/mrderivatives/foundry-of-agents/server/internal/realtime"
+	"github.com/mrderivatives/foundry-of-agents/server/pkg/bifrost"
+	"github.com/mrderivatives/foundry-of-agents/server/pkg/bifrost/providers"
+	"github.com/mrderivatives/foundry-of-agents/server/pkg/db"
+	"github.com/mrderivatives/foundry-of-agents/server/pkg/queue"
 )
 
 func main() {
@@ -32,8 +36,57 @@ func main() {
 		corsOrigin = "http://localhost:3000"
 	}
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "dev-secret-change-me"
+	}
+
+	// Database
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		dbURL = "postgres://foundry:foundry@localhost:5432/foundry?sslmode=disable"
+	}
+
+	ctx := context.Background()
+	pool, err := db.NewPool(ctx, dbURL)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to connect to database")
+	}
+	defer pool.Close()
+	log.Info().Msg("database connected")
+
+	// Redis / queue (best-effort — not fatal if unavailable)
+	var queueClient *queue.Client
+	redisURL := os.Getenv("REDIS_URL")
+	if redisURL != "" {
+		var err error
+		queueClient, err = queue.NewClient(redisURL)
+		if err != nil {
+			log.Warn().Err(err).Msg("failed to connect to redis, queue disabled")
+		} else {
+			defer queueClient.Close()
+		}
+	}
+
+	// Bifrost LLM router
+	bifrostRouter := bifrost.NewRouter()
+	anthropicKey := os.Getenv("ANTHROPIC_API_KEY")
+	if anthropicKey != "" {
+		bifrostRouter.Register("anthropic", providers.NewAnthropic(anthropicKey))
+		log.Info().Msg("anthropic provider registered")
+	}
+
 	hub := realtime.NewHub()
 	go hub.Run()
+
+	h := handler.NewHandler(handler.Deps{
+		DB:        pool,
+		Hub:       hub,
+		Router:    bifrostRouter,
+		Queue:     queueClient,
+		JWTSecret: []byte(jwtSecret),
+		Logger:    log.Logger,
+	})
 
 	r := chi.NewRouter()
 
@@ -49,17 +102,17 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	handler.MountRoutes(r, hub)
+	handler.MountRoutes(r, h)
 
 	srv := &http.Server{
 		Addr:         ":" + port,
 		Handler:      r,
 		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
+		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	sigCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	go func() {
@@ -69,7 +122,7 @@ func main() {
 		}
 	}()
 
-	<-ctx.Done()
+	<-sigCtx.Done()
 	log.Info().Msg("shutting down server")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

@@ -155,23 +155,20 @@ func (h *Handler) retrieveMemories(ctx context.Context, agentID uuid.UUID, userM
 		}
 	}
 
-	// 2. Keyword-matched semantic memories
-	if strings.TrimSpace(userMessage) != "" {
-		srows, err := h.DB.Query(ctx,
-			`SELECT content,
-			    ts_rank(to_tsvector('english', content), plainto_tsquery('english', $2)) AS rank
-			 FROM memory_entry
-			 WHERE agent_id = $1 AND memory_type IN ('semantic', 'identity', 'user_context', 'entity')
-			     AND to_tsvector('english', content) @@ plainto_tsquery('english', $2)
-			 ORDER BY rank DESC LIMIT 10`, agentID, userMessage)
-		if err == nil {
-			defer srows.Close()
-			for srows.Next() {
-				var content string
-				var rank float64
-				if srows.Scan(&content, &rank) == nil {
-					parts = append(parts, "- "+content)
-				}
+	// 2. All semantic/identity/user_context memories (load all, cap at 20)
+	// For early-stage agents with few memories, keyword search is too restrictive.
+	// Load all semantic memories and let the LLM decide relevance.
+	srows, serr := h.DB.Query(ctx,
+		`SELECT content FROM memory_entry
+		 WHERE agent_id = $1 AND memory_type IN ('semantic', 'identity', 'user_context', 'entity')
+		   AND (superseded_by IS NULL)
+		 ORDER BY importance_score DESC, created_at DESC LIMIT 20`, agentID)
+	if serr == nil {
+		defer srows.Close()
+		for srows.Next() {
+			var content string
+			if srows.Scan(&content) == nil {
+				parts = append(parts, "- "+content)
 			}
 		}
 	}

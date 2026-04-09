@@ -312,6 +312,7 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 			assistantMsgID, sessionID, wsID, responseText, inputTokens, outputTokens, model)
 
 		// Async memory extraction
+		h.Logger.Info().Str("agent_id", agentID.String()).Int("response_len", len(responseText)).Msg("triggering memory extraction from SSE path")
 		h.extractAndStoreMemories(agentID, wsID, sessionID.String(), body.Content, responseText)
 
 		return

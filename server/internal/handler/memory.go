@@ -278,3 +278,21 @@ func truncate(s string, max int) string {
 	}
 	return s[:max] + "..."
 }
+
+// GET /api/agents/{id}/memory/debug — temporary debug endpoint
+func (h *Handler) handleMemoryDebug(w http.ResponseWriter, r *http.Request) {
+	agentID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		errJSON(w, http.StatusBadRequest, "invalid agent id")
+		return
+	}
+
+	ctx := r.Context()
+	memCtx := h.retrieveMemories(ctx, agentID, "What is my name?")
+	
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"agent_id": agentID.String(),
+		"memory_context_length": len(memCtx),
+		"memory_context": memCtx,
+	})
+}

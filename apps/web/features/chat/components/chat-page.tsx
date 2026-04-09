@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/shared/api/client";
-import { useWebSocket } from "../hooks/use-websocket";
 import type { ChatMessage } from "@/shared/types";
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 interface Props {
   agentId: string;
@@ -17,62 +18,17 @@ interface DisplayMessage {
   content: string;
 }
 
-const WS_URL =
-  (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080").replace(
-    /^http/,
-    "ws"
-  ) + "/ws";
-
 export function ChatPage({ agentId, sessionId }: Props) {
   const router = useRouter();
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
-  const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-  const onWsMessage = useCallback(
-    (data: unknown) => {
-      const msg = data as {
-        event: string;
-        data: { session_id: string; message_id: string; delta?: string; content?: string };
-      };
-      if (!msg?.event || msg.data?.session_id !== sessionId) return;
-
-      switch (msg.event) {
-        case "chat:message_start":
-          setStreamingMsgId(msg.data.message_id);
-          setStreamingContent("");
-          break;
-        case "chat:message_delta":
-          setStreamingContent((prev) => prev + (msg.data.delta || ""));
-          break;
-        case "chat:message_end":
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: msg.data.message_id,
-              role: "assistant",
-              content: msg.data.content || "",
-            },
-          ]);
-          setStreamingMsgId(null);
-          setStreamingContent("");
-          break;
-      }
-    },
-    [sessionId]
-  );
-
-  useWebSocket({
-    url: WS_URL,
-    token,
-    onMessage: onWsMessage,
-  });
 
   useEffect(() => {
     if (!token) {
@@ -113,16 +69,99 @@ export function ChatPage({ agentId, sessionId }: Props) {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setSending(true);
+    setIsStreaming(true);
+    setStreamingContent("");
 
     try {
-      await api.post(
-        `/api/agents/${agentId}/sessions/${sessionId}/messages`,
-        { content }
+      // Use SSE streaming
+      const res = await fetch(
+        `${BASE_URL}/api/agents/${agentId}/sessions/${sessionId}/messages`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            Accept: "text/event-stream",
+          },
+          body: JSON.stringify({ content }),
+        }
       );
+
+      if (!res.ok) throw new Error("Failed to send message");
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+      let assistantMsgId = "";
+
+      if (reader) {
+        let buffer = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          // Keep the last potentially incomplete line in buffer
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            try {
+              const evt = JSON.parse(line.slice(6));
+              if (evt.type === "message_start") {
+                assistantMsgId = evt.message_id || crypto.randomUUID();
+              } else if (evt.type === "content_delta" && evt.delta) {
+                accumulated += evt.delta;
+                setStreamingContent(accumulated);
+              } else if (evt.type === "message_end") {
+                // Stream complete — add final message
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: assistantMsgId,
+                    role: "assistant",
+                    content: accumulated,
+                  },
+                ]);
+                setStreamingContent("");
+                setIsStreaming(false);
+              }
+            } catch {
+              // skip malformed SSE lines
+            }
+          }
+        }
+      }
+
+      // If stream ended without message_end (fallback)
+      if (accumulated && isStreaming) {
+        setMessages((prev) => [
+          ...prev,
+          { id: crypto.randomUUID(), role: "assistant", content: accumulated },
+        ]);
+      }
     } catch {
-      // error — the streaming should still work via WS
+      // On error, try non-streaming fallback
+      try {
+        const msg = await api.post<ChatMessage>(
+          `/api/agents/${agentId}/sessions/${sessionId}/messages`,
+          { content }
+        );
+        setMessages((prev) => [
+          ...prev,
+          { id: msg.id, role: "assistant", content: msg.content },
+        ]);
+      } catch {
+        setMessages((prev) => [
+          ...prev,
+          { id: crypto.randomUUID(), role: "assistant", content: "⚠️ Failed to get response" },
+        ]);
+      }
     } finally {
       setSending(false);
+      setIsStreaming(false);
+      setStreamingContent("");
     }
   };
 
@@ -140,7 +179,7 @@ export function ChatPage({ agentId, sessionId }: Props) {
         </h1>
       </header>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 && !streamingMsgId && (
+        {messages.length === 0 && !isStreaming && (
           <div className="flex h-full items-center justify-center">
             <p className="text-muted-foreground">Start a conversation</p>
           </div>
@@ -161,7 +200,7 @@ export function ChatPage({ agentId, sessionId }: Props) {
             </div>
           </div>
         ))}
-        {streamingMsgId && (
+        {isStreaming && (
           <div className="flex justify-start">
             <div className="max-w-[80%] rounded-xl px-4 py-2 text-sm bg-card border border-border whitespace-pre-wrap">
               {streamingContent || (

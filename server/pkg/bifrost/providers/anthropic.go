@@ -155,6 +155,7 @@ func (a *Anthropic) Stream(ctx context.Context, req bifrost.CompletionRequest, c
 	scanner := bufio.NewScanner(resp.Body)
 	var msgID string
 	var eventType string
+	var inputTokens, outputTokens int
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -182,6 +183,7 @@ func (a *Anthropic) Stream(ctx context.Context, req bifrost.CompletionRequest, c
 			}
 			if json.Unmarshal([]byte(data), &evt) == nil {
 				msgID = evt.Message.ID
+				inputTokens = evt.Message.Usage.InputTokens
 			}
 
 		case "content_block_delta":
@@ -199,13 +201,24 @@ func (a *Anthropic) Stream(ctx context.Context, req bifrost.CompletionRequest, c
 			}
 
 		case "message_delta":
-			// Contains output_tokens — we could track these but stream chunks
-			// are mainly for content delivery
+			var evt struct {
+				Usage struct {
+					OutputTokens int `json:"output_tokens"`
+				} `json:"usage"`
+			}
+			if json.Unmarshal([]byte(data), &evt) == nil {
+				outputTokens = evt.Usage.OutputTokens
+			}
 
 		case "message_stop":
 			ch <- bifrost.StreamChunk{
 				ID:   msgID,
 				Done: true,
+				Usage: &bifrost.TokenUsage{
+					InputTokens:  inputTokens,
+					OutputTokens: outputTokens,
+					Cost:         decimal.Zero,
+				},
 			}
 			return nil
 		}

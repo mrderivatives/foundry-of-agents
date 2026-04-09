@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -130,6 +131,14 @@ func (h *Handler) handleListMessages(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, messages)
 }
 
+// resolveModel strips provider prefix (e.g. "anthropic/claude-sonnet-4-6" → "claude-sonnet-4-6")
+func resolveModel(model string) string {
+	if i := strings.LastIndex(model, "/"); i >= 0 {
+		return model[i+1:]
+	}
+	return model
+}
+
 // POST /api/agents/{agentId}/sessions/{sessionId}/messages
 func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	wsID, _ := auth.GetWorkspaceID(r.Context())
@@ -153,6 +162,7 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
+	useSSE := strings.Contains(r.Header.Get("Accept"), "text/event-stream")
 
 	// Insert user message
 	var userMsgID uuid.UUID
@@ -166,12 +176,13 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Load agent instructions
+	// Load agent instructions + model
 	var agentInstructions *string
 	var agentModel *string
+	var agentName string
 	h.DB.QueryRow(ctx,
-		`SELECT instructions, model FROM agent WHERE id = $1 AND workspace_id = $2`,
-		agentID, wsID).Scan(&agentInstructions, &agentModel)
+		`SELECT name, instructions, model FROM agent WHERE id = $1 AND workspace_id = $2`,
+		agentID, wsID).Scan(&agentName, &agentInstructions, &agentModel)
 
 	// Load recent messages for context (last 50)
 	msgRows, err := h.DB.Query(ctx,
@@ -186,9 +197,17 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	defer msgRows.Close()
 
-	var messages []bifrost.Message
+	// Build system prompt
+	var systemPrompt string
 	if agentInstructions != nil && *agentInstructions != "" {
-		messages = append(messages, bifrost.Message{Role: "system", Content: *agentInstructions})
+		systemPrompt = fmt.Sprintf("You are %s. %s", agentName, *agentInstructions)
+	} else if agentName != "" {
+		systemPrompt = fmt.Sprintf("You are %s.", agentName)
+	}
+
+	var messages []bifrost.Message
+	if systemPrompt != "" {
+		messages = append(messages, bifrost.Message{Role: "system", Content: systemPrompt})
 	}
 	for msgRows.Next() {
 		var role, content string
@@ -201,10 +220,10 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		messages = append(messages, bifrost.Message{Role: role, Content: content})
 	}
 
-	// Determine model
+	// Determine model — strip provider prefix
 	model := "claude-sonnet-4-6"
 	if agentModel != nil && *agentModel != "" {
-		model = *agentModel
+		model = resolveModel(*agentModel)
 	}
 
 	// Stream via Bifrost
@@ -216,44 +235,106 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		Stream:    true,
 	}
 
-	// Generate assistant message ID upfront
 	assistantMsgID := uuid.New()
 
-	// Broadcast message_start
+	// Start streaming in background — Stream() closes ch via defer
+	streamErr := make(chan error, 1)
+	go func() {
+		streamErr <- h.Router.StreamRoute(ctx, req, ch)
+	}()
+
+	// SSE mode: stream events directly to HTTP response
+	if useSSE {
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+		w.WriteHeader(http.StatusOK)
+
+		flusher, _ := w.(http.Flusher)
+
+		// message_start
+		fmt.Fprintf(w, "data: {\"type\":\"message_start\",\"message_id\":\"%s\"}\n\n", assistantMsgID)
+		if flusher != nil {
+			flusher.Flush()
+		}
+
+		var fullContent strings.Builder
+		var inputTokens, outputTokens int
+
+		for chunk := range ch {
+			if chunk.Delta != "" {
+				fullContent.WriteString(chunk.Delta)
+				// Escape for JSON
+				escaped := strings.ReplaceAll(chunk.Delta, "\\", "\\\\")
+				escaped = strings.ReplaceAll(escaped, "\"", "\\\"")
+				escaped = strings.ReplaceAll(escaped, "\n", "\\n")
+				fmt.Fprintf(w, "data: {\"type\":\"content_delta\",\"delta\":\"%s\"}\n\n", escaped)
+				if flusher != nil {
+					flusher.Flush()
+				}
+			}
+			if chunk.Usage != nil {
+				inputTokens = chunk.Usage.InputTokens
+				outputTokens = chunk.Usage.OutputTokens
+			}
+
+			// Also broadcast via WebSocket
+			if chunk.Delta != "" {
+				h.Hub.BroadcastEvent(wsID.String(), "chat:message_delta", map[string]interface{}{
+					"session_id": sessionID.String(),
+					"message_id": assistantMsgID.String(),
+					"delta":      chunk.Delta,
+				})
+			}
+		}
+
+		// message_end
+		fmt.Fprintf(w, "data: {\"type\":\"message_end\",\"usage\":{\"input_tokens\":%d,\"output_tokens\":%d}}\n\n",
+			inputTokens, outputTokens)
+		if flusher != nil {
+			flusher.Flush()
+		}
+
+		// Persist assistant message
+		h.DB.Exec(ctx,
+			`INSERT INTO chat_message (id, chat_session_id, workspace_id, role, content, input_tokens, output_tokens, model)
+			 VALUES ($1, $2, $3, 'assistant', $4, $5, $6, $7)`,
+			assistantMsgID, sessionID, wsID, fullContent.String(), inputTokens, outputTokens, model)
+
+		return
+	}
+
+	// Non-SSE mode: collect full response, return JSON
 	h.Hub.BroadcastEvent(wsID.String(), "chat:message_start", map[string]interface{}{
 		"session_id": sessionID.String(),
 		"message_id": assistantMsgID.String(),
 	})
-
-	go func() {
-		if err := h.Router.StreamRoute(ctx, req, ch); err != nil {
-			h.Logger.Error().Err(err).Msg("stream route error")
-			close(ch)
-		}
-	}()
 
 	var fullContent strings.Builder
 	var inputTokens, outputTokens int
 
 	for chunk := range ch {
 		fullContent.WriteString(chunk.Delta)
+		if chunk.Usage != nil {
+			inputTokens = chunk.Usage.InputTokens
+			outputTokens = chunk.Usage.OutputTokens
+		}
 
-		// Broadcast each delta
-		h.Hub.BroadcastEvent(wsID.String(), "chat:message_delta", map[string]interface{}{
-			"session_id": sessionID.String(),
-			"message_id": assistantMsgID.String(),
-			"delta":      chunk.Delta,
-		})
+		if chunk.Delta != "" {
+			h.Hub.BroadcastEvent(wsID.String(), "chat:message_delta", map[string]interface{}{
+				"session_id": sessionID.String(),
+				"message_id": assistantMsgID.String(),
+				"delta":      chunk.Delta,
+			})
+		}
 	}
 
-	// Broadcast message_end
 	h.Hub.BroadcastEvent(wsID.String(), "chat:message_end", map[string]interface{}{
 		"session_id": sessionID.String(),
 		"message_id": assistantMsgID.String(),
 		"content":    fullContent.String(),
 	})
 
-	// Insert assistant message
 	var savedMsg messageRow
 	err = h.DB.QueryRow(ctx,
 		`INSERT INTO chat_message (id, chat_session_id, workspace_id, role, content, input_tokens, output_tokens, model)

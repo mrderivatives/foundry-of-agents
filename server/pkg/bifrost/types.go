@@ -45,9 +45,10 @@ type CompletionResponse struct {
 }
 
 type StreamChunk struct {
-	ID    string `json:"id"`
-	Delta string `json:"delta"`
-	Done  bool   `json:"done"`
+	ID    string      `json:"id"`
+	Delta string      `json:"delta"`
+	Done  bool        `json:"done"`
+	Usage *TokenUsage `json:"usage,omitempty"`
 }
 
 type ModelInfo struct {

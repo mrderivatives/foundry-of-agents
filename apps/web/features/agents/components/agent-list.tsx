@@ -1,9 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useAgentStore } from "../store";
 
 export function AgentList() {
   const { agents, loading } = useAgentStore();
+  const router = useRouter();
 
   if (loading) {
     return (
@@ -34,7 +36,8 @@ export function AgentList() {
       {agents.map((agent) => (
         <div
           key={agent.id}
-          className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/50"
+          onClick={() => router.push(`/dashboard/agents/${agent.id}`)}
+          className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/50 cursor-pointer"
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold">
             {agent.name.charAt(0).toUpperCase()}

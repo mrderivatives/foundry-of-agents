@@ -54,3 +54,4 @@ foundry-of-agents/
 - **Database:** PostgreSQL 17 + pgvector
 - **Queue:** Redis 7 + asynq
 - **Storage:** MinIO (S3-compatible)
+

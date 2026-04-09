@@ -202,13 +202,19 @@ func (h *Handler) retrieveMemories(ctx context.Context, agentID uuid.UUID, userM
 func (h *Handler) extractAndStoreMemories(agentID, workspaceID uuid.UUID, sessionID string, userMessage, assistantResponse string) {
 	go func() {
 		ctx := context.Background()
+		h.Logger.Info().Str("agent_id", agentID.String()).Str("workspace_id", workspaceID.String()).Msg("starting memory extraction")
 
 		// Store episodic memory (raw exchange summary)
 		episodic := "User said: " + truncate(userMessage, 200) + " | Assistant responded: " + truncate(assistantResponse, 300)
-		h.DB.Exec(ctx,
+		_, epErr := h.DB.Exec(ctx,
 			`INSERT INTO memory_entry (agent_id, workspace_id, content, memory_type, source_type, source_id)
 			 VALUES ($1, $2, $3, 'episodic', 'chat', $4)`,
 			agentID, workspaceID, episodic, sessionID)
+		if epErr != nil {
+			h.Logger.Error().Err(epErr).Msg("failed to store episodic memory")
+		} else {
+			h.Logger.Info().Msg("episodic memory stored")
+		}
 
 		// Extract semantic facts using Bifrost (cheap model)
 		extractionPrompt := `Review this conversation exchange and extract any important facts worth remembering long-term:

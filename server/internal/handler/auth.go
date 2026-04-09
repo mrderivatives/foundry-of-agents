@@ -37,8 +37,8 @@ func (h *Handler) handleMagicLink(w http.ResponseWriter, r *http.Request) {
 		`INSERT INTO auth_token (email, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '15 minutes')`,
 		body.Email, token)
 	if err != nil {
-		h.Logger.Error().Err(err).Msg("failed to insert auth token")
-		errJSON(w, http.StatusInternalServerError, "internal error")
+		h.Logger.Error().Err(err).Str("email", body.Email).Msg("failed to insert auth token")
+		errJSON(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

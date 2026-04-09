@@ -1,4 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS vector;
 
 CREATE TABLE memory_entry (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

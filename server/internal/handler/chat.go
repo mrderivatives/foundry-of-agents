@@ -199,10 +199,13 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 
 	// Build system prompt with memory injection
 	var systemPrompt string
+	basePrompt := "You have persistent memory that carries across conversations. When users tell you things to remember, you WILL remember them in future sessions. Your memory is shown below under '## Your Memory'. Trust it — it is real and accurate."
 	if agentInstructions != nil && *agentInstructions != "" {
-		systemPrompt = fmt.Sprintf("You are %s. %s", agentName, *agentInstructions)
+		systemPrompt = fmt.Sprintf("You are %s. %s\n\n%s", agentName, *agentInstructions, basePrompt)
 	} else if agentName != "" {
-		systemPrompt = fmt.Sprintf("You are %s.", agentName)
+		systemPrompt = fmt.Sprintf("You are %s.\n\n%s", agentName, basePrompt)
+	} else {
+		systemPrompt = basePrompt
 	}
 
 	// Retrieve and inject relevant memories

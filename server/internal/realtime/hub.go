@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"sync"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"
 )
@@ -89,12 +90,45 @@ func (h *Hub) Broadcast(room string, payload interface{}) {
 	h.broadcast <- RoomMessage{Room: room, Payload: data}
 }
 
-func (h *Hub) HandleConnection(conn *websocket.Conn) {
+func (h *Hub) BroadcastEvent(workspaceID string, event string, payload interface{}) {
+	data := map[string]interface{}{
+		"event": event,
+		"data":  payload,
+	}
+	h.Broadcast(workspaceID, data)
+}
+
+// HandleConnectionWithToken authenticates the WebSocket connection using a JWT token.
+func (h *Hub) HandleConnectionWithToken(conn *websocket.Conn, tokenStr string, jwtSecret []byte) {
+	workspaceID := "default"
+
+	if tokenStr != "" {
+		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
+			return jwtSecret, nil
+		})
+		if err != nil || !token.Valid {
+			log.Warn().Err(err).Msg("websocket: invalid JWT, closing")
+			conn.WriteMessage(websocket.CloseMessage,
+				websocket.FormatCloseMessage(websocket.ClosePolicyViolation, "invalid token"))
+			conn.Close()
+			return
+		}
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if ok {
+			if wsID, ok := claims["workspace_id"].(string); ok {
+				workspaceID = wsID
+			}
+		}
+	}
+
 	client := &Client{
 		conn:        conn,
 		send:        make(chan []byte, 256),
 		hub:         h,
-		workspaceID: "default",
+		workspaceID: workspaceID,
 	}
 
 	h.register <- client

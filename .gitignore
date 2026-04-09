@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+out/
+dist/
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go
+server/bin/
+server/tmp/
+vendor/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage/
+*.cover
+*.out
+
+# Misc
+*.log
+tmp/
+.turbo/

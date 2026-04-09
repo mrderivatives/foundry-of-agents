@@ -1,0 +1,14 @@
+package handler
+
+import (
+	"encoding/json"
+	"net/http"
+)
+
+func handleHealth(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"ok":      true,
+		"version": "0.1.0",
+	})
+}

@@ -47,6 +47,11 @@ func MountRoutes(r chi.Router, h *Handler) {
 						r.Post("/messages", h.handleSendMessage)
 					})
 				})
+				r.Route("/memory", func(r chi.Router) {
+					r.Get("/", h.handleListMemory)
+					r.Post("/", h.handleCreateMemory)
+					r.Delete("/{memId}", h.handleDeleteMemory)
+				})
 			})
 		})
 	})

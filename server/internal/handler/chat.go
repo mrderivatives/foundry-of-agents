@@ -197,12 +197,18 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	defer msgRows.Close()
 
-	// Build system prompt
+	// Build system prompt with memory injection
 	var systemPrompt string
 	if agentInstructions != nil && *agentInstructions != "" {
 		systemPrompt = fmt.Sprintf("You are %s. %s", agentName, *agentInstructions)
 	} else if agentName != "" {
 		systemPrompt = fmt.Sprintf("You are %s.", agentName)
+	}
+
+	// Retrieve and inject relevant memories
+	memoryContext := h.retrieveMemories(ctx, agentID, body.Content)
+	if memoryContext != "" {
+		systemPrompt += "\n\n## Your Memory\n" + memoryContext
 	}
 
 	var messages []bifrost.Message
@@ -296,10 +302,14 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Persist assistant message
+		responseText := fullContent.String()
 		h.DB.Exec(ctx,
 			`INSERT INTO chat_message (id, chat_session_id, workspace_id, role, content, input_tokens, output_tokens, model)
 			 VALUES ($1, $2, $3, 'assistant', $4, $5, $6, $7)`,
-			assistantMsgID, sessionID, wsID, fullContent.String(), inputTokens, outputTokens, model)
+			assistantMsgID, sessionID, wsID, responseText, inputTokens, outputTokens, model)
+
+		// Async memory extraction
+		h.extractAndStoreMemories(agentID, wsID, sessionID.String(), body.Content, responseText)
 
 		return
 	}
@@ -335,12 +345,13 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		"content":    fullContent.String(),
 	})
 
+	responseText := fullContent.String()
 	var savedMsg messageRow
 	err = h.DB.QueryRow(ctx,
 		`INSERT INTO chat_message (id, chat_session_id, workspace_id, role, content, input_tokens, output_tokens, model)
 		 VALUES ($1, $2, $3, 'assistant', $4, $5, $6, $7)
 		 RETURNING id, chat_session_id, workspace_id, role, content, input_tokens, output_tokens, model, created_at`,
-		assistantMsgID, sessionID, wsID, fullContent.String(), inputTokens, outputTokens, model).Scan(
+		assistantMsgID, sessionID, wsID, responseText, inputTokens, outputTokens, model).Scan(
 		&savedMsg.ID, &savedMsg.ChatSessionID, &savedMsg.WorkspaceID, &savedMsg.Role, &savedMsg.Content,
 		&savedMsg.InputTokens, &savedMsg.OutputTokens, &savedMsg.Model, &savedMsg.CreatedAt)
 	if err != nil {
@@ -348,6 +359,9 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		errJSON(w, http.StatusInternalServerError, "internal error")
 		return
 	}
+
+	// Async memory extraction
+	h.extractAndStoreMemories(agentID, wsID, sessionID.String(), body.Content, responseText)
 
 	writeJSON(w, http.StatusOK, savedMsg)
 }

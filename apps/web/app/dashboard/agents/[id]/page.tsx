@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api } from "@/shared/api/client";
+import { MemoryBrowser } from "@/features/memory/components/memory-browser";
 import type { Agent, ChatSession } from "@/shared/types";
 
 export default function AgentDetailPage() {
@@ -12,6 +13,7 @@ export default function AgentDetailPage() {
   const [agent, setAgent] = useState<Agent | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"chat" | "memory">("chat");
 
   useEffect(() => {
     if (!localStorage.getItem("token")) {
@@ -78,8 +80,32 @@ export default function AgentDetailPage() {
           </p>
         </div>
 
-        <div>
-          <h2 className="font-semibold mb-3">Chat Sessions</h2>
+        <div className="flex gap-1 border-b border-border">
+          <button
+            onClick={() => setTab("chat")}
+            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              tab === "chat"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Chat Sessions
+          </button>
+          <button
+            onClick={() => setTab("memory")}
+            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              tab === "memory"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Memory
+          </button>
+        </div>
+
+        {tab === "memory" && <MemoryBrowser agentId={agentId} />}
+
+        {tab === "chat" && <div>
           {sessions.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No sessions yet. Start a new chat!
@@ -106,7 +132,7 @@ export default function AgentDetailPage() {
               ))}
             </div>
           )}
-        </div>
+        </div>}
       </main>
     </div>
   );

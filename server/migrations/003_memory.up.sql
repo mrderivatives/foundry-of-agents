@@ -4,7 +4,7 @@ CREATE TABLE memory_entry (
     agent_id UUID NOT NULL REFERENCES agent(id) ON DELETE CASCADE,
     workspace_id UUID NOT NULL REFERENCES workspace(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
-    embedding VECTOR(1536),
+    embedding TEXT,  -- VECTOR(1536) when pgvector is available; ALTER COLUMN later
     memory_type TEXT NOT NULL CHECK (memory_type IN ('episodic', 'semantic', 'entity', 'identity', 'user_context')),
     entity_name TEXT,
     entity_type TEXT,
@@ -23,7 +23,8 @@ CREATE TABLE memory_entry (
     expires_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_memory_embedding ON memory_entry USING hnsw (embedding vector_cosine_ops);
+-- idx_memory_embedding: HNSW vector index added later when pgvector is available
+CREATE INDEX idx_memory_agent_recent ON memory_entry(agent_id, created_at DESC);
 CREATE INDEX idx_memory_agent_created ON memory_entry(agent_id, created_at);
 CREATE INDEX idx_memory_agent_type ON memory_entry(agent_id, memory_type);
 CREATE INDEX idx_memory_entity ON memory_entry(agent_id, entity_name) WHERE memory_type = 'entity';

@@ -25,13 +25,13 @@ CREATE TABLE document_chunk (
     document_id UUID NOT NULL REFERENCES document(id) ON DELETE CASCADE,
     workspace_id UUID NOT NULL REFERENCES workspace(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
-    embedding VECTOR(1536),
+    embedding TEXT,  -- VECTOR(1536) when pgvector is available
     chunk_index INT NOT NULL,
     page_number INT,
     metadata JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_doc_chunk_embedding ON document_chunk USING hnsw (embedding vector_cosine_ops);
+-- idx_doc_chunk_embedding: HNSW vector index added later when pgvector is available
 CREATE INDEX idx_doc_chunk_doc ON document_chunk(document_id);
 CREATE INDEX idx_document_workspace ON document(workspace_id);

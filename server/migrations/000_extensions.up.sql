@@ -1,8 +1,8 @@
--- pgvector extension - required for memory and document embeddings
--- This may fail if the extension is not available; handle gracefully
-DO $$ 
+-- pgvector - attempt to install, skip if unavailable
+-- Vector columns will use TEXT fallback until pgvector is installed
+DO $$
 BEGIN
-    CREATE EXTENSION IF NOT EXISTS vector;
+    EXECUTE 'CREATE EXTENSION IF NOT EXISTS vector';
 EXCEPTION WHEN OTHERS THEN
-    RAISE NOTICE 'pgvector extension not available - vector columns will not work until installed';
+    RAISE NOTICE 'pgvector not available: %', SQLERRM;
 END $$;

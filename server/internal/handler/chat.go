@@ -210,6 +210,7 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 
 	// Retrieve and inject relevant memories
 	memoryContext := h.retrieveMemories(ctx, agentID, body.Content)
+	h.Logger.Info().Str("agent_id", agentID.String()).Int("memory_len", len(memoryContext)).Str("memory_preview", memoryContext[:min(len(memoryContext), 100)]).Msg("memory context loaded")
 	if memoryContext != "" {
 		systemPrompt += "\n\n## Your Memory\n" + memoryContext
 	}

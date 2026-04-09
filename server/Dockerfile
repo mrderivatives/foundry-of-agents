@@ -12,5 +12,7 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /app/server /app/worker /app/migrate ./
 COPY --from=builder /app/migrations ./migrations
+COPY start.sh ./
+RUN chmod +x start.sh
 EXPOSE 8080
-CMD ["./server"]
+CMD ["./start.sh"]

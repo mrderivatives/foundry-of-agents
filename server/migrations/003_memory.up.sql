@@ -13,7 +13,7 @@ CREATE TABLE memory_entry (
     superseded_by UUID REFERENCES memory_entry(id),
     valid_from TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     valid_until TIMESTAMPTZ,
-    importance_score FLOAT NOT NULL DEFAULT 0.5,
+    importance_score NUMERIC(4,3) NOT NULL DEFAULT 0.500,
     access_count INT NOT NULL DEFAULT 0,
     last_accessed_at TIMESTAMPTZ,
     source_type TEXT,

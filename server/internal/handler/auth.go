@@ -232,10 +232,15 @@ func (h *Handler) issueJWT(userID, workspaceID uuid.UUID) (string, error) {
 func (h *Handler) findOrCreateUser(ctx context.Context, email, walletAddress string) (uuid.UUID, uuid.UUID, error) {
 	// Find or create user
 	var userID uuid.UUID
+	// Derive a display name from email
+	name := strings.Split(email, "@")[0]
+	if name == "" {
+		name = "User"
+	}
 	err := h.DB.QueryRow(ctx,
-		`INSERT INTO "user" (email) VALUES ($1)
+		`INSERT INTO "user" (email, name) VALUES ($1, $2)
 		 ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
-		 RETURNING id`, email).Scan(&userID)
+		 RETURNING id`, email, name).Scan(&userID)
 	if err != nil {
 		return uuid.Nil, uuid.Nil, err
 	}

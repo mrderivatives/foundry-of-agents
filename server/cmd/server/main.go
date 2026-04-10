@@ -20,6 +20,8 @@ import (
 	"github.com/mrderivatives/foundry-of-agents/server/pkg/bifrost/providers"
 	"github.com/mrderivatives/foundry-of-agents/server/pkg/db"
 	"github.com/mrderivatives/foundry-of-agents/server/pkg/queue"
+	"github.com/mrderivatives/foundry-of-agents/server/pkg/vault"
+	"github.com/mrderivatives/foundry-of-agents/server/pkg/wallet"
 )
 
 func main() {
@@ -79,11 +81,35 @@ func main() {
 	hub := realtime.NewHub()
 	go hub.Run()
 
+	// Vault — AES-256-GCM backed by PostgreSQL (falls back to stub if no master key)
+	var vaultImpl vault.Vault
+	vaultMasterKey := os.Getenv("VAULT_MASTER_KEY")
+	if vaultMasterKey != "" {
+		v, err := vault.NewPGVault(pool, vaultMasterKey)
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to initialize vault")
+		}
+		vaultImpl = v
+		log.Info().Msg("vault initialized (AES-256-GCM)")
+	} else {
+		vaultImpl = vault.NewStubVault()
+		log.Warn().Msg("VAULT_MASTER_KEY not set, using stub vault")
+	}
+
+	// Policy engine
+	policyEngine := wallet.NewPolicyEngine(pool)
+
+	// Jupiter swap service
+	jupiter := wallet.NewJupiterService()
+
 	h := handler.NewHandler(handler.Deps{
 		DB:               pool,
 		Hub:              hub,
 		Router:           bifrostRouter,
 		Queue:            queueClient,
+		Vault:            vaultImpl,
+		PolicyEngine:     policyEngine,
+		Jupiter:          jupiter,
 		JWTSecret:        []byte(jwtSecret),
 		Logger:           log.Logger,
 		TelegramBotToken: os.Getenv("TELEGRAM_BOT_TOKEN"),

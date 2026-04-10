@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,10 +10,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 
 	"github.com/mrderivatives/foundry-of-agents/server/internal/auth"
 	"github.com/mrderivatives/foundry-of-agents/server/pkg/bifrost"
 	"github.com/mrderivatives/foundry-of-agents/server/pkg/tools"
+	"github.com/mrderivatives/foundry-of-agents/server/pkg/wallet"
 )
 
 type sessionRow struct {
@@ -296,22 +299,41 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	// Define available tools
 	var availableTools []bifrost.ToolDef
 	if h.PerplexityAPIKey != "" {
-		availableTools = []bifrost.ToolDef{
-			{
-				Name:        "web_search",
-				Description: "Search the web for current information. Use for prices, news, market data, or anything requiring up-to-date info.",
-				Parameters: map[string]interface{}{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"query": map[string]interface{}{
-							"type":        "string",
-							"description": "Search query",
-						},
+		availableTools = append(availableTools, bifrost.ToolDef{
+			Name:        "web_search",
+			Description: "Search the web for current information. Use for prices, news, market data, or anything requiring up-to-date info.",
+			Parameters: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"query": map[string]interface{}{
+						"type":        "string",
+						"description": "Search query",
 					},
-					"required": []string{"query"},
 				},
+				"required": []string{"query"},
 			},
-		}
+		})
+	}
+
+	// Add wallet_propose tool if agent has an active wallet
+	var hasWallet bool
+	h.DB.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM wallet WHERE agent_id = $1 AND workspace_id = $2 AND status = 'active')`,
+		agentID, wsID).Scan(&hasWallet)
+	if hasWallet && h.Jupiter != nil {
+		availableTools = append(availableTools, bifrost.ToolDef{
+			Name:        "wallet_propose",
+			Description: "Propose a cryptocurrency swap transaction. The policy engine will validate it before execution.",
+			Parameters: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"action":       map[string]interface{}{"type": "string", "enum": []string{"swap"}, "description": "Transaction type"},
+					"input_token":  map[string]interface{}{"type": "string", "enum": []string{"SOL", "USDC"}, "description": "Token to sell"},
+					"output_token": map[string]interface{}{"type": "string", "enum": []string{"SOL", "USDC"}, "description": "Token to buy"},
+					"amount":       map[string]interface{}{"type": "string", "description": "Amount of input token to swap (e.g. '25' for 25 USDC)"},
+				},
+				"required": []string{"action", "input_token", "output_token", "amount"},
+			},
+		})
 	}
 
 	// Try tool use flow: non-streaming first call with tools, then stream final response
@@ -389,6 +411,8 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 						fmt.Fprintf(w, "data: {\"type\":\"tool_use_end\",\"tool\":\"web_search\",\"result_preview\":\"%s\"}\n\n", preview)
 						sseFlusher.Flush()
 					}
+				case "wallet_propose":
+					result = h.handleWalletProposeTool(ctx, tc, agentID, wsID, sessionID, assistantMsgID, useSSE, sseFlusher, w)
 				default:
 					result = "Unknown tool: " + tc.Name
 				}
@@ -610,4 +634,154 @@ func (h *Handler) streamResponse(
 	h.extractAndStoreMemories(agentID, wsID, sessionID.String(), userContent, responseText)
 
 	writeJSON(w, http.StatusOK, savedMsg)
+}
+
+// handleWalletProposeTool processes the wallet_propose tool call from the LLM.
+// Phase 1: gets real Jupiter quote, runs real policy engine, records transaction,
+// but does NOT sign or submit on-chain.
+func (h *Handler) handleWalletProposeTool(
+	ctx context.Context, tc bifrost.ToolCall,
+	agentID, wsID, sessionID, assistantMsgID uuid.UUID,
+	useSSE bool, sseFlusher http.Flusher, w http.ResponseWriter,
+) string {
+	// Emit SSE event
+	if useSSE && sseFlusher != nil {
+		fmt.Fprintf(w, "data: {\"type\":\"tool_use_start\",\"tool\":\"wallet_propose\",\"query\":\"evaluating swap proposal\"}\n\n")
+		sseFlusher.Flush()
+	}
+
+	var input struct {
+		Action      string `json:"action"`
+		InputToken  string `json:"input_token"`
+		OutputToken string `json:"output_token"`
+		Amount      string `json:"amount"`
+	}
+	if err := json.Unmarshal(tc.Input, &input); err != nil {
+		return "Invalid input format"
+	}
+
+	// Validate amount
+	amount, err := decimal.NewFromString(input.Amount)
+	if err != nil || amount.LessThanOrEqual(decimal.Zero) {
+		return "Invalid amount: must be a positive number"
+	}
+
+	// Validate tokens
+	if _, ok := wallet.TokenMints[input.InputToken]; !ok {
+		return "Invalid input token: " + input.InputToken
+	}
+	if _, ok := wallet.TokenMints[input.OutputToken]; !ok {
+		return "Invalid output token: " + input.OutputToken
+	}
+	if input.InputToken == input.OutputToken {
+		return "Input and output tokens must be different"
+	}
+
+	// Look up agent's wallet
+	var walletID uuid.UUID
+	var publicKey string
+	err = h.DB.QueryRow(ctx,
+		`SELECT w.id, w.public_key FROM wallet w WHERE w.agent_id = $1 AND w.status = 'active'`,
+		agentID).Scan(&walletID, &publicKey)
+	if err != nil {
+		return "Agent has no active wallet"
+	}
+
+	// Get Jupiter quote for price estimation
+	inputMint := wallet.TokenMints[input.InputToken]
+	outputMint := wallet.TokenMints[input.OutputToken]
+	// SOL has 9 decimals, USDC has 6
+	var lamports uint64
+	if input.InputToken == "SOL" {
+		lamports = uint64(amount.Mul(decimal.NewFromInt(1e9)).IntPart())
+	} else {
+		lamports = uint64(amount.Mul(decimal.NewFromInt(1e6)).IntPart())
+	}
+
+	quote, err := h.Jupiter.GetQuote(ctx, inputMint, outputMint, lamports, 100) // 1% slippage
+	if err != nil {
+		h.Logger.Error().Err(err).Msg("jupiter quote failed")
+		return "Failed to get price quote: " + err.Error()
+	}
+
+	// Estimate USD value for policy engine
+	// For USDC, amount IS USD. For SOL, use conservative $200/SOL estimate.
+	estimatedUSD := amount
+	if input.InputToken == "SOL" {
+		estimatedUSD = amount.Mul(decimal.NewFromInt(200))
+	}
+
+	// Run policy engine
+	proposal := wallet.TxProposal{
+		WalletID:    walletID,
+		Action:      input.Action,
+		InputToken:  input.InputToken,
+		OutputToken: input.OutputToken,
+		AmountUSD:   estimatedUSD,
+		InputAmount: input.Amount,
+	}
+
+	approved, checks, err := h.PolicyEngine.EvaluateProposal(ctx, walletID, proposal)
+	if err != nil {
+		h.Logger.Error().Err(err).Msg("policy evaluation failed")
+		return "Policy evaluation error: " + err.Error()
+	}
+
+	// Build idempotency key from session + message
+	idempKey := fmt.Sprintf("chat:%s:%s", sessionID.String(), assistantMsgID.String())
+
+	// Determine status and blocked reason
+	txStatus := "approved"
+	blockedReason := ""
+	if !approved {
+		txStatus = "blocked"
+		for _, c := range checks {
+			if !c.Passed {
+				blockedReason = c.Details
+				break
+			}
+		}
+	}
+
+	// Record transaction with idempotency key
+	h.DB.Exec(ctx,
+		`INSERT INTO wallet_transaction (wallet_id, workspace_id, agent_id, chain, action, status,
+		 input_token, input_amount, input_value_usd, output_token, output_amount, blocked_reason, idempotency_key)
+		 VALUES ($1, $2, $3, 'solana', $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		 ON CONFLICT (idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING`,
+		walletID, wsID, agentID, input.Action, txStatus,
+		input.InputToken, input.Amount, estimatedUSD,
+		input.OutputToken, quote.OutAmount, blockedReason, idempKey)
+
+	var result string
+	if !approved {
+		// Format checks for display
+		checksStr := ""
+		for _, c := range checks {
+			status := "PASS"
+			if !c.Passed {
+				status = "FAIL"
+			}
+			checksStr += fmt.Sprintf("[%s] %s: %s\n", status, c.Rule, c.Details)
+		}
+		result = fmt.Sprintf("Transaction BLOCKED by policy engine.\nReason: %s\nChecks:\n%s", blockedReason, checksStr)
+	} else {
+		// Phase 1: don't actually execute — show the quote
+		result = fmt.Sprintf("Transaction APPROVED by policy engine.\nQuote: %s %s -> %s %s\nPolicy checks: all passed\nNote: Execution is currently in simulation mode. Transaction recorded but not submitted on-chain.",
+			input.Amount, input.InputToken, quote.OutAmount, input.OutputToken)
+	}
+
+	// Emit SSE end event
+	if useSSE && sseFlusher != nil {
+		preview := result
+		if len(preview) > 100 {
+			preview = preview[:100] + "..."
+		}
+		preview = strings.ReplaceAll(preview, "\"", "\\\"")
+		preview = strings.ReplaceAll(preview, "\n", " ")
+		fmt.Fprintf(w, "data: {\"type\":\"tool_use_end\",\"tool\":\"wallet_propose\",\"result_preview\":\"%s\"}\n\n", preview)
+		sseFlusher.Flush()
+	}
+
+	return result
 }

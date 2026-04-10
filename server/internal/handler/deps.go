@@ -10,6 +10,8 @@ import (
 	"github.com/mrderivatives/foundry-of-agents/server/internal/realtime"
 	"github.com/mrderivatives/foundry-of-agents/server/pkg/bifrost"
 	"github.com/mrderivatives/foundry-of-agents/server/pkg/queue"
+	"github.com/mrderivatives/foundry-of-agents/server/pkg/vault"
+	"github.com/mrderivatives/foundry-of-agents/server/pkg/wallet"
 )
 
 type Deps struct {
@@ -17,6 +19,9 @@ type Deps struct {
 	Hub               *realtime.Hub
 	Router            *bifrost.Router
 	Queue             *queue.Client
+	Vault             vault.Vault
+	PolicyEngine      wallet.PolicyEngine
+	Jupiter           *wallet.JupiterService
 	JWTSecret         []byte
 	Logger            zerolog.Logger
 	TelegramBotToken  string

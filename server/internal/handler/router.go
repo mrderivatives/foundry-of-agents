@@ -65,6 +65,14 @@ func MountRoutes(r chi.Router, h *Handler) {
 					r.Post("/", h.handleAssignSkill)
 					r.Delete("/{skillId}", h.handleUnassignSkill)
 				})
+				r.Route("/wallet", func(r chi.Router) {
+					r.Post("/", h.handleCreateWallet)
+					r.Get("/", h.handleGetWallet)
+					r.Get("/transactions", h.handleListWalletTransactions)
+					r.Patch("/policy", h.handleUpdateWalletPolicy)
+					r.Post("/freeze", h.handleFreezeWallet)
+					r.Post("/unfreeze", h.handleUnfreezeWallet)
+				})
 			})
 		})
 

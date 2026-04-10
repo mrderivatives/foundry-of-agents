@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, Send, CheckCircle2, AlertCircle } from "lucide-react";
+import { Send, CheckCircle2, AlertCircle } from "lucide-react";
 import { api } from "@/shared/api/client";
+import { useAuthStore } from "@/features/auth/store";
 
 interface NotifPref {
   id: string;
@@ -12,6 +13,7 @@ interface NotifPref {
 }
 
 export default function SettingsPage() {
+  const { user } = useAuthStore();
   const [chatId, setChatId] = useState("");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -93,6 +95,7 @@ export default function SettingsPage() {
           <input
             type="email"
             disabled
+            value={user?.email || ""}
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-muted-foreground"
             placeholder="your@email.com"
           />

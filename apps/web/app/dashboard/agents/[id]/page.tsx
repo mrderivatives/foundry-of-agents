@@ -292,6 +292,57 @@ export default function AgentDetailPage() {
           </div>
         </div>
 
+        {/* Wallet Banner */}
+        {walletData ? (
+          <div className="rounded-lg border border-border bg-card/50 p-3 sm:p-4 mb-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">💰</span>
+                <code className="text-xs font-mono text-muted-foreground">
+                  {walletData.wallet.public_key.slice(0, 6)}...{walletData.wallet.public_key.slice(-4)}
+                </code>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(walletData.wallet.public_key); }}
+                  className="text-muted-foreground hover:text-foreground text-xs"
+                  title="Copy address"
+                >📋</button>
+                <a
+                  href={`https://solscan.io/account/${walletData.wallet.public_key}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary text-xs"
+                >↗ Solscan</a>
+              </div>
+              <div className="flex items-center gap-4 text-xs">
+                <span className="text-muted-foreground">SOL: <span className="text-foreground font-medium">0.00</span></span>
+                <span className="text-muted-foreground">USDC: <span className="text-foreground font-medium">0.00</span></span>
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                  walletData.wallet.status === 'active' ? 'bg-green-500/10 text-green-400' :
+                  walletData.wallet.status === 'frozen' ? 'bg-red-500/10 text-red-400' : 'bg-zinc-500/10 text-zinc-400'
+                }`}>{walletData.wallet.status}</span>
+              </div>
+            </div>
+            {walletData.policy && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground">Daily: $0 / ${walletData.policy.daily_limit_usd}</span>
+                <div className="flex-1 h-1.5 bg-secondary rounded-full max-w-[120px]">
+                  <div className="h-full bg-primary rounded-full" style={{ width: '0%' }} />
+                </div>
+              </div>
+            )}
+          </div>
+        ) : !walletLoading ? (
+          <div className="mb-4">
+            <button
+              onClick={handleCreateWallet}
+              disabled={creatingWallet}
+              className="rounded-lg border border-dashed border-border px-4 py-2 text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+            >
+              {creatingWallet ? 'Creating...' : '💰 Enable Wallet for this Agent'}
+            </button>
+          </div>
+        ) : null}
+
         {/* Tabs */}
         <div className="flex gap-1 overflow-x-auto">
           {TABS.map((t) => (

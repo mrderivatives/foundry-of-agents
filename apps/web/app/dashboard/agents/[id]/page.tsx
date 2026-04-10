@@ -13,6 +13,7 @@ import {
   Plus,
 } from "lucide-react";
 import type { Agent, ChatSession } from "@/shared/types";
+import { AgentAvatar } from "@/shared/components/agent-avatar";
 
 interface AgentSkill {
   agent_id: string;
@@ -161,9 +162,7 @@ export default function AgentDetailPage() {
       <div className="border-b border-border px-4 sm:px-6 py-4 shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold">
-              {agent.name.charAt(0).toUpperCase()}
-            </div>
+            <AgentAvatar emoji={agent.avatar_url} size={40} />
             <div className="min-w-0">
               <h1 className="text-base sm:text-lg font-bold truncate">{agent.name}</h1>
               {agent.description && (
@@ -275,6 +274,7 @@ export default function AgentDetailPage() {
                   sessionId={chatSessionId}
                   agentName={agent.name}
                   agentModel={agent.model}
+                  agentEmoji={agent.avatar_url}
                 />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center text-center p-6">

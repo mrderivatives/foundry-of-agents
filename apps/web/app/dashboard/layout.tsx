@@ -16,6 +16,7 @@ import { api } from "@/shared/api/client";
 import { useAgentStore } from "@/features/agents/store";
 import { useAuthStore } from "@/features/auth/store";
 import type { Agent } from "@/shared/types";
+import { AgentAvatar } from "@/shared/components/agent-avatar";
 
 export default function DashboardLayout({
   children,
@@ -128,15 +129,7 @@ export default function DashboardLayout({
                     : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                 }`}
               >
-                <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                    isAgentActive(agent.id)
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-muted-foreground"
-                  }`}
-                >
-                  {agent.name.charAt(0).toUpperCase()}
-                </div>
+                <AgentAvatar emoji={agent.avatar_url} size={32} />
                 <div className="flex-1 min-w-0">
                   <p className="truncate font-medium">{agent.name}</p>
                 </div>

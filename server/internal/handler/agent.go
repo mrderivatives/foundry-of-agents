@@ -68,6 +68,7 @@ func (h *Handler) handleCreateAgent(w http.ResponseWriter, r *http.Request) {
 		Name         string  `json:"name"`
 		Description  *string `json:"description"`
 		Instructions *string `json:"instructions"`
+		AvatarURL    *string `json:"avatar_url"`
 		Model        *string `json:"model"`
 	}
 	if err := readJSON(r, &body); err != nil || body.Name == "" {
@@ -77,10 +78,10 @@ func (h *Handler) handleCreateAgent(w http.ResponseWriter, r *http.Request) {
 
 	var a agentRow
 	err := h.DB.QueryRow(r.Context(),
-		`INSERT INTO agent (workspace_id, name, description, instructions, model, owner_id)
-		 VALUES ($1, $2, $3, $4, $5, $6)
+		`INSERT INTO agent (workspace_id, name, description, instructions, avatar_url, model, owner_id)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)
 		 RETURNING id, workspace_id, name, description, instructions, avatar_url, model, status, visibility, owner_id, archived_at, created_at, updated_at`,
-		wsID, body.Name, body.Description, body.Instructions, body.Model, userID).Scan(
+		wsID, body.Name, body.Description, body.Instructions, body.AvatarURL, body.Model, userID).Scan(
 		&a.ID, &a.WorkspaceID, &a.Name, &a.Description, &a.Instructions,
 		&a.AvatarURL, &a.Model, &a.Status, &a.Visibility, &a.OwnerID, &a.ArchivedAt, &a.CreatedAt, &a.UpdatedAt)
 	if err != nil {
@@ -128,6 +129,7 @@ func (h *Handler) handleUpdateAgent(w http.ResponseWriter, r *http.Request) {
 		Name         *string `json:"name"`
 		Description  *string `json:"description"`
 		Instructions *string `json:"instructions"`
+		AvatarURL    *string `json:"avatar_url"`
 		Model        *string `json:"model"`
 	}
 	if err := readJSON(r, &body); err != nil {
@@ -141,11 +143,12 @@ func (h *Handler) handleUpdateAgent(w http.ResponseWriter, r *http.Request) {
 			name = COALESCE($3, name),
 			description = COALESCE($4, description),
 			instructions = COALESCE($5, instructions),
-			model = COALESCE($6, model),
+			avatar_url = COALESCE($6, avatar_url),
+			model = COALESCE($7, model),
 			updated_at = NOW()
 		 WHERE id = $1 AND workspace_id = $2
 		 RETURNING id, workspace_id, name, description, instructions, avatar_url, model, status, visibility, owner_id, archived_at, created_at, updated_at`,
-		agentID, wsID, body.Name, body.Description, body.Instructions, body.Model).Scan(
+		agentID, wsID, body.Name, body.Description, body.Instructions, body.AvatarURL, body.Model).Scan(
 		&a.ID, &a.WorkspaceID, &a.Name, &a.Description, &a.Instructions,
 		&a.AvatarURL, &a.Model, &a.Status, &a.Visibility, &a.OwnerID, &a.ArchivedAt, &a.CreatedAt, &a.UpdatedAt)
 	if err != nil {

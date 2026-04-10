@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import { ArrowUp, RotateCcw } from "lucide-react";
 import { api } from "@/shared/api/client";
 import type { ChatMessage } from "@/shared/types";
+import { AgentAvatar } from "@/shared/components/agent-avatar";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -14,6 +15,7 @@ interface Props {
   sessionId: string;
   agentName?: string;
   agentModel?: string;
+  agentEmoji?: string;
 }
 
 interface DisplayMessage {
@@ -23,7 +25,7 @@ interface DisplayMessage {
   timestamp: string;
 }
 
-export function ChatPage({ agentId, sessionId, agentName, agentModel }: Props) {
+export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji }: Props) {
   const router = useRouter();
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState("");
@@ -228,6 +230,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel }: Props) {
           >
             &larr;
           </button>
+          <AgentAvatar emoji={agentEmoji} size={28} />
           <div>
             <h1 className="text-sm font-semibold">
               {agentName || "Agent"}

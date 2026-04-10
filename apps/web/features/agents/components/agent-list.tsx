@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useAgentStore } from "../store";
+import { AgentAvatar } from "@/shared/components/agent-avatar";
 
 export function AgentList() {
   const { agents, loading } = useAgentStore();
@@ -39,9 +40,7 @@ export function AgentList() {
           onClick={() => router.push(`/dashboard/agents/${agent.id}`)}
           className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/50 cursor-pointer"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold">
-            {agent.name.charAt(0).toUpperCase()}
-          </div>
+          <AgentAvatar emoji={agent.avatar_url} size={40} />
           <div className="flex-1">
             <h3 className="font-medium">{agent.name}</h3>
             {agent.description && (

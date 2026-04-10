@@ -59,6 +59,7 @@ function OnboardingContent() {
   const [agentName, setAgentName] = useState("");
   const [instructions, setInstructions] = useState("");
   const [model, setModel] = useState("claude-sonnet-4-6");
+  const [avatarEmoji, setAvatarEmoji] = useState<string | undefined>(undefined);
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState(false);
   const [createdAgent, setCreatedAgent] = useState<Agent | null>(null);
@@ -71,6 +72,7 @@ function OnboardingContent() {
         setAgentName(tpl.name);
         setInstructions(tpl.defaultInstructions);
         setModel(tpl.defaultModel);
+        setAvatarEmoji(tpl.emoji);
         setStep(1);
       }
     }
@@ -83,6 +85,7 @@ function OnboardingContent() {
       setAgentName(tpl.name);
       setInstructions(tpl.defaultInstructions);
       setModel(tpl.defaultModel);
+      setAvatarEmoji(tpl.emoji);
     }
   };
 
@@ -98,6 +101,7 @@ function OnboardingContent() {
         name: agentName,
         instructions: instructions || undefined,
         model,
+        avatar_url: avatarEmoji || undefined,
       });
       setCreatedAgent(agent);
       setCreated(true);

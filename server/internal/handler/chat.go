@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -637,8 +640,8 @@ func (h *Handler) streamResponse(
 }
 
 // handleWalletProposeTool processes the wallet_propose tool call from the LLM.
-// Phase 1: gets real Jupiter quote, runs real policy engine, records transaction,
-// but does NOT sign or submit on-chain.
+// Gets real Jupiter quote, runs real policy engine, records transaction.
+// If ENABLE_LIVE_TRADING=true and Vault is configured, signs and submits on-chain.
 func (h *Handler) handleWalletProposeTool(
 	ctx context.Context, tc bifrost.ToolCall,
 	agentID, wsID, sessionID, assistantMsgID uuid.UUID,
@@ -704,6 +707,13 @@ func (h *Handler) handleWalletProposeTool(
 		return "Failed to get price quote: " + err.Error()
 	}
 
+	// Emit wallet_propose SSE event with quote details
+	if useSSE && sseFlusher != nil {
+		fmt.Fprintf(w, "data: {\"type\":\"wallet_propose\",\"action\":\"%s\",\"input_token\":\"%s\",\"output_token\":\"%s\",\"amount\":\"%s\",\"output_amount\":\"%s\"}\n\n",
+			input.Action, input.InputToken, input.OutputToken, input.Amount, quote.OutAmount)
+		sseFlusher.Flush()
+	}
+
 	// Estimate USD value for policy engine
 	// For USDC, amount IS USD. For SOL, use conservative $200/SOL estimate.
 	estimatedUSD := amount
@@ -725,6 +735,13 @@ func (h *Handler) handleWalletProposeTool(
 	if err != nil {
 		h.Logger.Error().Err(err).Msg("policy evaluation failed")
 		return "Policy evaluation error: " + err.Error()
+	}
+
+	// Emit wallet_policy SSE event
+	if useSSE && sseFlusher != nil {
+		checksJSON, _ := json.Marshal(checks)
+		fmt.Fprintf(w, "data: {\"type\":\"wallet_policy\",\"approved\":%t,\"checks\":%s}\n\n", approved, checksJSON)
+		sseFlusher.Flush()
 	}
 
 	// Build idempotency key from session + message
@@ -765,10 +782,53 @@ func (h *Handler) handleWalletProposeTool(
 			checksStr += fmt.Sprintf("[%s] %s: %s\n", status, c.Rule, c.Details)
 		}
 		result = fmt.Sprintf("Transaction BLOCKED by policy engine.\nReason: %s\nChecks:\n%s", blockedReason, checksStr)
+
+		// Emit wallet_blocked SSE event
+		if useSSE && sseFlusher != nil {
+			escapedReason := strings.ReplaceAll(blockedReason, "\"", "\\\"")
+			escapedReason = strings.ReplaceAll(escapedReason, "\n", " ")
+			fmt.Fprintf(w, "data: {\"type\":\"wallet_blocked\",\"reason\":\"%s\"}\n\n", escapedReason)
+			sseFlusher.Flush()
+		}
 	} else {
-		// Phase 1: don't actually execute — show the quote
-		result = fmt.Sprintf("Transaction APPROVED by policy engine.\nQuote: %s %s -> %s %s\nPolicy checks: all passed\nNote: Execution is currently in simulation mode. Transaction recorded but not submitted on-chain.",
-			input.Amount, input.InputToken, quote.OutAmount, input.OutputToken)
+		// Check if live trading is enabled
+		if os.Getenv("ENABLE_LIVE_TRADING") == "true" && h.Vault != nil {
+			// 1. Get swap transaction from Jupiter
+			swapTxBase64, err := h.Jupiter.GetSwapTransaction(ctx, quote, publicKey)
+			if err != nil {
+				h.Logger.Error().Err(err).Msg("jupiter swap tx failed")
+				// Update tx status to failed
+				h.DB.Exec(ctx, `UPDATE wallet_transaction SET status = 'failed', blocked_reason = $1
+					WHERE idempotency_key = $2`, "swap tx build failed: "+err.Error(), idempKey)
+				result = "Transaction approved but swap transaction build failed: " + err.Error()
+			} else {
+				// 2. Decode, sign, and submit the transaction
+				txSig, err := h.signAndSubmitTransaction(ctx, swapTxBase64, walletID, publicKey)
+				if err != nil {
+					h.Logger.Error().Err(err).Msg("sign/submit failed")
+					h.DB.Exec(ctx, `UPDATE wallet_transaction SET status = 'failed', blocked_reason = $1
+						WHERE idempotency_key = $2`, "execution failed: "+err.Error(), idempKey)
+					result = fmt.Sprintf("Transaction approved but execution failed: %s", err.Error())
+				} else {
+					// Success!
+					h.DB.Exec(ctx, `UPDATE wallet_transaction SET status = 'executed', tx_signature = $1, executed_at = NOW()
+						WHERE idempotency_key = $2`, txSig, idempKey)
+					result = fmt.Sprintf("Transaction EXECUTED successfully!\nSwapped: %s %s -> %s %s\nTX: %s\nView: https://solscan.io/tx/%s",
+						input.Amount, input.InputToken, quote.OutAmount, input.OutputToken, txSig, txSig)
+
+					// Emit wallet_executed SSE event
+					if useSSE && sseFlusher != nil {
+						fmt.Fprintf(w, "data: {\"type\":\"wallet_executed\",\"tx_signature\":\"%s\",\"input\":\"%s %s\",\"output\":\"%s %s\"}\n\n",
+							txSig, input.Amount, input.InputToken, quote.OutAmount, input.OutputToken)
+						sseFlusher.Flush()
+					}
+				}
+			}
+		} else {
+			// Simulation mode
+			result = fmt.Sprintf("Transaction APPROVED by policy engine.\nQuote: %s %s -> %s %s\nPolicy checks: all passed\n⚠️ Simulation mode — not submitted on-chain.",
+				input.Amount, input.InputToken, quote.OutAmount, input.OutputToken)
+		}
 	}
 
 	// Emit SSE end event
@@ -784,4 +844,121 @@ func (h *Handler) handleWalletProposeTool(
 	}
 
 	return result
+}
+
+// signAndSubmitTransaction decodes a base64 Solana VersionedTransaction, signs it
+// with the vault, and submits it to the Solana RPC.
+func (h *Handler) signAndSubmitTransaction(ctx context.Context, txBase64 string, walletID uuid.UUID, signerPubkey string) (string, error) {
+	// Decode base64 transaction
+	txBytes, err := base64.StdEncoding.DecodeString(txBase64)
+	if err != nil {
+		return "", fmt.Errorf("decode tx: %w", err)
+	}
+
+	// Parse Solana transaction structure
+	// VersionedTransaction format:
+	// [signatures_count (compact-u16)] [signature_0 (64 bytes)] ... [message_bytes]
+	// We need to:
+	// 1. Parse the number of signatures
+	// 2. Find the message bytes (everything after all signatures)
+	// 3. Sign the message
+	// 4. Insert our signature at the correct position
+
+	offset := 0
+	// Parse compact-u16 for signature count
+	sigCount, bytesRead := parseCompactU16(txBytes[offset:])
+	offset += bytesRead
+
+	// The signatures section is sigCount * 64 bytes
+	sigSectionStart := offset
+	offset += sigCount * 64
+
+	// Message bytes start here
+	messageBytes := txBytes[offset:]
+
+	// Get vault key ID for this wallet
+	var vaultKeyID string
+	err = h.DB.QueryRow(ctx, `SELECT vault_key_id FROM wallet WHERE id = $1`, walletID).Scan(&vaultKeyID)
+	if err != nil {
+		return "", fmt.Errorf("load vault key: %w", err)
+	}
+
+	// Sign the message
+	sig, err := h.Vault.Sign(ctx, vaultKeyID, messageBytes)
+	if err != nil {
+		return "", fmt.Errorf("vault sign: %w", err)
+	}
+
+	// Find our pubkey's position in the account keys to know which signature slot
+	// For Jupiter swaps, the fee payer (first signer) is usually our key
+	// Place signature at position 0 (first signature slot)
+	copy(txBytes[sigSectionStart:sigSectionStart+64], sig)
+
+	// Re-encode as base64
+	signedTx := base64.StdEncoding.EncodeToString(txBytes)
+
+	// Submit to Solana RPC
+	rpcURL := h.SolanaRPCURL
+	if rpcURL == "" {
+		rpcURL = "https://api.mainnet-beta.solana.com"
+	}
+
+	reqBody, _ := json.Marshal(map[string]interface{}{
+		"jsonrpc": "2.0",
+		"id":      1,
+		"method":  "sendTransaction",
+		"params": []interface{}{
+			signedTx,
+			map[string]interface{}{
+				"encoding":      "base64",
+				"skipPreflight": false,
+				"maxRetries":    3,
+			},
+		},
+	})
+
+	resp, err := http.Post(rpcURL, "application/json", bytes.NewReader(reqBody))
+	if err != nil {
+		return "", fmt.Errorf("rpc send: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var rpcResp struct {
+		Result string `json:"result"`
+		Error  *struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	json.NewDecoder(resp.Body).Decode(&rpcResp)
+
+	if rpcResp.Error != nil {
+		return "", fmt.Errorf("rpc error %d: %s", rpcResp.Error.Code, rpcResp.Error.Message)
+	}
+
+	return rpcResp.Result, nil
+}
+
+// parseCompactU16 parses a Solana compact-u16 encoded integer.
+func parseCompactU16(data []byte) (int, int) {
+	if len(data) == 0 {
+		return 0, 0
+	}
+	val := int(data[0])
+	if val < 0x80 {
+		return val, 1
+	}
+	val = (val & 0x7f)
+	if len(data) < 2 {
+		return val, 1
+	}
+	val |= int(data[1]&0x7f) << 7
+	if data[1] < 0x80 {
+		return val, 2
+	}
+	if len(data) < 3 {
+		return val, 2
+	}
+	val |= int(data[2]&0x03) << 14
+	return val, 3
 }

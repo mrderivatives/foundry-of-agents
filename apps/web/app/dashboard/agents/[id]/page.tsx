@@ -66,6 +66,7 @@ export default function AgentDetailPage() {
   const [assigningSkill, setAssigningSkill] = useState(false);
   const [cronJobs, setCronJobs] = useState<CronJob[]>([]);
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+  const [showAddSkill, setShowAddSkill] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -238,14 +239,23 @@ export default function AgentDetailPage() {
         )}
 
         {tab === "skills" && (
-          <div className="p-6 overflow-y-auto h-full space-y-6">
+          <div className="p-4 sm:p-6 overflow-y-auto h-full space-y-6">
             <div>
-              <h3 className="text-sm font-semibold mb-3">Assigned Skills</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold">Assigned Skills</h3>
+                <button
+                  onClick={() => setShowAddSkill(!showAddSkill)}
+                  className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <Plus className="w-3 h-3" />
+                  Add Skill
+                </button>
+              </div>
               {agentSkills.length === 0 ? (
                 <div className="rounded-xl border border-border bg-card/50 p-6 text-center">
                   <Puzzle className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    No skills assigned. Add skills below.
+                    No skills assigned yet. Click &quot;Add Skill&quot; to get started.
                   </p>
                 </div>
               ) : (
@@ -255,7 +265,7 @@ export default function AgentDetailPage() {
                       key={s.skill_id}
                       className="flex items-center justify-between rounded-xl border border-border bg-card p-3"
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium">{s.name}</span>
                         {s.is_builtin && (
                           <span className="rounded-full bg-violet-500/10 text-violet-400 px-2 py-0.5 text-xs">
@@ -270,7 +280,7 @@ export default function AgentDetailPage() {
                       </div>
                       <button
                         onClick={() => handleUnassignSkill(s.skill_id)}
-                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                        className="text-xs text-red-400 hover:text-red-300 transition-colors shrink-0"
                       >
                         Remove
                       </button>
@@ -279,35 +289,41 @@ export default function AgentDetailPage() {
                 </div>
               )}
             </div>
-            <div>
-              <h3 className="text-sm font-semibold mb-3">Available Skills</h3>
-              <div className="space-y-2">
-                {allSkills
-                  .filter((s) => !agentSkills.some((as2) => as2.skill_id === s.id))
-                  .map((s) => (
-                    <div
-                      key={s.id}
-                      className="flex items-center justify-between rounded-xl border border-border bg-card p-3"
-                    >
-                      <div>
-                        <span className="text-sm font-medium">{s.name}</span>
-                        {s.description && (
-                          <span className="text-xs text-muted-foreground ml-2">
-                            {s.description}
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleAssignSkill(s.id)}
-                        disabled={assigningSkill}
-                        className="rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-                      >
-                        Assign
-                      </button>
-                    </div>
-                  ))}
+            {showAddSkill && (
+              <div>
+                <h3 className="text-sm font-semibold mb-3">Available Skills</h3>
+                {allSkills.filter((s) => !agentSkills.some((as2) => as2.skill_id === s.id)).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">All skills are already assigned.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {allSkills
+                      .filter((s) => !agentSkills.some((as2) => as2.skill_id === s.id))
+                      .map((s) => (
+                        <div
+                          key={s.id}
+                          className="flex items-center justify-between rounded-xl border border-border bg-card p-3"
+                        >
+                          <div className="min-w-0">
+                            <span className="text-sm font-medium">{s.name}</span>
+                            {s.description && (
+                              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                                {s.description}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleAssignSkill(s.id)}
+                            disabled={assigningSkill}
+                            className="rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0 ml-3"
+                          >
+                            Assign
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
         )}
 

@@ -100,11 +100,31 @@ export interface MemoryEntry {
   created_at: string;
 }
 
+export interface WalletInfo {
+  id: string;
+  workspace_id: string;
+  agent_id?: string;
+  owner_id: string;
+  chain: string;
+  public_key: string;
+  status: string;
+  wallet_type: string;
+  created_at: string;
+}
+
+export interface WalletPolicy {
+  id: string;
+  wallet_id: string;
+  daily_limit_usd: string;
+  per_tx_limit_usd: string;
+  allowed_tokens: string[];
+  auto_freeze_on_anomaly: boolean;
+  anomaly_max_tx_per_hour: number;
+}
+
 export interface WalletTransaction {
   id: string;
   wallet_id: string;
-  workspace_id: string;
-  chain: string;
   action: string;
   status: string;
   input_token?: string;
@@ -112,6 +132,6 @@ export interface WalletTransaction {
   input_value_usd?: string;
   output_token?: string;
   output_amount?: string;
-  output_value_usd?: string;
+  blocked_reason?: string;
   created_at: string;
 }

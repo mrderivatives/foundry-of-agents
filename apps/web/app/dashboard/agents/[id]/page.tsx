@@ -11,8 +11,12 @@ import {
   Puzzle,
   Clock,
   Plus,
+  Wallet,
+  Copy,
+  Snowflake,
+  Play,
 } from "lucide-react";
-import type { Agent, ChatSession } from "@/shared/types";
+import type { Agent, ChatSession, WalletInfo, WalletPolicy, WalletTransaction } from "@/shared/types";
 import { AgentAvatar } from "@/shared/components/agent-avatar";
 
 interface AgentSkill {
@@ -49,13 +53,14 @@ interface CronJob {
   created_at: string;
 }
 
-type Tab = "chat" | "memory" | "skills" | "schedule";
+type Tab = "chat" | "memory" | "skills" | "schedule" | "wallet";
 
 const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "chat", label: "Chat", icon: MessageSquare },
   { id: "memory", label: "Memory", icon: Brain },
   { id: "skills", label: "Skills", icon: Puzzle },
   { id: "schedule", label: "Schedule", icon: Clock },
+  { id: "wallet", label: "Wallet", icon: Wallet },
 ];
 
 export default function AgentDetailPage() {
@@ -78,6 +83,11 @@ export default function AgentDetailPage() {
   const [showCreateCron, setShowCreateCron] = useState(false);
   const [cronForm, setCronForm] = useState({ name: "", cron_expression: "0 9 * * *", prompt: "", output_channel: "none", output_target: "" });
   const [creatingCron, setCreatingCron] = useState(false);
+  const [walletData, setWalletData] = useState<{ wallet: WalletInfo; policy: WalletPolicy } | null>(null);
+  const [walletTxs, setWalletTxs] = useState<WalletTransaction[]>([]);
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [creatingWallet, setCreatingWallet] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -117,6 +127,61 @@ export default function AgentDetailPage() {
       loadSessions();
     }
   }, [tab, loadSessions]);
+
+  const loadWallet = useCallback(async () => {
+    setWalletLoading(true);
+    try {
+      const data = await api.get<{ wallet: WalletInfo; policy: WalletPolicy }>(`/api/agents/${agentId}/wallet`);
+      setWalletData(data);
+      const txs = await api.get<WalletTransaction[]>(`/api/agents/${agentId}/wallet/transactions`);
+      setWalletTxs(txs);
+    } catch {
+      setWalletData(null);
+      setWalletTxs([]);
+    } finally {
+      setWalletLoading(false);
+    }
+  }, [agentId]);
+
+  useEffect(() => {
+    if (tab === "wallet") {
+      loadWallet();
+    }
+  }, [tab, loadWallet]);
+
+  const handleCreateWallet = async () => {
+    setCreatingWallet(true);
+    try {
+      await api.post(`/api/agents/${agentId}/wallet`);
+      await loadWallet();
+    } catch {
+      // ignore
+    } finally {
+      setCreatingWallet(false);
+    }
+  };
+
+  const handleFreezeWallet = async () => {
+    try {
+      await api.post(`/api/agents/${agentId}/wallet/freeze`);
+      await loadWallet();
+    } catch { /* ignore */ }
+  };
+
+  const handleUnfreezeWallet = async () => {
+    try {
+      await api.post(`/api/agents/${agentId}/wallet/unfreeze`);
+      await loadWallet();
+    } catch { /* ignore */ }
+  };
+
+  const handleCopyAddress = () => {
+    if (walletData?.wallet.public_key) {
+      navigator.clipboard.writeText(walletData.wallet.public_key);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const handleTabChange = (newTab: Tab) => {
     setTab(newTab);
@@ -573,6 +638,179 @@ export default function AgentDetailPage() {
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+        )}
+
+        {tab === "wallet" && (
+          <div className="p-4 sm:p-6 overflow-y-auto h-full space-y-6">
+            {walletLoading ? (
+              <div className="flex h-32 items-center justify-center">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            ) : !walletData ? (
+              <div className="rounded-xl border border-border bg-card/50 p-12 text-center">
+                <Wallet className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <h3 className="text-lg font-semibold mb-1">No wallet yet</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Create a custodial Solana wallet for this agent to enable on-chain actions.
+                </p>
+                <button
+                  onClick={handleCreateWallet}
+                  disabled={creatingWallet}
+                  className="flex items-center gap-2 mx-auto rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  <Plus className="w-4 h-4" />
+                  {creatingWallet ? "Creating..." : "Create Wallet"}
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Wallet Info */}
+                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold">Wallet</h3>
+                    <div className="flex items-center gap-2">
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                        walletData.wallet.status === "active"
+                          ? "bg-green-500/10 text-green-400"
+                          : walletData.wallet.status === "frozen"
+                            ? "bg-blue-500/10 text-blue-400"
+                            : "bg-red-500/10 text-red-400"
+                      }`}>
+                        {walletData.wallet.status}
+                      </span>
+                      {walletData.wallet.status === "active" ? (
+                        <button
+                          onClick={handleFreezeWallet}
+                          className="flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-accent/50 transition-colors"
+                        >
+                          <Snowflake className="w-3 h-3" />
+                          Freeze
+                        </button>
+                      ) : walletData.wallet.status === "frozen" ? (
+                        <button
+                          onClick={handleUnfreezeWallet}
+                          className="flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs text-green-400 hover:bg-accent/50 transition-colors"
+                        >
+                          <Play className="w-3 h-3" />
+                          Unfreeze
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Public Key</p>
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs bg-secondary rounded px-2 py-1 break-all flex-1">
+                        {walletData.wallet.public_key}
+                      </code>
+                      <button
+                        onClick={handleCopyAddress}
+                        className="shrink-0 rounded-lg border border-border p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                        title="Copy address"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                      {copied && <span className="text-xs text-green-400">Copied!</span>}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <p className="text-muted-foreground">Chain</p>
+                      <p className="font-medium capitalize">{walletData.wallet.chain}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Type</p>
+                      <p className="font-medium capitalize">{walletData.wallet.wallet_type}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Created</p>
+                      <p className="font-medium">{new Date(walletData.wallet.created_at).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Policy */}
+                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                  <h3 className="text-sm font-semibold">Policy</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <p className="text-muted-foreground">Daily Limit</p>
+                      <p className="font-medium">${walletData.policy.daily_limit_usd}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Per-TX Limit</p>
+                      <p className="font-medium">${walletData.policy.per_tx_limit_usd}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Max TX/Hour</p>
+                      <p className="font-medium">{walletData.policy.anomaly_max_tx_per_hour}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Allowed Tokens</p>
+                      <p className="font-medium">{walletData.policy.allowed_tokens?.join(", ") || "Any"}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Auto-Freeze</p>
+                      <p className="font-medium">{walletData.policy.auto_freeze_on_anomaly ? "Enabled" : "Disabled"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transactions */}
+                <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                  <h3 className="text-sm font-semibold">Transaction History</h3>
+                  {walletTxs.length === 0 ? (
+                    <p className="text-xs text-muted-foreground py-4 text-center">No transactions yet</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-border text-muted-foreground">
+                            <th className="text-left py-2 pr-3">Time</th>
+                            <th className="text-left py-2 pr-3">Action</th>
+                            <th className="text-left py-2 pr-3">Input</th>
+                            <th className="text-left py-2 pr-3">Output</th>
+                            <th className="text-left py-2 pr-3">Status</th>
+                            <th className="text-left py-2">Details</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {walletTxs.map((tx) => (
+                            <tr key={tx.id} className="border-b border-border/50">
+                              <td className="py-2 pr-3 whitespace-nowrap">
+                                {new Date(tx.created_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                              </td>
+                              <td className="py-2 pr-3 capitalize">{tx.action}</td>
+                              <td className="py-2 pr-3">
+                                {tx.input_amount && tx.input_token ? `${tx.input_amount} ${tx.input_token}` : "-"}
+                              </td>
+                              <td className="py-2 pr-3">
+                                {tx.output_amount && tx.output_token ? `${tx.output_amount} ${tx.output_token}` : "-"}
+                              </td>
+                              <td className="py-2 pr-3">
+                                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                                  tx.status === "approved" || tx.status === "executed"
+                                    ? "bg-green-500/10 text-green-400"
+                                    : tx.status === "blocked"
+                                      ? "bg-red-500/10 text-red-400"
+                                      : "bg-yellow-500/10 text-yellow-400"
+                                }`}>
+                                  {tx.status}
+                                </span>
+                              </td>
+                              <td className="py-2 text-muted-foreground truncate max-w-[200px]">
+                                {tx.blocked_reason || (tx.input_value_usd ? `$${tx.input_value_usd}` : "-")}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         )}

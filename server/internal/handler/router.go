@@ -68,6 +68,7 @@ func MountRoutes(r chi.Router, h *Handler) {
 				r.Route("/wallet", func(r chi.Router) {
 					r.Post("/", h.handleCreateWallet)
 					r.Get("/", h.handleGetWallet)
+					r.Get("/balance", h.handleWalletBalance)
 					r.Get("/transactions", h.handleListWalletTransactions)
 					r.Patch("/policy", h.handleUpdateWalletPolicy)
 					r.Post("/freeze", h.handleFreezeWallet)

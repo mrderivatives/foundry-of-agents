@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -268,6 +270,107 @@ func (h *Handler) handleUnfreezeWallet(w http.ResponseWriter, r *http.Request) {
 }
 
 // checksToString formats policy checks for display.
+// GET /api/agents/{id}/wallet/balance
+func (h *Handler) handleWalletBalance(w http.ResponseWriter, r *http.Request) {
+	wsID, _ := auth.GetWorkspaceID(r.Context())
+	agentID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		errJSON(w, http.StatusBadRequest, "invalid agent id")
+		return
+	}
+
+	var publicKey string
+	err = h.DB.QueryRow(r.Context(),
+		`SELECT public_key FROM wallet WHERE agent_id = $1 AND workspace_id = $2 AND status != 'revoked'`,
+		agentID, wsID).Scan(&publicKey)
+	if err != nil {
+		errJSON(w, http.StatusNotFound, "no wallet found")
+		return
+	}
+
+	rpcURL := h.SolanaRPCURL
+	if rpcURL == "" {
+		rpcURL = "https://api.mainnet-beta.solana.com"
+	}
+
+	// Get SOL balance
+	solBalance := decimal.Zero
+	if resp, err := solanaRPC(rpcURL, "getBalance", []interface{}{publicKey}); err == nil {
+		if val, ok := resp["value"].(float64); ok {
+			solBalance = decimal.NewFromFloat(val).Div(decimal.NewFromInt(1e9))
+		}
+	}
+
+	// Get USDC balance
+	usdcBalance := decimal.Zero
+	usdcMint := "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+	if resp, err := solanaRPC(rpcURL, "getTokenAccountsByOwner", []interface{}{
+		publicKey,
+		map[string]string{"mint": usdcMint},
+		map[string]string{"encoding": "jsonParsed"},
+	}); err == nil {
+		if val, ok := resp["value"].([]interface{}); ok && len(val) > 0 {
+			if acct, ok := val[0].(map[string]interface{}); ok {
+				if acc, ok := acct["account"].(map[string]interface{}); ok {
+					if data, ok := acc["data"].(map[string]interface{}); ok {
+						if parsed, ok := data["parsed"].(map[string]interface{}); ok {
+							if info, ok := parsed["info"].(map[string]interface{}); ok {
+								if ta, ok := info["tokenAmount"].(map[string]interface{}); ok {
+									if uiStr, ok := ta["uiAmountString"].(string); ok {
+										usdcBalance, _ = decimal.NewFromString(uiStr)
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Get SOL price from CoinGecko
+	solPrice := decimal.NewFromInt(150) // fallback
+	if resp, err := http.Get("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"); err == nil {
+		defer resp.Body.Close()
+		var priceData map[string]map[string]float64
+		if json.NewDecoder(resp.Body).Decode(&priceData) == nil {
+			if p, ok := priceData["solana"]["usd"]; ok {
+				solPrice = decimal.NewFromFloat(p)
+			}
+		}
+	}
+
+	solUSD := solBalance.Mul(solPrice)
+	totalUSD := solUSD.Add(usdcBalance) // USDC ≈ $1
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"sol":       map[string]string{"amount": solBalance.StringFixed(4), "usd_value": solUSD.StringFixed(2)},
+		"usdc":      map[string]string{"amount": usdcBalance.StringFixed(2), "usd_value": usdcBalance.StringFixed(2)},
+		"total_usd": totalUSD.StringFixed(2),
+		"sol_price": solPrice.StringFixed(2),
+	})
+}
+
+func solanaRPC(rpcURL, method string, params []interface{}) (map[string]interface{}, error) {
+	body, _ := json.Marshal(map[string]interface{}{
+		"jsonrpc": "2.0", "id": 1, "method": method, "params": params,
+	})
+	resp, err := http.Post(rpcURL, "application/json", bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		b, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("rpc error %d: %s", resp.StatusCode, string(b))
+	}
+	var result struct {
+		Result map[string]interface{} `json:"result"`
+	}
+	json.NewDecoder(resp.Body).Decode(&result)
+	return result.Result, nil
+}
+
 func checksToString(checks []policyCheckJSON) string {
 	result := ""
 	for _, c := range checks {

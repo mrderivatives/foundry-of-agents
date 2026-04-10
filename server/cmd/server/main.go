@@ -117,6 +117,7 @@ func main() {
 		SupabaseURL:      os.Getenv("SUPABASE_URL"),
 		SupabaseAnonKey:  os.Getenv("SUPABASE_ANON_KEY"),
 		PerplexityAPIKey: os.Getenv("PERPLEXITY_API_KEY"),
+		SolanaRPCURL:     os.Getenv("SOLANA_RPC_URL"),
 	})
 
 	r := chi.NewRouter()

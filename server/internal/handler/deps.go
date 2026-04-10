@@ -29,6 +29,7 @@ type Deps struct {
 	SupabaseURL       string
 	SupabaseAnonKey   string
 	PerplexityAPIKey  string
+	SolanaRPCURL      string
 }
 
 type Handler struct {

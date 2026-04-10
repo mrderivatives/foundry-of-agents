@@ -84,6 +84,7 @@ export default function AgentDetailPage() {
   const [cronForm, setCronForm] = useState({ name: "", cron_expression: "0 9 * * *", prompt: "", output_channel: "none", output_target: "" });
   const [creatingCron, setCreatingCron] = useState(false);
   const [walletData, setWalletData] = useState<{ wallet: WalletInfo; policy: WalletPolicy } | null>(null);
+  const [walletBalance, setWalletBalance] = useState<{ sol: { amount: string; usd_value: string }; usdc: { amount: string; usd_value: string }; total_usd: string } | null>(null);
   const [walletTxs, setWalletTxs] = useState<WalletTransaction[]>([]);
   const [walletLoading, setWalletLoading] = useState(false);
   const [creatingWallet, setCreatingWallet] = useState(false);
@@ -135,9 +136,15 @@ export default function AgentDetailPage() {
       setWalletData(data);
       const txs = await api.get<WalletTransaction[]>(`/api/agents/${agentId}/wallet/transactions`);
       setWalletTxs(txs);
+      // Fetch real on-chain balances
+      try {
+        const bal = await api.get<{ sol: { amount: string; usd_value: string }; usdc: { amount: string; usd_value: string }; total_usd: string }>(`/api/agents/${agentId}/wallet/balance`);
+        setWalletBalance(bal);
+      } catch { setWalletBalance(null); }
     } catch {
       setWalletData(null);
       setWalletTxs([]);
+      setWalletBalance(null);
     } finally {
       setWalletLoading(false);
     }
@@ -314,8 +321,10 @@ export default function AgentDetailPage() {
                 >↗ Solscan</a>
               </div>
               <div className="flex items-center gap-4 text-xs">
-                <span className="text-muted-foreground">SOL: <span className="text-foreground font-medium">0.00</span></span>
-                <span className="text-muted-foreground">USDC: <span className="text-foreground font-medium">0.00</span></span>
+                <span className="text-muted-foreground">SOL: <span className="text-foreground font-medium">{walletBalance?.sol.amount ?? '...'}</span></span>
+                <span className="text-muted-foreground">USDC: <span className="text-foreground font-medium">{walletBalance?.usdc.amount ?? '...'}</span></span>
+                {walletBalance && <span className="text-muted-foreground">≈ ${walletBalance.total_usd}</span>}
+                <button onClick={loadWallet} className="text-muted-foreground hover:text-primary" title="Refresh">🔄</button>
                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                   walletData.wallet.status === 'active' ? 'bg-green-500/10 text-green-400' :
                   walletData.wallet.status === 'frozen' ? 'bg-red-500/10 text-red-400' : 'bg-zinc-500/10 text-zinc-400'

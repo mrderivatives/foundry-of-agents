@@ -707,10 +707,20 @@ func (h *Handler) handleWalletProposeTool(
 		return "Failed to get price quote: " + err.Error()
 	}
 
+	// Convert output amount from smallest units to human-readable
+	outAmountRaw, _ := decimal.NewFromString(quote.OutAmount)
+	var outAmountHuman decimal.Decimal
+	if input.OutputToken == "SOL" {
+		outAmountHuman = outAmountRaw.Div(decimal.NewFromInt(1e9))
+	} else {
+		outAmountHuman = outAmountRaw.Div(decimal.NewFromInt(1e6))
+	}
+	outAmountStr := outAmountHuman.StringFixed(6)
+
 	// Emit wallet_propose SSE event with quote details
 	if useSSE && sseFlusher != nil {
 		fmt.Fprintf(w, "data: {\"type\":\"wallet_propose\",\"action\":\"%s\",\"input_token\":\"%s\",\"output_token\":\"%s\",\"amount\":\"%s\",\"output_amount\":\"%s\"}\n\n",
-			input.Action, input.InputToken, input.OutputToken, input.Amount, quote.OutAmount)
+			input.Action, input.InputToken, input.OutputToken, input.Amount, outAmountStr)
 		sseFlusher.Flush()
 	}
 
@@ -768,7 +778,7 @@ func (h *Handler) handleWalletProposeTool(
 		 ON CONFLICT (idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING`,
 		walletID, wsID, agentID, input.Action, txStatus,
 		input.InputToken, input.Amount, estimatedUSD,
-		input.OutputToken, quote.OutAmount, blockedReason, idempKey)
+		input.OutputToken, outAmountStr, blockedReason, idempKey)
 
 	var result string
 	if !approved {
@@ -814,12 +824,12 @@ func (h *Handler) handleWalletProposeTool(
 					h.DB.Exec(ctx, `UPDATE wallet_transaction SET status = 'executed', tx_signature = $1, executed_at = NOW()
 						WHERE idempotency_key = $2`, txSig, idempKey)
 					result = fmt.Sprintf("Transaction EXECUTED successfully!\nSwapped: %s %s -> %s %s\nTX: %s\nView: https://solscan.io/tx/%s",
-						input.Amount, input.InputToken, quote.OutAmount, input.OutputToken, txSig, txSig)
+						input.Amount, input.InputToken, outAmountStr, input.OutputToken, txSig, txSig)
 
 					// Emit wallet_executed SSE event
 					if useSSE && sseFlusher != nil {
 						fmt.Fprintf(w, "data: {\"type\":\"wallet_executed\",\"tx_signature\":\"%s\",\"input\":\"%s %s\",\"output\":\"%s %s\"}\n\n",
-							txSig, input.Amount, input.InputToken, quote.OutAmount, input.OutputToken)
+							txSig, input.Amount, input.InputToken, outAmountStr, input.OutputToken)
 						sseFlusher.Flush()
 					}
 				}
@@ -827,7 +837,7 @@ func (h *Handler) handleWalletProposeTool(
 		} else {
 			// Simulation mode
 			result = fmt.Sprintf("Transaction APPROVED by policy engine.\nQuote: %s %s -> %s %s\nPolicy checks: all passed\n⚠️ Simulation mode — not submitted on-chain.",
-				input.Amount, input.InputToken, quote.OutAmount, input.OutputToken)
+				input.Amount, input.InputToken, outAmountStr, input.OutputToken)
 		}
 	}
 

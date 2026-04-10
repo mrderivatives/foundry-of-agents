@@ -71,12 +71,17 @@ func (h *Handler) handleCreateWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if h.Vault == nil {
+		errJSON(w, http.StatusInternalServerError, "vault not configured — set VAULT_MASTER_KEY env var")
+		return
+	}
+
 	// Generate key via vault
 	derivationPath := fmt.Sprintf("m/44'/501'/0'/0'/%s", agentID.String()[:8])
 	keyID, publicKey, err := h.Vault.GenerateKey(ctx, derivationPath)
 	if err != nil {
-		h.Logger.Error().Err(err).Msg("vault key generation failed")
-		errJSON(w, http.StatusInternalServerError, "failed to generate wallet key")
+		h.Logger.Error().Err(err).Str("error", err.Error()).Msg("vault key generation failed")
+		errJSON(w, http.StatusInternalServerError, "failed to generate wallet key: "+err.Error())
 		return
 	}
 

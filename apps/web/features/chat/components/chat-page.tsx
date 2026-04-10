@@ -18,11 +18,25 @@ interface Props {
   agentEmoji?: string;
 }
 
+interface WalletEventData {
+  type: 'propose' | 'policy' | 'executed' | 'blocked';
+  action?: string;
+  input_token?: string;
+  output_token?: string;
+  amount?: string;
+  output_amount?: string;
+  approved?: boolean;
+  checks?: Array<{rule: string; passed: boolean; details: string}>;
+  tx_signature?: string;
+  reason?: string;
+}
+
 interface DisplayMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+  walletCard?: WalletEventData | null;
 }
 
 function WalletCard({ event }: { event: {
@@ -109,18 +123,8 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
   const [streamingContent, setStreamingContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [toolStatus, setToolStatus] = useState<{tool: string; query: string; done: boolean} | null>(null);
-  const [walletEvent, setWalletEvent] = useState<{
-    type: 'propose' | 'policy' | 'executed' | 'blocked';
-    action?: string;
-    input_token?: string;
-    output_token?: string;
-    amount?: string;
-    output_amount?: string;
-    approved?: boolean;
-    checks?: Array<{rule: string; passed: boolean; details: string}>;
-    tx_signature?: string;
-    reason?: string;
-  } | null>(null);
+  const [walletEvent, setWalletEvent] = useState<WalletEventData | null>(null);
+  const walletEventRef = useRef<WalletEventData | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -224,40 +228,51 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
               } else if (evt.type === "tool_use_end") {
                 setToolStatus({ tool: evt.tool, query: evt.query || "", done: true });
               } else if (evt.type === "wallet_propose") {
-                setWalletEvent({
+                const we: WalletEventData = {
                   type: 'propose',
                   action: evt.action,
                   input_token: evt.input_token,
                   output_token: evt.output_token,
                   amount: evt.amount,
                   output_amount: evt.output_amount,
-                });
+                };
+                walletEventRef.current = we;
+                setWalletEvent(we);
               } else if (evt.type === "wallet_policy") {
-                setWalletEvent(prev => prev ? {
-                  ...prev,
-                  type: 'policy',
+                const we = walletEventRef.current ? {
+                  ...walletEventRef.current,
+                  type: 'policy' as const,
                   approved: evt.approved,
                   checks: evt.checks,
-                } : null);
+                } : null;
+                walletEventRef.current = we;
+                setWalletEvent(we);
               } else if (evt.type === "wallet_executed") {
-                setWalletEvent(prev => prev ? {
-                  ...prev,
-                  type: 'executed',
+                const we = walletEventRef.current ? {
+                  ...walletEventRef.current,
+                  type: 'executed' as const,
                   tx_signature: evt.tx_signature,
-                } : null);
+                } : null;
+                walletEventRef.current = we;
+                setWalletEvent(we);
               } else if (evt.type === "wallet_blocked") {
-                setWalletEvent(prev => prev ? {
-                  ...prev,
-                  type: 'blocked',
+                const we = walletEventRef.current ? {
+                  ...walletEventRef.current,
+                  type: 'blocked' as const,
                   reason: evt.reason,
-                } : null);
+                } : null;
+                walletEventRef.current = we;
+                setWalletEvent(we);
               } else if (evt.type === "content_delta" && evt.delta) {
                 setToolStatus(null); // Clear tool status when content starts
                 accumulated += evt.delta;
                 setStreamingContent(accumulated);
               } else if (evt.type === "message_end") {
+                // Capture wallet event before clearing
+                const savedWalletEvent = walletEventRef.current;
                 setWalletEvent(null);
                 setToolStatus(null);
+                walletEventRef.current = null;
                 setMessages((prev) => [
                   ...prev,
                   {
@@ -265,6 +280,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
                     role: "assistant",
                     content: accumulated,
                     timestamp: new Date().toISOString(),
+                    walletCard: savedWalletEvent,
                   },
                 ]);
                 setStreamingContent("");
@@ -403,6 +419,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
                     : "bg-card border border-border rounded-bl-md"
                 }`}
               >
+                {msg.walletCard && <WalletCard event={msg.walletCard} />}
                 {msg.role === "assistant" ? (
                   <div className="prose prose-sm prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_pre]:bg-background [&_pre]:border [&_pre]:border-border [&_pre]:rounded-lg [&_pre]:p-3 [&_code]:text-primary [&_code]:bg-primary/10 [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5 [&_pre_code]:bg-transparent [&_pre_code]:p-0">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>

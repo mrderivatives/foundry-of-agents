@@ -31,6 +31,14 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Sparkles,
 };
 
+const TEMPLATE_SKILL_MAP: Record<string, string[]> = {
+  'dca-bot': ['price-check'],
+  'morning-brief': ['morning-brief'],
+  'research': ['web-search', 'document-analyzer'],
+  'portfolio': ['portfolio-tracker', 'price-check'],
+  'yield': ['price-check'],
+};
+
 const STEPS = ["Welcome", "Template", "Customize", "Notifications", "Done"];
 
 export default function OnboardingPage() {
@@ -69,7 +77,7 @@ function OnboardingContent() {
       const tpl = agentTemplates.find((t) => t.id === preselectedTemplate);
       if (tpl) {
         setSelectedTemplate(tpl.id);
-        setAgentName(tpl.name);
+        setAgentName(tpl.id === "custom" ? "" : `My ${tpl.name}`);
         setInstructions(tpl.defaultInstructions);
         setModel(tpl.defaultModel);
         setAvatarEmoji(tpl.emoji);
@@ -82,7 +90,7 @@ function OnboardingContent() {
     const tpl = agentTemplates.find((t) => t.id === id);
     if (tpl) {
       setSelectedTemplate(id);
-      setAgentName(tpl.name);
+      setAgentName(tpl.id === "custom" ? "" : `My ${tpl.name}`);
       setInstructions(tpl.defaultInstructions);
       setModel(tpl.defaultModel);
       setAvatarEmoji(tpl.emoji);
@@ -105,6 +113,22 @@ function OnboardingContent() {
       });
       setCreatedAgent(agent);
       setCreated(true);
+
+      // Auto-assign skills based on template
+      if (selectedTemplate && TEMPLATE_SKILL_MAP[selectedTemplate]) {
+        try {
+          const allSkills = await api.get<{ id: string; name: string }[]>("/api/skills");
+          const skillNames = TEMPLATE_SKILL_MAP[selectedTemplate];
+          for (const skillName of skillNames) {
+            const skill = allSkills.find((s) => s.name === skillName);
+            if (skill) {
+              await api.post(`/api/agents/${agent.id}/skills`, { skill_id: skill.id });
+            }
+          }
+        } catch {
+          // Non-critical, ignore
+        }
+      }
     } catch {
       // If not logged in, redirect
       router.push("/auth/login");

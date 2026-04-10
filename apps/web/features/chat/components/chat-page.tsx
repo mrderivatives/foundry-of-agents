@@ -25,6 +25,82 @@ interface DisplayMessage {
   timestamp: string;
 }
 
+function WalletCard({ event }: { event: {
+  type: 'propose' | 'policy' | 'executed' | 'blocked';
+  action?: string;
+  input_token?: string;
+  output_token?: string;
+  amount?: string;
+  output_amount?: string;
+  approved?: boolean;
+  checks?: Array<{rule: string; passed: boolean; details: string}>;
+  tx_signature?: string;
+  reason?: string;
+} | null }) {
+  if (!event) return null;
+
+  const borderColor = event.type === 'executed' ? 'border-green-500/30' :
+                      event.type === 'blocked' ? 'border-red-500/30' : 'border-border';
+
+  return (
+    <div className={`rounded-lg border ${borderColor} bg-card/50 p-3 mb-2 text-xs space-y-2`}>
+      {/* Proposal */}
+      <div className="flex items-center gap-2">
+        <span>🔄</span>
+        <span className="font-medium">
+          Swap {event.amount} {event.input_token} → {event.output_amount || '...'} {event.output_token}
+        </span>
+      </div>
+
+      {/* Policy */}
+      {(event.type === 'policy' || event.type === 'executed' || event.type === 'blocked') && (
+        <div className={`flex items-center gap-1 ${event.approved ? 'text-green-400' : 'text-red-400'}`}>
+          <span>{event.approved ? '✅' : '❌'}</span>
+          <span>Policy: {event.approved ? 'Approved' : 'Blocked'}</span>
+        </div>
+      )}
+
+      {/* Policy checks */}
+      {event.checks && (
+        <div className="pl-5 space-y-0.5 text-muted-foreground">
+          {event.checks.map((c, i) => (
+            <div key={i} className="flex items-center gap-1">
+              <span>{c.passed ? '✓' : '✗'}</span>
+              <span>{c.rule}: {c.details}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Executed */}
+      {event.type === 'executed' && event.tx_signature && (
+        <div className="flex items-center gap-2 text-green-400">
+          <span>✅ Executed</span>
+          <a href={`https://solscan.io/tx/${event.tx_signature}`} target="_blank"
+             rel="noopener noreferrer"
+             className="underline hover:text-green-300">
+            {event.tx_signature.slice(0, 8)}...{event.tx_signature.slice(-4)} ↗
+          </a>
+        </div>
+      )}
+
+      {/* Blocked */}
+      {event.type === 'blocked' && (
+        <div className="text-red-400">
+          ❌ {event.reason || 'Transaction blocked'}
+        </div>
+      )}
+
+      {/* Loading indicator for propose state */}
+      {event.type === 'propose' && (
+        <div className="text-muted-foreground animate-pulse">
+          Evaluating policy...
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji }: Props) {
   const router = useRouter();
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
@@ -33,6 +109,18 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
   const [streamingContent, setStreamingContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [toolStatus, setToolStatus] = useState<{tool: string; query: string; done: boolean} | null>(null);
+  const [walletEvent, setWalletEvent] = useState<{
+    type: 'propose' | 'policy' | 'executed' | 'blocked';
+    action?: string;
+    input_token?: string;
+    output_token?: string;
+    amount?: string;
+    output_amount?: string;
+    approved?: boolean;
+    checks?: Array<{rule: string; passed: boolean; details: string}>;
+    tx_signature?: string;
+    reason?: string;
+  } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -135,11 +223,40 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
                 setToolStatus({ tool: evt.tool, query: evt.query || "", done: false });
               } else if (evt.type === "tool_use_end") {
                 setToolStatus({ tool: evt.tool, query: evt.query || "", done: true });
+              } else if (evt.type === "wallet_propose") {
+                setWalletEvent({
+                  type: 'propose',
+                  action: evt.action,
+                  input_token: evt.input_token,
+                  output_token: evt.output_token,
+                  amount: evt.amount,
+                  output_amount: evt.output_amount,
+                });
+              } else if (evt.type === "wallet_policy") {
+                setWalletEvent(prev => prev ? {
+                  ...prev,
+                  type: 'policy',
+                  approved: evt.approved,
+                  checks: evt.checks,
+                } : null);
+              } else if (evt.type === "wallet_executed") {
+                setWalletEvent(prev => prev ? {
+                  ...prev,
+                  type: 'executed',
+                  tx_signature: evt.tx_signature,
+                } : null);
+              } else if (evt.type === "wallet_blocked") {
+                setWalletEvent(prev => prev ? {
+                  ...prev,
+                  type: 'blocked',
+                  reason: evt.reason,
+                } : null);
               } else if (evt.type === "content_delta" && evt.delta) {
                 setToolStatus(null); // Clear tool status when content starts
                 accumulated += evt.delta;
                 setStreamingContent(accumulated);
               } else if (evt.type === "message_end") {
+                setWalletEvent(null);
                 setToolStatus(null);
                 setMessages((prev) => [
                   ...prev,
@@ -304,6 +421,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
           <div className="flex justify-start">
             <div className="max-w-[85%] sm:max-w-[75%]">
               <div className="rounded-2xl rounded-bl-md px-4 py-3 text-sm bg-card border border-border">
+                {walletEvent && <WalletCard event={walletEvent} />}
                 {toolStatus && (
                   <div className={`flex items-center gap-2 text-xs mb-2 px-2 py-1.5 rounded-lg ${toolStatus.done ? 'bg-green-500/5 text-green-400' : 'bg-primary/5 text-muted-foreground'}`}>
                     <span>{toolStatus.done ? '✓' : '🔍'}</span>

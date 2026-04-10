@@ -21,6 +21,8 @@ type Deps struct {
 	Logger           zerolog.Logger
 	TelegramBotToken string
 	ResendAPIKey     string
+	SupabaseURL      string
+	SupabaseAnonKey  string
 }
 
 type Handler struct {

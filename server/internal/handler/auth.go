@@ -55,40 +55,45 @@ func (h *Handler) handleMagicLink(w http.ResponseWriter, r *http.Request) {
 		Str("url", verifyURL).
 		Msg("Magic link generated")
 
-	// Send via Resend API
-	if h.ResendAPIKey != "" {
+	// Send magic link via Supabase GoTrue (sends to any email)
+	if h.SupabaseURL != "" && h.SupabaseAnonKey != "" {
 		go func() {
-			emailHTML := fmt.Sprintf(`
-			<div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px; background: #0a0a0a; color: #fafafa;">
-				<h1 style="font-size: 24px; background: linear-gradient(135deg, #8b5cf6, #6366f1, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Foundry of Agents</h1>
-				<p style="color: #a1a1aa; font-size: 16px; line-height: 1.6;">Click the button below to sign in:</p>
-				<a href="%s" style="display: inline-block; padding: 12px 32px; background: #8b5cf6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0;">Sign In to Foundry</a>
-				<p style="color: #71717a; font-size: 13px;">This link expires in 15 minutes. If you didn't request this, ignore this email.</p>
-				<hr style="border: none; border-top: 1px solid #27272a; margin: 30px 0;">
-				<p style="color: #52525b; font-size: 12px;">TenX Protocols - Built on Solana</p>
-			</div>`, verifyURL)
-
 			reqBody, _ := json.Marshal(map[string]interface{}{
-				"from":    "Foundry <onboarding@resend.dev>",
-				"to":      []string{body.Email},
-				"subject": "Your Foundry of Agents Magic Link",
-				"html":    emailHTML,
+				"email": body.Email,
+			})
+			apiURL := h.SupabaseURL + "/auth/v1/magiclink"
+			req, _ := http.NewRequest("POST", apiURL, bytes.NewReader(reqBody))
+			req.Header.Set("apikey", h.SupabaseAnonKey)
+			req.Header.Set("Content-Type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				h.Logger.Error().Err(err).Msg("failed to send supabase magic link")
+				return
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode >= 300 {
+				b, _ := io.ReadAll(resp.Body)
+				h.Logger.Error().Int("status", resp.StatusCode).Str("body", string(b)).Msg("supabase magiclink error")
+			} else {
+				h.Logger.Info().Str("email", body.Email).Msg("supabase magic link sent")
+			}
+		}()
+	} else if h.ResendAPIKey != "" {
+		// Fallback: Resend (only works for verified emails)
+		go func() {
+			emailHTML := fmt.Sprintf(`<div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:40px 20px;background:#0a0a0a;color:#fafafa"><h1 style="font-size:24px">Foundry of Agents</h1><p><a href="%s" style="display:inline-block;padding:12px 32px;background:#8b5cf6;color:white;text-decoration:none;border-radius:8px;font-weight:600">Sign In</a></p><p style="color:#71717a;font-size:13px">Expires in 15 minutes.</p></div>`, verifyURL)
+			reqBody, _ := json.Marshal(map[string]interface{}{
+				"from": "Foundry <onboarding@resend.dev>", "to": []string{body.Email},
+				"subject": "Your Magic Link", "html": emailHTML,
 			})
 			req, _ := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewReader(reqBody))
 			req.Header.Set("Authorization", "Bearer "+h.ResendAPIKey)
 			req.Header.Set("Content-Type", "application/json")
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
-				h.Logger.Error().Err(err).Msg("failed to send magic link email")
 				return
 			}
-			defer resp.Body.Close()
-			if resp.StatusCode >= 300 {
-				b, _ := io.ReadAll(resp.Body)
-				h.Logger.Error().Int("status", resp.StatusCode).Str("body", string(b)).Msg("resend API error")
-			} else {
-				h.Logger.Info().Str("email", body.Email).Msg("magic link email sent")
-			}
+			resp.Body.Close()
 		}()
 	}
 
@@ -259,6 +264,78 @@ func (h *Handler) handleRefresh(w http.ResponseWriter, r *http.Request) {
 // DELETE /api/auth/session
 func (h *Handler) handleLogout(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// POST /api/auth/supabase-verify — exchange Supabase access token for our JWT
+func (h *Handler) handleSupabaseVerify(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		AccessToken string `json:"access_token"`
+	}
+	if err := readJSON(r, &body); err != nil || body.AccessToken == "" {
+		errJSON(w, http.StatusBadRequest, "access_token is required")
+		return
+	}
+
+	if h.SupabaseURL == "" || h.SupabaseAnonKey == "" {
+		errJSON(w, http.StatusInternalServerError, "supabase not configured")
+		return
+	}
+
+	// Verify token with Supabase — get user info
+	apiURL := h.SupabaseURL + "/auth/v1/user"
+	req, _ := http.NewRequest("GET", apiURL, nil)
+	req.Header.Set("apikey", h.SupabaseAnonKey)
+	req.Header.Set("Authorization", "Bearer "+body.AccessToken)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		h.Logger.Error().Err(err).Msg("supabase user lookup failed")
+		errJSON(w, http.StatusInternalServerError, "failed to verify token")
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(resp.Body)
+		h.Logger.Error().Int("status", resp.StatusCode).Str("body", string(b)).Msg("supabase verify error")
+		errJSON(w, http.StatusUnauthorized, "invalid supabase token")
+		return
+	}
+
+	var supaUser struct {
+		ID    string `json:"id"`
+		Email string `json:"email"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&supaUser); err != nil || supaUser.Email == "" {
+		errJSON(w, http.StatusUnauthorized, "could not extract email from supabase token")
+		return
+	}
+
+	// Find or create user in our DB
+	ctx := r.Context()
+	userID, workspaceID, err := h.findOrCreateUser(ctx, supaUser.Email, "")
+	if err != nil {
+		h.Logger.Error().Err(err).Msg("failed to find or create user from supabase")
+		errJSON(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	tokenStr, err := h.issueJWT(userID, workspaceID)
+	if err != nil {
+		errJSON(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"token": tokenStr,
+		"user": map[string]interface{}{
+			"id":    userID.String(),
+			"email": supaUser.Email,
+		},
+		"workspace": map[string]interface{}{
+			"id": workspaceID.String(),
+		},
+	})
 }
 
 // GET /api/auth/me

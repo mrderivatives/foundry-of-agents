@@ -24,6 +24,7 @@ func MountRoutes(r chi.Router, h *Handler) {
 		r.Post("/magic-link", h.handleMagicLink)
 		r.Post("/verify", h.handleVerify)
 		r.Post("/siws", h.handleSIWS)
+		r.Post("/supabase-verify", h.handleSupabaseVerify)
 		r.Post("/refresh", h.handleRefresh)
 		r.Delete("/session", h.handleLogout)
 	})

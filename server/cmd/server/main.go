@@ -88,6 +88,8 @@ func main() {
 		Logger:           log.Logger,
 		TelegramBotToken: os.Getenv("TELEGRAM_BOT_TOKEN"),
 		ResendAPIKey:     os.Getenv("RESEND_API_KEY"),
+		SupabaseURL:      os.Getenv("SUPABASE_URL"),
+		SupabaseAnonKey:  os.Getenv("SUPABASE_ANON_KEY"),
 	})
 
 	r := chi.NewRouter()

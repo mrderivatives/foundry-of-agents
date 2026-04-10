@@ -312,7 +312,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel }: Props) {
       </div>
 
       {/* Input */}
-      <div className="border-t border-border p-4">
+      <div className="border-t border-border p-3 sm:p-4 shrink-0">
         <div className="max-w-3xl mx-auto relative">
           <textarea
             ref={textareaRef}

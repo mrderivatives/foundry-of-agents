@@ -122,7 +122,7 @@ export default function LandingPage() {
       <GridPattern />
 
       {/* Nav */}
-      <nav className="relative z-10 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
+      <nav className="relative z-10 flex items-center justify-between px-4 sm:px-6 py-4 max-w-7xl mx-auto">
         <span className="text-lg font-bold bg-gradient-to-r from-primary via-blue-400 to-cyan-400 bg-clip-text text-transparent">
           Foundry of Agents
         </span>
@@ -135,11 +135,11 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="relative py-24 md:py-36 px-6">
+      <section className="relative py-16 sm:py-24 md:py-36 px-4 sm:px-6">
         <GradientOrb />
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <FadeIn>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
               <span className="bg-gradient-to-r from-primary via-blue-400 to-cyan-400 bg-clip-text text-transparent">
                 Your AI Agents.
               </span>
@@ -181,7 +181,7 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section className="relative py-24 px-6">
+      <section className="relative py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <FadeIn>
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
@@ -229,7 +229,7 @@ export default function LandingPage() {
       </section>
 
       {/* Agent Templates */}
-      <section className="relative py-24 px-6">
+      <section className="relative py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <FadeIn>
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
@@ -269,7 +269,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Grid */}
-      <section className="relative py-24 px-6">
+      <section className="relative py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <FadeIn>
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
@@ -314,7 +314,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Banner */}
-      <section className="relative py-24 px-6">
+      <section className="relative py-16 sm:py-24 px-4 sm:px-6">
         <FadeIn>
           <div className="max-w-3xl mx-auto text-center rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-12 md:p-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -335,7 +335,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8 px-6">
+      <footer className="border-t border-border py-8 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <span>TenX Protocols &copy; 2026</span>
           <span>Built on Solana</span>

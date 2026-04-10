@@ -160,18 +160,18 @@ export default function AgentDetailPage() {
       {/* Agent Header */}
       <div className="border-b border-border px-4 sm:px-6 py-4 shrink-0">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold">
               {agent.name.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <h1 className="text-lg font-bold">{agent.name}</h1>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold truncate">{agent.name}</h1>
               {agent.description && (
-                <p className="text-xs text-muted-foreground">{agent.description}</p>
+                <p className="text-xs text-muted-foreground truncate">{agent.description}</p>
               )}
             </div>
             <span
-              className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+              className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                 agent.status === "idle"
                   ? "bg-green-500/10 text-green-400"
                   : agent.status === "working"
@@ -181,19 +181,19 @@ export default function AgentDetailPage() {
             >
               {agent.status}
             </span>
-            <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+            <span className="hidden sm:inline rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
               {agent.model || "claude-sonnet-4-6"}
             </span>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => handleTabChange(t.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
                 tab === t.id
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"

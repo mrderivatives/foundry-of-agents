@@ -130,7 +130,7 @@ function OnboardingContent() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Stepper */}
-      <div className="border-b border-border px-6 py-4">
+      <div className="border-b border-border px-4 sm:px-6 py-4">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between">
             {STEPS.map((label, i) => (
@@ -169,7 +169,7 @@ function OnboardingContent() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
         <div className="w-full max-w-2xl">
           <AnimatePresence mode="wait">
             {step === 0 && (
@@ -403,7 +403,7 @@ function OnboardingContent() {
 
       {/* Navigation Buttons */}
       {step < 4 && (
-        <div className="border-t border-border px-6 py-4">
+        <div className="border-t border-border px-4 sm:px-6 py-4">
           <div className="max-w-2xl mx-auto flex items-center justify-between">
             <button
               onClick={() => step > 0 && setStep(step - 1)}

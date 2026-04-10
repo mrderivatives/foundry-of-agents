@@ -78,8 +78,8 @@ func (h *Handler) handleCreateAgent(w http.ResponseWriter, r *http.Request) {
 
 	var a agentRow
 	err := h.DB.QueryRow(r.Context(),
-		`INSERT INTO agent (workspace_id, name, description, instructions, avatar_url, model, owner_id)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7)
+		`INSERT INTO agent (workspace_id, name, description, instructions, avatar_url, model, owner_id, status)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, 'idle')
 		 RETURNING id, workspace_id, name, description, instructions, avatar_url, model, status, visibility, owner_id, archived_at, created_at, updated_at`,
 		wsID, body.Name, body.Description, body.Instructions, body.AvatarURL, body.Model, userID).Scan(
 		&a.ID, &a.WorkspaceID, &a.Name, &a.Description, &a.Instructions,

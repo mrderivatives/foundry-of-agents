@@ -1,6 +1,10 @@
 package bifrost
 
-import "github.com/shopspring/decimal"
+import (
+	"encoding/json"
+
+	"github.com/shopspring/decimal"
+)
 
 type ModelTier string
 
@@ -12,14 +16,31 @@ const (
 )
 
 type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role         string        `json:"role"`
+	Content      string        `json:"content,omitempty"`
+	ContentParts []ContentPart `json:"content_parts,omitempty"`
+}
+
+type ContentPart struct {
+	Type      string          `json:"type"`
+	Text      string          `json:"text,omitempty"`
+	ID        string          `json:"id,omitempty"`
+	Name      string          `json:"name,omitempty"`
+	Input     json.RawMessage `json:"input,omitempty"`
+	ToolUseID string          `json:"tool_use_id,omitempty"`
+	Content   interface{}     `json:"content,omitempty"`
 }
 
 type ToolDef struct {
 	Name        string      `json:"name"`
 	Description string      `json:"description"`
 	Parameters  interface{} `json:"parameters"`
+}
+
+type ToolCall struct {
+	ID    string          `json:"id"`
+	Name  string          `json:"name"`
+	Input json.RawMessage `json:"input"`
 }
 
 type CompletionRequest struct {
@@ -38,10 +59,12 @@ type TokenUsage struct {
 }
 
 type CompletionResponse struct {
-	ID      string     `json:"id"`
-	Model   string     `json:"model"`
-	Content string     `json:"content"`
-	Usage   TokenUsage `json:"usage"`
+	ID         string     `json:"id"`
+	Model      string     `json:"model"`
+	Content    string     `json:"content"`
+	Usage      TokenUsage `json:"usage"`
+	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
+	StopReason string     `json:"stop_reason,omitempty"`
 }
 
 type StreamChunk struct {

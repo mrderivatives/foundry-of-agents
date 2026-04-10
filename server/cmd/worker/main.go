@@ -64,9 +64,10 @@ func main() {
 	if redisURL == "" {
 		redisURL = "redis://localhost:6379"
 	}
+	log.Info().Str("redis_url", redisURL).Msg("connecting to redis")
 	redisOpt, err := asynq.ParseRedisURI(redisURL)
 	if err != nil {
-		log.Fatal().Err(err).Msg("redis parse failed")
+		log.Fatal().Err(err).Str("redis_url", redisURL).Msg("redis parse failed")
 	}
 
 	// asynq server (task processor)
@@ -88,6 +89,7 @@ func main() {
 	})
 
 	// Load cron jobs from DB and register
+	log.Info().Msg("loading cron jobs from database")
 	deps.registerCronJobs(ctx, scheduler)
 
 	sigCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

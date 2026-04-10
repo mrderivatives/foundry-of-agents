@@ -90,6 +90,7 @@ func main() {
 		ResendAPIKey:     os.Getenv("RESEND_API_KEY"),
 		SupabaseURL:      os.Getenv("SUPABASE_URL"),
 		SupabaseAnonKey:  os.Getenv("SUPABASE_ANON_KEY"),
+		PerplexityAPIKey: os.Getenv("PERPLEXITY_API_KEY"),
 	})
 
 	r := chi.NewRouter()

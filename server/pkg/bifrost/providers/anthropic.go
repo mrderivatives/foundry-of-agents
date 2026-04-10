@@ -27,27 +27,38 @@ func NewAnthropic(apiKey string) *Anthropic {
 	return &Anthropic{apiKey: apiKey, client: &http.Client{}}
 }
 
-type anthropicReq struct {
-	Model     string              `json:"model"`
-	MaxTokens int                 `json:"max_tokens"`
-	Messages  []anthropicMessage  `json:"messages"`
-	System    string              `json:"system,omitempty"`
-	Stream    bool                `json:"stream,omitempty"`
+type anthropicTool struct {
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	InputSchema interface{} `json:"input_schema"`
 }
 
-type anthropicMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+type anthropicReq struct {
+	Model     string        `json:"model"`
+	MaxTokens int           `json:"max_tokens"`
+	Messages  []anthropicMsg `json:"messages"`
+	System    string        `json:"system,omitempty"`
+	Stream    bool          `json:"stream,omitempty"`
+	Tools     []anthropicTool `json:"tools,omitempty"`
+}
+
+type anthropicMsg struct {
+	Role    string      `json:"role"`
+	Content interface{} `json:"content"` // string or []contentBlock
 }
 
 type anthropicResp struct {
 	ID      string `json:"id"`
 	Model   string `json:"model"`
 	Content []struct {
-		Type string `json:"type"`
-		Text string `json:"text"`
+		Type  string          `json:"type"`
+		Text  string          `json:"text,omitempty"`
+		ID    string          `json:"id,omitempty"`
+		Name  string          `json:"name,omitempty"`
+		Input json.RawMessage `json:"input,omitempty"`
 	} `json:"content"`
-	Usage struct {
+	StopReason string `json:"stop_reason"`
+	Usage      struct {
 		InputTokens  int `json:"input_tokens"`
 		OutputTokens int `json:"output_tokens"`
 	} `json:"usage"`
@@ -62,12 +73,40 @@ func (a *Anthropic) buildRequest(req bifrost.CompletionRequest) anthropicReq {
 		ar.MaxTokens = 4096
 	}
 
+	for _, t := range req.Tools {
+		ar.Tools = append(ar.Tools, anthropicTool{
+			Name:        t.Name,
+			Description: t.Description,
+			InputSchema: t.Parameters,
+		})
+	}
+
 	for _, m := range req.Messages {
 		if m.Role == "system" {
 			ar.System = m.Content
 			continue
 		}
-		ar.Messages = append(ar.Messages, anthropicMessage{Role: m.Role, Content: m.Content})
+		if len(m.ContentParts) > 0 {
+			var parts []map[string]interface{}
+			for _, p := range m.ContentParts {
+				part := map[string]interface{}{"type": p.Type}
+				switch p.Type {
+				case "text":
+					part["text"] = p.Text
+				case "tool_use":
+					part["id"] = p.ID
+					part["name"] = p.Name
+					part["input"] = json.RawMessage(p.Input)
+				case "tool_result":
+					part["tool_use_id"] = p.ToolUseID
+					part["content"] = p.Content
+				}
+				parts = append(parts, part)
+			}
+			ar.Messages = append(ar.Messages, anthropicMsg{Role: m.Role, Content: parts})
+		} else {
+			ar.Messages = append(ar.Messages, anthropicMsg{Role: m.Role, Content: m.Content})
+		}
 	}
 	return ar
 }
@@ -105,20 +144,32 @@ func (a *Anthropic) Complete(ctx context.Context, req bifrost.CompletionRequest)
 		return nil, fmt.Errorf("decode response: %w", err)
 	}
 
-	content := ""
-	if len(ar2.Content) > 0 {
-		content = ar2.Content[0].Text
+	var toolCalls []bifrost.ToolCall
+	var textContent string
+	for _, block := range ar2.Content {
+		switch block.Type {
+		case "text":
+			textContent = block.Text
+		case "tool_use":
+			toolCalls = append(toolCalls, bifrost.ToolCall{
+				ID:    block.ID,
+				Name:  block.Name,
+				Input: block.Input,
+			})
+		}
 	}
 
 	return &bifrost.CompletionResponse{
 		ID:      ar2.ID,
 		Model:   ar2.Model,
-		Content: content,
+		Content: textContent,
 		Usage: bifrost.TokenUsage{
 			InputTokens:  ar2.Usage.InputTokens,
 			OutputTokens: ar2.Usage.OutputTokens,
 			Cost:         decimal.Zero,
 		},
+		ToolCalls:  toolCalls,
+		StopReason: ar2.StopReason,
 	}, nil
 }
 

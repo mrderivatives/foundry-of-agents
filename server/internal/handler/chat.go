@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/mrderivatives/foundry-of-agents/server/internal/auth"
 	"github.com/mrderivatives/foundry-of-agents/server/pkg/bifrost"
+	"github.com/mrderivatives/foundry-of-agents/server/pkg/tools"
 )
 
 type sessionRow struct {
@@ -289,7 +291,111 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		model = resolveModel(*agentModel)
 	}
 
-	// Stream via Bifrost
+	assistantMsgID := uuid.New()
+
+	// Define available tools
+	var availableTools []bifrost.ToolDef
+	if h.PerplexityAPIKey != "" {
+		availableTools = []bifrost.ToolDef{
+			{
+				Name:        "web_search",
+				Description: "Search the web for current information. Use for prices, news, market data, or anything requiring up-to-date info.",
+				Parameters: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"query": map[string]interface{}{
+							"type":        "string",
+							"description": "Search query",
+						},
+					},
+					"required": []string{"query"},
+				},
+			},
+		}
+	}
+
+	// Try tool use flow: non-streaming first call with tools, then stream final response
+	if len(availableTools) > 0 {
+		firstResp, err := h.Router.Route(ctx, bifrost.CompletionRequest{
+			Model:     model,
+			Messages:  messages,
+			Tools:     availableTools,
+			MaxTokens: 4096,
+		})
+
+		if err == nil && len(firstResp.ToolCalls) > 0 {
+			h.Logger.Info().Int("tool_calls", len(firstResp.ToolCalls)).Msg("tool use detected")
+
+			// Build assistant message with tool_use blocks
+			assistantParts := []bifrost.ContentPart{}
+			if firstResp.Content != "" {
+				assistantParts = append(assistantParts, bifrost.ContentPart{Type: "text", Text: firstResp.Content})
+			}
+			for _, tc := range firstResp.ToolCalls {
+				assistantParts = append(assistantParts, bifrost.ContentPart{
+					Type:  "tool_use",
+					ID:    tc.ID,
+					Name:  tc.Name,
+					Input: tc.Input,
+				})
+			}
+			messages = append(messages, bifrost.Message{Role: "assistant", ContentParts: assistantParts})
+
+			// Execute tools and build tool_result parts
+			toolResultParts := []bifrost.ContentPart{}
+			for _, tc := range firstResp.ToolCalls {
+				var result string
+				switch tc.Name {
+				case "web_search":
+					var input struct {
+						Query string `json:"query"`
+					}
+					json.Unmarshal(tc.Input, &input)
+					if input.Query != "" {
+						h.Logger.Info().Str("query", input.Query).Msg("executing web search")
+						result, err = tools.WebSearch(ctx, h.PerplexityAPIKey, input.Query)
+						if err != nil {
+							h.Logger.Error().Err(err).Msg("web search failed")
+							result = "Search failed: " + err.Error()
+						}
+					} else {
+						result = "No query provided"
+					}
+				default:
+					result = "Unknown tool: " + tc.Name
+				}
+				toolResultParts = append(toolResultParts, bifrost.ContentPart{
+					Type:      "tool_result",
+					ToolUseID: tc.ID,
+					Content:   result,
+				})
+			}
+			messages = append(messages, bifrost.Message{Role: "user", ContentParts: toolResultParts})
+
+			// Second call: stream final response without tools
+			ch := make(chan bifrost.StreamChunk, 64)
+			secondReq := bifrost.CompletionRequest{
+				Model:     model,
+				Messages:  messages,
+				MaxTokens: 4096,
+				Stream:    true,
+			}
+
+			streamErr := make(chan error, 1)
+			go func() {
+				streamErr <- h.Router.StreamRoute(ctx, secondReq, ch)
+			}()
+
+			h.streamResponse(w, r, ch, streamErr, wsID, sessionID, assistantMsgID, model, agentID, body.Content, useSSE)
+			return
+		}
+		// If no tool calls or error, fall through to normal streaming
+		if err != nil {
+			h.Logger.Warn().Err(err).Msg("tool-use first call failed, falling back to normal stream")
+		}
+	}
+
+	// Normal streaming (no tools or tool call fallback)
 	ch := make(chan bifrost.StreamChunk, 64)
 	req := bifrost.CompletionRequest{
 		Model:     model,
@@ -298,13 +404,23 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		Stream:    true,
 	}
 
-	assistantMsgID := uuid.New()
-
-	// Start streaming in background — Stream() closes ch via defer
 	streamErr := make(chan error, 1)
 	go func() {
 		streamErr <- h.Router.StreamRoute(ctx, req, ch)
 	}()
+
+	h.streamResponse(w, r, ch, streamErr, wsID, sessionID, assistantMsgID, model, agentID, body.Content, useSSE)
+}
+
+// streamResponse handles SSE and non-SSE streaming of a bifrost stream channel to the HTTP response.
+func (h *Handler) streamResponse(
+	w http.ResponseWriter, r *http.Request,
+	ch <-chan bifrost.StreamChunk, streamErr <-chan error,
+	wsID, sessionID, assistantMsgID uuid.UUID,
+	model string, agentID uuid.UUID, userContent string,
+	useSSE bool,
+) {
+	ctx := r.Context()
 
 	// SSE mode: stream events directly to HTTP response
 	if useSSE {
@@ -367,7 +483,7 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 
 		// Async memory extraction
 		h.Logger.Info().Str("agent_id", agentID.String()).Int("response_len", len(responseText)).Msg("triggering memory extraction from SSE path")
-		h.extractAndStoreMemories(agentID, wsID, sessionID.String(), body.Content, responseText)
+		h.extractAndStoreMemories(agentID, wsID, sessionID.String(), userContent, responseText)
 
 		return
 	}
@@ -405,7 +521,7 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 
 	responseText := fullContent.String()
 	var savedMsg messageRow
-	err = h.DB.QueryRow(ctx,
+	err := h.DB.QueryRow(ctx,
 		`INSERT INTO chat_message (id, chat_session_id, workspace_id, role, content, input_tokens, output_tokens, model)
 		 VALUES ($1, $2, $3, 'assistant', $4, $5, $6, $7)
 		 RETURNING id, chat_session_id, workspace_id, role, content, input_tokens, output_tokens, model, created_at`,
@@ -419,7 +535,7 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Async memory extraction
-	h.extractAndStoreMemories(agentID, wsID, sessionID.String(), body.Content, responseText)
+	h.extractAndStoreMemories(agentID, wsID, sessionID.String(), userContent, responseText)
 
 	writeJSON(w, http.StatusOK, savedMsg)
 }

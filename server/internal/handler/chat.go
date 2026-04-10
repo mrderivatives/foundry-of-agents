@@ -208,6 +208,26 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		systemPrompt = basePrompt
 	}
 
+	// Load assigned skills and inject into system prompt
+	skillRows, skillErr := h.DB.Query(ctx,
+		`SELECT s.name, s.content FROM skill s
+		 JOIN agent_skill as2 ON as2.skill_id = s.id
+		 WHERE as2.agent_id = $1 AND as2.enabled = true
+		 ORDER BY as2.priority DESC`, agentID)
+	if skillErr == nil {
+		defer skillRows.Close()
+		var skillSection strings.Builder
+		for skillRows.Next() {
+			var sName, sContent string
+			if skillRows.Scan(&sName, &sContent) == nil {
+				skillSection.WriteString(fmt.Sprintf("### %s\n%s\n\n", sName, sContent))
+			}
+		}
+		if skillSection.Len() > 0 {
+			systemPrompt += "\n\n## Skills\n" + skillSection.String()
+		}
+	}
+
 	// Retrieve and inject relevant memories
 	memoryContext := h.retrieveMemories(ctx, agentID, body.Content)
 	h.Logger.Info().Str("agent_id", agentID.String()).Int("memory_len", len(memoryContext)).Str("memory_preview", memoryContext[:min(len(memoryContext), 100)]).Msg("memory context loaded")

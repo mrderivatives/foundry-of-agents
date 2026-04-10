@@ -13,12 +13,13 @@ import (
 )
 
 type Deps struct {
-	DB        *pgxpool.Pool
-	Hub       *realtime.Hub
-	Router    *bifrost.Router
-	Queue     *queue.Client
-	JWTSecret []byte
-	Logger    zerolog.Logger
+	DB               *pgxpool.Pool
+	Hub              *realtime.Hub
+	Router           *bifrost.Router
+	Queue            *queue.Client
+	JWTSecret        []byte
+	Logger           zerolog.Logger
+	TelegramBotToken string
 }
 
 type Handler struct {

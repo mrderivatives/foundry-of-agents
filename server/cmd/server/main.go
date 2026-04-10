@@ -80,12 +80,13 @@ func main() {
 	go hub.Run()
 
 	h := handler.NewHandler(handler.Deps{
-		DB:        pool,
-		Hub:       hub,
-		Router:    bifrostRouter,
-		Queue:     queueClient,
-		JWTSecret: []byte(jwtSecret),
-		Logger:    log.Logger,
+		DB:               pool,
+		Hub:              hub,
+		Router:           bifrostRouter,
+		Queue:            queueClient,
+		JWTSecret:        []byte(jwtSecret),
+		Logger:           log.Logger,
+		TelegramBotToken: os.Getenv("TELEGRAM_BOT_TOKEN"),
 	})
 
 	r := chi.NewRouter()

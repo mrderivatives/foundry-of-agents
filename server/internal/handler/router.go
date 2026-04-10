@@ -53,7 +53,35 @@ func MountRoutes(r chi.Router, h *Handler) {
 					r.Post("/", h.handleCreateMemory)
 					r.Delete("/{memId}", h.handleDeleteMemory)
 				})
+				r.Route("/cron-jobs", func(r chi.Router) {
+					r.Get("/", h.handleListCronJobs)
+					r.Post("/", h.handleCreateCronJob)
+				})
+				r.Route("/skills", func(r chi.Router) {
+					r.Get("/", h.handleListAgentSkills)
+					r.Post("/", h.handleAssignSkill)
+					r.Delete("/{skillId}", h.handleUnassignSkill)
+				})
 			})
+		})
+
+		r.Route("/api/notifications", func(r chi.Router) {
+			r.Get("/preferences", h.handleListNotifPrefs)
+			r.Post("/preferences", h.handleSaveNotifPref)
+			r.Post("/test", h.handleTestNotification)
+		})
+
+		r.Route("/api/cron-jobs", func(r chi.Router) {
+			r.Route("/{cronId}", func(r chi.Router) {
+				r.Patch("/", h.handleUpdateCronJob)
+				r.Delete("/", h.handleDeleteCronJob)
+			})
+		})
+
+		r.Route("/api/skills", func(r chi.Router) {
+			r.Get("/", h.handleListSkills)
+			r.Post("/", h.handleCreateSkill)
+			r.Get("/{skillId}", h.handleGetSkill)
 		})
 	})
 

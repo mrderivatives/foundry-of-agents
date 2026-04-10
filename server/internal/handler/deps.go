@@ -20,6 +20,7 @@ type Deps struct {
 	JWTSecret        []byte
 	Logger           zerolog.Logger
 	TelegramBotToken string
+	ResendAPIKey     string
 }
 
 type Handler struct {

@@ -1,10 +1,14 @@
 package handler
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -12,6 +16,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/mr-tron/base58"
+
+	"github.com/mrderivatives/foundry-of-agents/server/internal/auth"
 )
 
 // POST /api/auth/magic-link
@@ -42,10 +48,49 @@ func (h *Handler) handleMagicLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	verifyURL := fmt.Sprintf("https://forge-of-agents.vercel.app/auth/verify?token=%s", token)
+
 	h.Logger.Info().
 		Str("email", body.Email).
-		Str("url", "http://localhost:3000/auth/verify?token="+token).
+		Str("url", verifyURL).
 		Msg("Magic link generated")
+
+	// Send via Resend API
+	if h.ResendAPIKey != "" {
+		go func() {
+			emailHTML := fmt.Sprintf(`
+			<div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px; background: #0a0a0a; color: #fafafa;">
+				<h1 style="font-size: 24px; background: linear-gradient(135deg, #8b5cf6, #6366f1, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Foundry of Agents</h1>
+				<p style="color: #a1a1aa; font-size: 16px; line-height: 1.6;">Click the button below to sign in:</p>
+				<a href="%s" style="display: inline-block; padding: 12px 32px; background: #8b5cf6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0;">Sign In to Foundry</a>
+				<p style="color: #71717a; font-size: 13px;">This link expires in 15 minutes. If you didn't request this, ignore this email.</p>
+				<hr style="border: none; border-top: 1px solid #27272a; margin: 30px 0;">
+				<p style="color: #52525b; font-size: 12px;">TenX Protocols - Built on Solana</p>
+			</div>`, verifyURL)
+
+			reqBody, _ := json.Marshal(map[string]interface{}{
+				"from":    "Foundry <onboarding@resend.dev>",
+				"to":      []string{body.Email},
+				"subject": "Your Foundry of Agents Magic Link",
+				"html":    emailHTML,
+			})
+			req, _ := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewReader(reqBody))
+			req.Header.Set("Authorization", "Bearer "+h.ResendAPIKey)
+			req.Header.Set("Content-Type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				h.Logger.Error().Err(err).Msg("failed to send magic link email")
+				return
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode >= 300 {
+				b, _ := io.ReadAll(resp.Body)
+				h.Logger.Error().Int("status", resp.StatusCode).Str("body", string(b)).Msg("resend API error")
+			} else {
+				h.Logger.Info().Str("email", body.Email).Msg("magic link email sent")
+			}
+		}()
+	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Magic link sent"})
 }
@@ -214,6 +259,25 @@ func (h *Handler) handleRefresh(w http.ResponseWriter, r *http.Request) {
 // DELETE /api/auth/session
 func (h *Handler) handleLogout(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// GET /api/auth/me
+func (h *Handler) handleMe(w http.ResponseWriter, r *http.Request) {
+	userID, _ := auth.GetUserID(r.Context())
+
+	var email, name string
+	err := h.DB.QueryRow(r.Context(),
+		`SELECT email, COALESCE(name, '') FROM "user" WHERE id = $1`, userID).Scan(&email, &name)
+	if err != nil {
+		errJSON(w, http.StatusNotFound, "user not found")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"id":    userID.String(),
+		"email": email,
+		"name":  name,
+	})
 }
 
 // --- helpers ---

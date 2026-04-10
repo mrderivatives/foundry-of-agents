@@ -32,6 +32,8 @@ func MountRoutes(r chi.Router, h *Handler) {
 	r.Group(func(r chi.Router) {
 		r.Use(auth.Middleware(h.JWTSecret))
 
+		r.Get("/api/auth/me", h.handleMe)
+
 		r.Route("/api/agents", func(r chi.Router) {
 			r.Get("/", h.handleListAgents)
 			r.Post("/", h.handleCreateAgent)

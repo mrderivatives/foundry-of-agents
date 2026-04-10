@@ -87,6 +87,7 @@ func main() {
 		JWTSecret:        []byte(jwtSecret),
 		Logger:           log.Logger,
 		TelegramBotToken: os.Getenv("TELEGRAM_BOT_TOKEN"),
+		ResendAPIKey:     os.Getenv("RESEND_API_KEY"),
 	})
 
 	r := chi.NewRouter()

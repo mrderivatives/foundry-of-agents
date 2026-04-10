@@ -342,6 +342,19 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 			messages = append(messages, bifrost.Message{Role: "assistant", ContentParts: assistantParts})
 
 			// Execute tools and build tool_result parts
+			// Set up SSE flusher for tool events
+			var sseFlusher http.Flusher
+			if useSSE {
+				w.Header().Set("Content-Type", "text/event-stream")
+				w.Header().Set("Cache-Control", "no-cache")
+				w.Header().Set("Connection", "keep-alive")
+				w.WriteHeader(http.StatusOK)
+				sseFlusher, _ = w.(http.Flusher)
+				// message_start
+				fmt.Fprintf(w, "data: {\"type\":\"message_start\",\"message_id\":\"%s\"}\n\n", assistantMsgID)
+				if sseFlusher != nil { sseFlusher.Flush() }
+			}
+
 			toolResultParts := []bifrost.ContentPart{}
 			for _, tc := range firstResp.ToolCalls {
 				var result string
@@ -351,6 +364,12 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 						Query string `json:"query"`
 					}
 					json.Unmarshal(tc.Input, &input)
+					// Emit tool_use_start SSE event
+					if useSSE && sseFlusher != nil {
+						escQ := strings.ReplaceAll(input.Query, "\"", "\\\"")
+						fmt.Fprintf(w, "data: {\"type\":\"tool_use_start\",\"tool\":\"web_search\",\"query\":\"%s\"}\n\n", escQ)
+						sseFlusher.Flush()
+					}
 					if input.Query != "" {
 						h.Logger.Info().Str("query", input.Query).Msg("executing web search")
 						result, err = tools.WebSearch(ctx, h.PerplexityAPIKey, input.Query)
@@ -360,6 +379,15 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 						}
 					} else {
 						result = "No query provided"
+					}
+					// Emit tool_use_end SSE event
+					if useSSE && sseFlusher != nil {
+						preview := result
+						if len(preview) > 100 { preview = preview[:100] + "..." }
+						preview = strings.ReplaceAll(preview, "\"", "\\\"")
+						preview = strings.ReplaceAll(preview, "\n", " ")
+						fmt.Fprintf(w, "data: {\"type\":\"tool_use_end\",\"tool\":\"web_search\",\"result_preview\":\"%s\"}\n\n", preview)
+						sseFlusher.Flush()
 					}
 				default:
 					result = "Unknown tool: " + tc.Name
@@ -381,12 +409,56 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 				Stream:    true,
 			}
 
-			streamErr := make(chan error, 1)
 			go func() {
-				streamErr <- h.Router.StreamRoute(ctx, secondReq, ch)
+				h.Router.StreamRoute(ctx, secondReq, ch)
 			}()
 
-			h.streamResponse(w, r, ch, streamErr, wsID, sessionID, assistantMsgID, model, agentID, body.Content, useSSE)
+			if useSSE && sseFlusher != nil {
+				// Continue SSE stream (headers already written, message_start already sent)
+				var fullContent strings.Builder
+				var inputTokens, outputTokens int
+				for chunk := range ch {
+					if chunk.Delta != "" {
+						fullContent.WriteString(chunk.Delta)
+						escaped := strings.ReplaceAll(chunk.Delta, "\\", "\\\\")
+						escaped = strings.ReplaceAll(escaped, "\"", "\\\"")
+						escaped = strings.ReplaceAll(escaped, "\n", "\\n")
+						fmt.Fprintf(w, "data: {\"type\":\"content_delta\",\"delta\":\"%s\"}\n\n", escaped)
+						sseFlusher.Flush()
+					}
+					if chunk.Usage != nil {
+						inputTokens = chunk.Usage.InputTokens
+						outputTokens = chunk.Usage.OutputTokens
+					}
+				}
+				fmt.Fprintf(w, "data: {\"type\":\"message_end\",\"usage\":{\"input_tokens\":%d,\"output_tokens\":%d}}\n\n", inputTokens, outputTokens)
+				sseFlusher.Flush()
+
+				responseText := fullContent.String()
+				h.DB.Exec(ctx,
+					`INSERT INTO chat_message (id, chat_session_id, workspace_id, role, content, input_tokens, output_tokens, model)
+					 VALUES ($1, $2, $3, 'assistant', $4, $5, $6, $7)`,
+					assistantMsgID, sessionID, wsID, responseText, inputTokens, outputTokens, model)
+				h.extractAndStoreMemories(agentID, wsID, sessionID.String(), body.Content, responseText)
+				return
+			}
+
+			// Non-SSE tool-use path: collect and return JSON
+			var fullContent strings.Builder
+			for chunk := range ch {
+				fullContent.WriteString(chunk.Delta)
+			}
+			responseText := fullContent.String()
+			var savedMsg messageRow
+			h.DB.QueryRow(ctx,
+				`INSERT INTO chat_message (id, chat_session_id, workspace_id, role, content, model)
+				 VALUES ($1, $2, $3, 'assistant', $4, $5)
+				 RETURNING id, chat_session_id, workspace_id, role, content, input_tokens, output_tokens, model, created_at`,
+				assistantMsgID, sessionID, wsID, responseText, model).Scan(
+				&savedMsg.ID, &savedMsg.ChatSessionID, &savedMsg.WorkspaceID, &savedMsg.Role, &savedMsg.Content,
+				&savedMsg.InputTokens, &savedMsg.OutputTokens, &savedMsg.Model, &savedMsg.CreatedAt)
+			h.extractAndStoreMemories(agentID, wsID, sessionID.String(), body.Content, responseText)
+			writeJSON(w, http.StatusOK, savedMsg)
 			return
 		}
 		// If no tool calls or error, fall through to normal streaming

@@ -32,6 +32,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
   const [sending, setSending] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [toolStatus, setToolStatus] = useState<{tool: string; query: string; done: boolean} | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -130,10 +131,16 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
               const evt = JSON.parse(line.slice(6));
               if (evt.type === "message_start") {
                 assistantMsgId = evt.message_id || crypto.randomUUID();
+              } else if (evt.type === "tool_use_start") {
+                setToolStatus({ tool: evt.tool, query: evt.query || "", done: false });
+              } else if (evt.type === "tool_use_end") {
+                setToolStatus({ tool: evt.tool, query: evt.query || "", done: true });
               } else if (evt.type === "content_delta" && evt.delta) {
+                setToolStatus(null); // Clear tool status when content starts
                 accumulated += evt.delta;
                 setStreamingContent(accumulated);
               } else if (evt.type === "message_end") {
+                setToolStatus(null);
                 setMessages((prev) => [
                   ...prev,
                   {
@@ -297,16 +304,24 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
           <div className="flex justify-start">
             <div className="max-w-[85%] sm:max-w-[75%]">
               <div className="rounded-2xl rounded-bl-md px-4 py-3 text-sm bg-card border border-border">
+                {toolStatus && (
+                  <div className={`flex items-center gap-2 text-xs mb-2 px-2 py-1.5 rounded-lg ${toolStatus.done ? 'bg-green-500/5 text-green-400' : 'bg-primary/5 text-muted-foreground'}`}>
+                    <span>{toolStatus.done ? '✓' : '🔍'}</span>
+                    <span className={!toolStatus.done ? 'animate-pulse' : ''}>
+                      {toolStatus.done ? 'Searched' : 'Searching'}: "{toolStatus.query}"
+                    </span>
+                  </div>
+                )}
                 {streamingContent ? (
                   <div className="prose prose-sm prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_pre]:bg-background [&_pre]:border [&_pre]:border-border [&_pre]:rounded-lg [&_pre]:p-3 [&_code]:text-primary [&_code]:bg-primary/10 [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5 [&_pre_code]:bg-transparent [&_pre_code]:p-0">
                     <ReactMarkdown>{streamingContent}</ReactMarkdown>
                     <span className="inline-block w-2 h-4 bg-primary/70 animate-pulse ml-0.5 align-text-bottom" />
                   </div>
-                ) : (
+                ) : !toolStatus ? (
                   <span className="inline-flex items-center gap-1 text-muted-foreground">
                     <span className="inline-block w-2 h-4 bg-primary/70 animate-pulse" />
                   </span>
-                )}
+                ) : null}
               </div>
             </div>
           </div>

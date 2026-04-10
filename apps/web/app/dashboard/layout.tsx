@@ -7,6 +7,7 @@ import {
   Bot,
   Plus,
   Puzzle,
+  FileText,
   Settings,
   LogOut,
   Menu,
@@ -168,6 +169,18 @@ export default function DashboardLayout({
           >
             <Puzzle className="w-4 h-4" />
             Skills
+          </Link>
+          <Link
+            href="/dashboard/documents"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+              pathname === "/dashboard/documents"
+                ? "bg-primary/10 text-foreground"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            Documents
           </Link>
           <Link
             href="/dashboard/settings"

@@ -85,6 +85,12 @@ func MountRoutes(r chi.Router, h *Handler) {
 			r.Post("/", h.handleCreateSkill)
 			r.Get("/{skillId}", h.handleGetSkill)
 		})
+
+		r.Route("/api/documents", func(r chi.Router) {
+			r.Get("/", h.handleListDocuments)
+			r.Post("/", h.handleCreateDocument)
+			r.Delete("/{docId}", h.handleDeleteDocument)
+		})
 	})
 
 	r.Get("/ws", func(w http.ResponseWriter, r *http.Request) {

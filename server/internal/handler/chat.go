@@ -237,6 +237,30 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Load document chunks for context injection
+	docRows, docErr := h.DB.Query(ctx,
+		`SELECT dc.content FROM document_chunk dc
+		 JOIN document d ON d.id = dc.document_id
+		 WHERE d.workspace_id = $1 AND d.status = 'ready'
+		 ORDER BY dc.document_id, dc.chunk_index LIMIT 20`, wsID)
+	if docErr == nil {
+		defer docRows.Close()
+		var docContext strings.Builder
+		for docRows.Next() {
+			var c string
+			if docRows.Scan(&c) == nil {
+				docContext.WriteString(c + "\n\n")
+			}
+		}
+		if docContext.Len() > 0 {
+			dc := docContext.String()
+			if len(dc) > 3000 {
+				dc = dc[:3000] + "\n..."
+			}
+			systemPrompt += "\n\n## Document Context\n" + dc
+		}
+	}
+
 	// Retrieve and inject relevant memories
 	memoryContext := h.retrieveMemories(ctx, agentID, body.Content)
 	h.Logger.Info().Str("agent_id", agentID.String()).Int("memory_len", len(memoryContext)).Str("memory_preview", memoryContext[:min(len(memoryContext), 100)]).Msg("memory context loaded")

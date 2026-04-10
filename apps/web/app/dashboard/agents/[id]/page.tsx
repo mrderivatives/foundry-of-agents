@@ -66,6 +66,7 @@ export default function AgentDetailPage() {
   const [assigningSkill, setAssigningSkill] = useState(false);
   const [cronJobs, setCronJobs] = useState<CronJob[]>([]);
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [showAddSkill, setShowAddSkill] = useState(false);
 
   useEffect(() => {
@@ -85,15 +86,15 @@ export default function AgentDetailPage() {
       .finally(() => setLoading(false));
   }, [agentId, router]);
 
-  const ensureChatSession = useCallback(async () => {
-    if (chatSessionId) return;
+  const loadSessions = useCallback(async () => {
     try {
-      // Try to get existing sessions first
-      const sessions = await api.get<ChatSession[]>(`/api/agents/${agentId}/sessions`);
-      if (sessions.length > 0) {
-        setChatSessionId(sessions[0].id);
-      } else {
+      const list = await api.get<ChatSession[]>(`/api/agents/${agentId}/sessions`);
+      setSessions(list);
+      if (list.length > 0 && !chatSessionId) {
+        setChatSessionId(list[0].id);
+      } else if (list.length === 0) {
         const session = await api.post<ChatSession>(`/api/agents/${agentId}/sessions`);
+        setSessions([session]);
         setChatSessionId(session.id);
       }
     } catch {
@@ -103,9 +104,9 @@ export default function AgentDetailPage() {
 
   useEffect(() => {
     if (tab === "chat") {
-      ensureChatSession();
+      loadSessions();
     }
-  }, [tab, ensureChatSession]);
+  }, [tab, loadSessions]);
 
   const handleTabChange = (newTab: Tab) => {
     setTab(newTab);
@@ -139,6 +140,7 @@ export default function AgentDetailPage() {
   const handleNewChat = async () => {
     try {
       const session = await api.post<ChatSession>(`/api/agents/${agentId}/sessions`);
+      setSessions((prev) => [session, ...prev]);
       setChatSessionId(session.id);
     } catch {
       // ignore
@@ -207,29 +209,91 @@ export default function AgentDetailPage() {
       {/* Tab Content */}
       <div className="flex-1 overflow-hidden">
         {tab === "chat" && (
-          chatSessionId ? (
-            <ChatPage
-              agentId={agentId}
-              sessionId={chatSessionId}
-              agentName={agent.name}
-              agentModel={agent.model}
-            />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center text-center p-6">
-              <MessageSquare className="w-10 h-10 text-muted-foreground mb-3" />
-              <h3 className="text-lg font-semibold mb-1">No chat sessions yet</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Start a conversation with {agent.name}
-              </p>
-              <button
-                onClick={handleNewChat}
-                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                New Chat
-              </button>
+          <div className="flex h-full">
+            {/* Sessions sidebar — hidden on mobile, shown on md+ */}
+            {sessions.length > 0 && (
+              <div className="hidden md:flex w-56 shrink-0 flex-col border-r border-border bg-card/50">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sessions</span>
+                  <button
+                    onClick={handleNewChat}
+                    className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+                    title="New Session"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto py-1">
+                  {sessions.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setChatSessionId(s.id)}
+                      className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                        chatSessionId === s.id
+                          ? "bg-primary/10 text-foreground"
+                          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                      }`}
+                    >
+                      <p className="font-medium truncate">
+                        {s.title || `Session ${s.id.slice(0, 8)}`}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {new Date(s.created_at).toLocaleDateString()}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Chat area */}
+            <div className="flex-1 min-w-0">
+              {/* Mobile session selector */}
+              {sessions.length > 1 && (
+                <div className="md:hidden border-b border-border px-3 py-2 flex items-center gap-2">
+                  <select
+                    value={chatSessionId || ""}
+                    onChange={(e) => setChatSessionId(e.target.value)}
+                    className="flex-1 rounded-lg border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {sessions.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.title || `Session ${s.id.slice(0, 8)}`}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleNewChat}
+                    className="shrink-0 rounded-lg bg-primary p-1.5 text-primary-foreground"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+              {chatSessionId ? (
+                <ChatPage
+                  agentId={agentId}
+                  sessionId={chatSessionId}
+                  agentName={agent.name}
+                  agentModel={agent.model}
+                />
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center text-center p-6">
+                  <MessageSquare className="w-10 h-10 text-muted-foreground mb-3" />
+                  <h3 className="text-lg font-semibold mb-1">No chat sessions yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Start a conversation with {agent.name}
+                  </p>
+                  <button
+                    onClick={handleNewChat}
+                    className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New Chat
+                  </button>
+                </div>
+              )}
             </div>
-          )
+          </div>
         )}
 
         {tab === "memory" && (

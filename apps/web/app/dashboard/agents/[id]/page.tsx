@@ -36,11 +36,17 @@ interface Skill {
 
 interface CronJob {
   id: string;
-  name: string;
-  schedule: string;
+  name: string | null;
+  description: string | null;
+  cron_expression: string;
+  prompt: string;
+  output_channel: string | null;
+  output_target: string | null;
   enabled: boolean;
   last_run_at?: string;
+  last_run_status?: string;
   next_run_at?: string;
+  created_at: string;
 }
 
 type Tab = "chat" | "memory" | "skills" | "schedule";
@@ -69,6 +75,9 @@ export default function AgentDetailPage() {
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [showAddSkill, setShowAddSkill] = useState(false);
+  const [showCreateCron, setShowCreateCron] = useState(false);
+  const [cronForm, setCronForm] = useState({ name: "", cron_expression: "0 9 * * *", prompt: "", output_channel: "none", output_target: "" });
+  const [creatingCron, setCreatingCron] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -146,6 +155,38 @@ export default function AgentDetailPage() {
     } catch {
       // ignore
     }
+  };
+
+  const handleCreateCron = async () => {
+    setCreatingCron(true);
+    try {
+      const cj = await api.post<CronJob>(`/api/agents/${agentId}/cron-jobs`, {
+        name: cronForm.name || undefined,
+        cron_expression: cronForm.cron_expression,
+        prompt: cronForm.prompt,
+        output_channel: cronForm.output_channel === "none" ? undefined : cronForm.output_channel,
+        output_target: cronForm.output_target || undefined,
+      });
+      setCronJobs((prev) => [cj, ...prev]);
+      setShowCreateCron(false);
+      setCronForm({ name: "", cron_expression: "0 9 * * *", prompt: "", output_channel: "none", output_target: "" });
+    } catch { /* ignore */ } finally {
+      setCreatingCron(false);
+    }
+  };
+
+  const handleToggleCron = async (cronId: string, enabled: boolean) => {
+    try {
+      const updated = await api.patch<CronJob>(`/api/cron-jobs/${cronId}`, { enabled });
+      setCronJobs((prev) => prev.map((j) => j.id === cronId ? updated : j));
+    } catch { /* ignore */ }
+  };
+
+  const handleDeleteCron = async (cronId: string) => {
+    try {
+      await api.delete(`/api/cron-jobs/${cronId}`);
+      setCronJobs((prev) => prev.filter((j) => j.id !== cronId));
+    } catch { /* ignore */ }
   };
 
   if (loading || !agent) {
@@ -392,13 +433,96 @@ export default function AgentDetailPage() {
         )}
 
         {tab === "schedule" && (
-          <div className="p-6 overflow-y-auto h-full">
-            {cronJobs.length === 0 ? (
+          <div className="p-4 sm:p-6 overflow-y-auto h-full space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Scheduled Tasks</h3>
+              <button
+                onClick={() => setShowCreateCron(!showCreateCron)}
+                className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+                Create Cron Job
+              </button>
+            </div>
+
+            {showCreateCron && (
+              <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                <input
+                  value={cronForm.name}
+                  onChange={(e) => setCronForm({ ...cronForm, name: e.target.value })}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Job name (optional)"
+                />
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Cron Expression</label>
+                  <select
+                    value={cronForm.cron_expression}
+                    onChange={(e) => setCronForm({ ...cronForm, cron_expression: e.target.value })}
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="0 9 * * *">Every day at 9:00 UTC</option>
+                    <option value="30 11 * * *">Every day at 11:30 UTC</option>
+                    <option value="0 */6 * * *">Every 6 hours</option>
+                    <option value="0 * * * *">Every hour</option>
+                    <option value="*/30 * * * *">Every 30 minutes</option>
+                    <option value="0 9 * * 1">Every Monday at 9:00 UTC</option>
+                  </select>
+                </div>
+                <textarea
+                  value={cronForm.prompt}
+                  onChange={(e) => setCronForm({ ...cronForm, prompt: e.target.value })}
+                  rows={3}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  placeholder="Prompt for the agent to execute..."
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Output Channel</label>
+                    <select
+                      value={cronForm.output_channel}
+                      onChange={(e) => setCronForm({ ...cronForm, output_channel: e.target.value })}
+                      className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="none">None</option>
+                      <option value="telegram">Telegram</option>
+                    </select>
+                  </div>
+                  {cronForm.output_channel === "telegram" && (
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Chat ID</label>
+                      <input
+                        value={cronForm.output_target}
+                        onChange={(e) => setCronForm({ ...cronForm, output_target: e.target.value })}
+                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        placeholder="Telegram chat ID"
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => setShowCreateCron(false)}
+                    className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent/50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreateCron}
+                    disabled={creatingCron || !cronForm.prompt.trim() || !cronForm.cron_expression}
+                    className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  >
+                    {creatingCron ? "Creating..." : "Create"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {cronJobs.length === 0 && !showCreateCron ? (
               <div className="rounded-xl border border-border bg-card/50 p-12 text-center">
                 <Clock className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <h3 className="text-lg font-semibold mb-1">No scheduled tasks</h3>
+                <h3 className="text-lg font-semibold mb-1">No scheduled tasks yet</h3>
                 <p className="text-sm text-muted-foreground">
-                  Cron jobs for this agent will appear here. Coming soon.
+                  Create one to automate your agent.
                 </p>
               </div>
             ) : (
@@ -409,26 +533,42 @@ export default function AgentDetailPage() {
                     className="rounded-xl border border-border bg-card p-4"
                   >
                     <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-sm font-medium">{job.name}</h4>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-medium">{job.name || "Untitled Job"}</h4>
                         <p className="text-xs text-muted-foreground font-mono mt-1">
-                          {job.schedule}
+                          {job.cron_expression}
                         </p>
                       </div>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          job.enabled
-                            ? "bg-green-500/10 text-green-400"
-                            : "bg-zinc-500/10 text-zinc-400"
-                        }`}
-                      >
-                        {job.enabled ? "Active" : "Paused"}
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => handleToggleCron(job.id, !job.enabled)}
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium transition-colors ${
+                            job.enabled
+                              ? "bg-green-500/10 text-green-400 hover:bg-green-500/20"
+                              : "bg-zinc-500/10 text-zinc-400 hover:bg-zinc-500/20"
+                          }`}
+                        >
+                          {job.enabled ? "Active" : "Paused"}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCron(job.id)}
+                          className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                    {job.next_run_at && (
-                      <p className="text-[10px] text-muted-foreground mt-2">
-                        Next run: {new Date(job.next_run_at).toLocaleString()}
-                      </p>
+                    {job.last_run_at && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <p className="text-[10px] text-muted-foreground">
+                          Last run: {new Date(job.last_run_at).toLocaleString()}
+                        </p>
+                        {job.last_run_status && (
+                          <span className={`text-[10px] ${job.last_run_status === "completed" ? "text-green-400" : "text-red-400"}`}>
+                            ({job.last_run_status})
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}

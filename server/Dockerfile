@@ -8,7 +8,7 @@ RUN CGO_ENABLED=0 go build -o worker ./cmd/worker
 RUN CGO_ENABLED=0 go build -o migrate ./cmd/migrate
 
 FROM alpine:3.20
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates poppler-utils
 WORKDIR /app
 COPY --from=builder /app/server /app/worker /app/migrate ./
 COPY --from=builder /app/migrations ./migrations

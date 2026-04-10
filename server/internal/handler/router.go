@@ -90,6 +90,7 @@ func MountRoutes(r chi.Router, h *Handler) {
 		r.Route("/api/documents", func(r chi.Router) {
 			r.Get("/", h.handleListDocuments)
 			r.Post("/", h.handleCreateDocument)
+			r.Post("/upload", h.handleUploadDocument)
 			r.Delete("/{docId}", h.handleDeleteDocument)
 		})
 	})

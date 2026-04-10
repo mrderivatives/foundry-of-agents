@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SolanaWalletProvider } from "@/shared/providers/wallet-provider";
 
 export const metadata: Metadata = {
   title: "Foundry of Agents | Crypto-Native AI Agent Platform",
@@ -30,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen antialiased">
-        {children}
+        <SolanaWalletProvider>{children}</SolanaWalletProvider>
       </body>
     </html>
   );

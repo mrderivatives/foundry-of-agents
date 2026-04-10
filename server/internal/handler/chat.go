@@ -176,6 +176,15 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Auto-title session from first user message
+	title := strings.TrimSpace(body.Content)
+	if len(title) > 40 {
+		title = title[:40] + "..."
+	}
+	h.DB.Exec(ctx,
+		`UPDATE chat_session SET title = $1 WHERE id = $2 AND title IS NULL`,
+		title, sessionID)
+
 	// Load agent instructions + model
 	var agentInstructions *string
 	var agentModel *string

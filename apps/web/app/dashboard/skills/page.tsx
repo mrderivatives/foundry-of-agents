@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { api } from "@/shared/api/client";
 
 interface Skill {
@@ -17,7 +16,6 @@ interface Skill {
 }
 
 export default function SkillsPage() {
-  const router = useRouter();
   const [skills, setSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -25,12 +23,8 @@ export default function SkillsPage() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    if (!localStorage.getItem("token")) {
-      router.replace("/auth/login");
-      return;
-    }
     loadSkills();
-  }, [router]);
+  }, []);
 
   const loadSkills = () => {
     api
@@ -57,7 +51,7 @@ export default function SkillsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex h-64 items-center justify-center">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
@@ -70,26 +64,16 @@ export default function SkillsPage() {
   };
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-border px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            &larr; Back
-          </button>
-          <h1 className="text-xl font-bold">Skills</h1>
-        </div>
+    <div className="max-w-4xl mx-auto p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Skills</h2>
         <button
           onClick={() => setShowForm(true)}
           className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
         >
           Create Skill
         </button>
-      </header>
-
-      <main className="max-w-4xl mx-auto p-6 space-y-4">
+      </div>
         {showForm && (
           <div className="rounded-xl border border-border bg-card p-6 space-y-4">
             <h2 className="font-semibold">New Skill</h2>
@@ -172,7 +156,6 @@ export default function SkillsPage() {
             ))}
           </div>
         )}
-      </main>
     </div>
   );
 }

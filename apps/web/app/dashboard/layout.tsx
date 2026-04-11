@@ -99,7 +99,7 @@ export default function DashboardLayout({
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <Link
             href="/dashboard"
-            className="text-base font-bold bg-gradient-to-r from-primary via-blue-400 to-cyan-400 bg-clip-text text-transparent"
+            className="text-base font-medium text-[#fafafa]"
           >
             Foundry of Agents
           </Link>
@@ -235,7 +235,7 @@ export default function DashboardLayout({
           >
             <Menu className="w-5 h-5" />
           </button>
-          <span className="text-sm font-bold bg-gradient-to-r from-primary via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+          <span className="text-sm font-medium text-[#fafafa]">
             Foundry of Agents
           </span>
         </div>

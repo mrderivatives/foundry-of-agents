@@ -22,19 +22,19 @@ function TeamCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.08, ease }}
       onClick={() => router.push(`/teams/${team.id}/assemble`)}
       className="group cursor-pointer"
     >
-      <GlassCard className="p-8">
+      <GlassCard className="p-8 transition-all duration-200 group-hover:translate-y-[-2px] group-hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
           {/* Left: Team info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-2">
               <span className="text-2xl">{team.emoji}</span>
-              <h3 className="text-lg font-medium text-[#fafafa]">{team.name}</h3>
+              <h3 className="text-lg font-light text-[#fafafa] tracking-[-0.02em]">{team.name}</h3>
             </div>
             <p className="text-sm text-[#a1a1aa] mb-3">
               {team.vibe}
@@ -67,7 +67,7 @@ function TeamCard({
           </div>
 
           {/* Center: Character avatars */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {LeadChar && (
               <div
                 className="rounded-xl p-1 transition-all duration-200 group-hover:scale-105"
@@ -91,7 +91,7 @@ function TeamCard({
               [1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="w-[52px] h-[52px] rounded-xl border-2 border-dashed border-white/[0.1] flex items-center justify-center text-[#71717a] text-sm"
+                  className="w-[48px] h-[48px] rounded-full border-2 border-dashed border-white/[0.1] flex items-center justify-center text-[#71717a] text-sm"
                 >
                   ?
                 </div>
@@ -100,7 +100,7 @@ function TeamCard({
 
           {/* Right: CTA */}
           <div className="sm:ml-4 shrink-0">
-            <div className="flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium text-[#fafafa] border border-white/[0.1] bg-white/[0.03] transition-all duration-200 group-hover:bg-white/[0.06] group-hover:border-white/[0.15]">
+            <div className="flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium text-[#a1a1aa] border border-white/10 transition-all duration-200 group-hover:border-white/20 group-hover:text-white active:scale-[0.98]">
               {team.id === "custom" ? "BUILD" : "SELECT"}
               <ArrowRight className="w-4 h-4" />
             </div>
@@ -115,7 +115,7 @@ export default function TeamsPage() {
   return (
     <div className="min-h-screen" style={{ background: "#09090b" }}>
       {/* Header */}
-      <div className="max-w-[800px] mx-auto px-6 pt-12 pb-6">
+      <div className="max-w-3xl mx-auto px-6 pt-24 pb-6">
         <div className="flex items-center justify-between mb-8">
           <Link
             href="/"
@@ -128,12 +128,12 @@ export default function TeamsPage() {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease }}
         >
           <h1
-            className="text-[clamp(28px,4vw,36px)] font-light tracking-[-0.02em] mb-2"
+            className="text-3xl font-light tracking-tight mb-2"
             style={{
               background: "linear-gradient(180deg, #fff 40%, rgba(255,255,255,0.5) 100%)",
               WebkitBackgroundClip: "text",
@@ -149,7 +149,7 @@ export default function TeamsPage() {
       </div>
 
       {/* Team cards */}
-      <div className="max-w-[800px] mx-auto px-6 pb-24 space-y-6">
+      <div className="max-w-3xl mx-auto px-6 pb-24 space-y-6">
         {TEAMS.map((team, i) => (
           <TeamCard key={team.id} team={team} index={i} />
         ))}

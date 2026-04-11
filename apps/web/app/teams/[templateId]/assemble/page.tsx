@@ -23,7 +23,7 @@ function EditableName({
 
   if (editing) {
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center justify-center gap-1">
         <input
           autoFocus
           value={draft}
@@ -35,7 +35,7 @@ function EditableName({
             }
             if (e.key === "Escape") setEditing(false);
           }}
-          className="bg-white/[0.06] text-[#fafafa] text-sm font-medium px-2 py-0.5 rounded border border-white/[0.06] outline-none focus:border-white/[0.15] focus:ring-1 focus:ring-[#7c3aed]/30 w-24 transition-all duration-200"
+          className="bg-transparent text-[#fafafa] text-sm font-medium text-center border-b border-white/10 outline-none focus:border-violet-500/50 w-24 transition-all duration-200 py-0.5"
         />
         <button
           onClick={() => {
@@ -56,7 +56,7 @@ function EditableName({
         setDraft(value);
         setEditing(true);
       }}
-      className="flex items-center gap-1 group"
+      className="flex items-center justify-center gap-1 group mx-auto"
     >
       <span className="font-medium text-sm text-[#fafafa]">{value}</span>
       <Pencil className="w-3 h-3 text-[#71717a] group-hover:text-[#a1a1aa] transition-colors duration-200" />
@@ -89,7 +89,7 @@ function AgentCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: isLead ? -20 : 20, scale: 0.95 }}
+      initial={{ opacity: 0, y: isLead ? -16 : 16, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{
         duration: 0.6,
@@ -97,9 +97,8 @@ function AgentCard({
         ease,
       }}
     >
-      <GlassCard
-        className={`relative p-5 text-center ${isLead ? 'w-[180px]' : 'w-[160px]'}`}
-        hover={false}
+      <div
+        className={`relative p-5 text-center rounded-xl border bg-white/[0.03] backdrop-blur-xl ${isLead ? 'w-[180px] border-white/[0.06]' : 'w-[160px] border-white/[0.06]'}`}
       >
         {isLead && (
           <div
@@ -117,7 +116,7 @@ function AgentCard({
         <p className="text-[10px] text-[#71717a] italic mt-1.5 leading-tight opacity-60">
           &ldquo;{tagline}&rdquo;
         </p>
-      </GlassCard>
+      </div>
     </motion.div>
   );
 }
@@ -162,7 +161,7 @@ function SpecialistPicker({
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-medium text-[#fafafa]">Pick 3 Specialists</h3>
+        <h3 className="text-lg font-light text-[#fafafa] tracking-[-0.02em]">Pick 3 Specialists</h3>
         <span
           className="text-sm font-medium px-3 py-1 rounded-full"
           style={{
@@ -188,7 +187,7 @@ function SpecialistPicker({
                 if (!isSelected && selected.length >= 3) return;
                 onToggle(spec.id);
               }}
-              className="relative rounded-xl p-3 text-center transition-all duration-200 hover:bg-white/[0.04]"
+              className="relative rounded-xl p-3 text-center transition-all duration-200 hover:bg-white/[0.04] active:scale-[0.98]"
               style={{
                 background: isSelected ? `${accentColor}08` : "transparent",
                 border: isSelected
@@ -297,7 +296,7 @@ export default function AssemblePage({
   return (
     <div className="min-h-screen" style={{ background: "#09090b" }}>
       {/* Header */}
-      <div className="max-w-[700px] mx-auto px-6 pt-12 pb-6">
+      <div className="max-w-[640px] mx-auto px-6 pt-12 pb-6">
         <div className="flex items-center justify-between mb-8">
           <Link
             href="/teams"
@@ -312,7 +311,7 @@ export default function AssemblePage({
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease }}
         >
@@ -334,11 +333,11 @@ export default function AssemblePage({
         </motion.div>
       </div>
 
-      <div className="max-w-[700px] mx-auto px-6 pb-24">
+      <div className="max-w-[640px] mx-auto px-6 pb-24">
         {/* Custom team picker */}
         {isCustom && !showOrgChart && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <GlassCard className="mb-8 p-6" hover={false}>
@@ -374,7 +373,7 @@ export default function AssemblePage({
               >
                 <button
                   onClick={() => setShowOrgChart(true)}
-                  className="inline-flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-medium text-[#fafafa] border border-white/[0.1] bg-white/[0.03] hover:bg-white/[0.06] transition-all duration-200"
+                  className="inline-flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-medium text-[#fafafa] border border-white/[0.1] bg-white/[0.03] hover:bg-white/[0.06] transition-all duration-200 active:scale-[0.98]"
                 >
                   Assemble Team
                   <ArrowRight className="w-4 h-4" />
@@ -407,8 +406,8 @@ export default function AssemblePage({
                 />
               </div>
 
-              {/* Connection lines */}
-              <div className="relative h-[48px] flex justify-center">
+              {/* Connection lines — 64px gap */}
+              <div className="relative h-16 flex justify-center">
                 <OrgChartLines specCount={specialists.length} />
               </div>
 
@@ -444,9 +443,9 @@ export default function AssemblePage({
                 <button
                   onClick={handleActivate}
                   disabled={activating}
-                  className="inline-flex items-center gap-2 rounded-xl px-10 py-4 text-lg font-medium text-white bg-[#22c55e] transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-70"
+                  className="inline-flex items-center gap-2 rounded-xl px-10 py-4 text-lg font-medium text-white bg-[#22c55e] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(34,197,94,0.35)] disabled:opacity-70 active:scale-[0.98]"
                   style={{
-                    boxShadow: "0 0 32px rgba(34,197,94,0.3)",
+                    boxShadow: "0 0 24px rgba(34,197,94,0.25)",
                   }}
                 >
                   <Zap className="w-5 h-5" />

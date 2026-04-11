@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Plus } from "lucide-react";
+import { Send, Plus, MessageSquare } from "lucide-react";
 import { getCharacter } from "@/shared/components/characters";
 import { useAgentStore } from "@/features/agents/store";
 import { AgentList } from "@/features/agents/components/agent-list";
@@ -65,9 +65,9 @@ function OrgChartSidebar({
   const LeadChar = getCharacter(team.lead.characterId);
 
   return (
-    <div className="w-[240px] shrink-0 border-r border-white/[0.06] flex flex-col h-full overflow-y-auto" style={{ background: "#09090b" }}>
+    <div className="w-60 shrink-0 border-r border-white/[0.04] flex flex-col h-full overflow-y-auto" style={{ background: "#09090b" }}>
       {/* Team header */}
-      <div className="px-4 py-4 border-b border-white/[0.06]">
+      <div className="px-4 py-4 border-b border-white/[0.04]">
         <div className="flex items-center gap-2">
           <span className="text-base">{team.emoji}</span>
           <span className="text-sm font-medium text-[#fafafa]">{team.teamName}</span>
@@ -80,7 +80,7 @@ function OrgChartSidebar({
           <div className="relative">
             {LeadChar && <LeadChar size={32} />}
             <div
-              className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2"
+              className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2"
               style={{
                 borderColor: "#09090b",
                 backgroundColor: STATUS_COLORS[statuses["lead"] ?? "idle"],
@@ -88,16 +88,16 @@ function OrgChartSidebar({
             />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-[#fafafa] truncate">
+            <p className="text-sm text-[#fafafa] truncate">
               {team.lead.name}
             </p>
-            <p className="text-[10px] text-[#71717a]">{team.lead.role}</p>
+            <p className="text-xs text-[#71717a]">{team.lead.role}</p>
           </div>
         </div>
 
         {/* Connection line */}
         <div className="flex justify-center">
-          <div className="w-px h-3 bg-white/[0.06]" />
+          <div className="w-px h-3 bg-white/[0.04]" />
         </div>
 
         {/* Specialists */}
@@ -114,7 +114,7 @@ function OrgChartSidebar({
                 <div className="relative">
                   {SpecChar && <SpecChar size={32} />}
                   <motion.div
-                    className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2"
+                    className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2"
                     style={{
                       borderColor: "#09090b",
                       backgroundColor: STATUS_COLORS[status],
@@ -132,10 +132,10 @@ function OrgChartSidebar({
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-[#fafafa] truncate">
+                  <p className="text-sm text-[#fafafa] truncate">
                     {spec.name}
                   </p>
-                  <p className="text-[10px] text-[#71717a]">{spec.role}</p>
+                  <p className="text-xs text-[#71717a]">{spec.role}</p>
                 </div>
               </div>
             );
@@ -163,37 +163,39 @@ function FeedItem({ event }: { event: FeedEvent }) {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors duration-200"
+      className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-4"
     >
-      <span className="text-[10px] text-[#71717a] font-mono shrink-0 pt-1 w-10">
-        {event.timestamp}
-      </span>
-      <div className="shrink-0 pt-0.5">
-        {AgentChar ? (
-          <AgentChar size={24} />
-        ) : (
-          <span className="text-xs text-[#71717a] w-6 h-6 flex items-center justify-center">{icon}</span>
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-[#a1a1aa] leading-relaxed">
-          {event.agentName && (
-            <span className="font-medium text-[#fafafa]">
-              {event.agentName}
-            </span>
+      <div className="flex gap-3">
+        <span className="text-[10px] text-[#71717a] font-mono shrink-0 pt-1 w-10">
+          {event.timestamp}
+        </span>
+        <div className="shrink-0 pt-0.5">
+          {AgentChar ? (
+            <AgentChar size={24} />
+          ) : (
+            <span className="text-xs text-[#71717a] w-6 h-6 flex items-center justify-center">{icon}</span>
           )}
-          {event.targetName && (
-            <>
-              {" "}
-              <span className="text-[#71717a]">→</span>{" "}
-              <span className="font-medium text-[#a1a1aa]">
-                {event.targetName}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-[#a1a1aa] leading-relaxed">
+            {event.agentName && (
+              <span className="font-medium text-[#fafafa]">
+                {event.agentName}
               </span>
-            </>
-          )}
-          {event.agentName ? ": " : ""}
-          <span className="text-[#a1a1aa]">{event.text}</span>
-        </p>
+            )}
+            {event.targetName && (
+              <>
+                {" "}
+                <span className="text-[#71717a]">→</span>{" "}
+                <span className="font-medium text-[#a1a1aa]">
+                  {event.targetName}
+                </span>
+              </>
+            )}
+            {event.agentName ? ": " : ""}
+            <span className="text-[#a1a1aa]">{event.text}</span>
+          </p>
+        </div>
       </div>
     </motion.div>
   );
@@ -319,7 +321,7 @@ function CommandCenter({ team }: { team: TeamData }) {
       {/* Center: Activity feed + chat */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile org strip */}
-        <div className="lg:hidden flex items-center gap-2 px-4 py-3 border-b border-white/[0.06] overflow-x-auto">
+        <div className="lg:hidden flex items-center gap-2 px-4 py-3 border-b border-white/[0.04] overflow-x-auto">
           <span className="text-sm">{team.emoji}</span>
           {[team.lead, ...team.specialists].map((member, i) => {
             const Char = getCharacter(member.characterId);
@@ -342,7 +344,7 @@ function CommandCenter({ team }: { team: TeamData }) {
         </div>
 
         {/* Activity feed header */}
-        <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
+        <div className="px-4 py-3 border-b border-white/[0.04] flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
           <span className="text-xs text-[#71717a] font-medium">
             Activity
@@ -351,7 +353,7 @@ function CommandCenter({ team }: { team: TeamData }) {
 
         {/* Activity feed */}
         <div
-          className="flex-1 overflow-y-auto min-h-0"
+          className="flex-1 overflow-y-auto min-h-0 p-3 space-y-3"
           style={{ maxHeight: "calc(100vh - 360px)" }}
         >
           <AnimatePresence>
@@ -360,7 +362,8 @@ function CommandCenter({ team }: { team: TeamData }) {
             ))}
           </AnimatePresence>
           {events.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-40 text-center px-4">
+            <div className="flex flex-col items-center justify-center h-full text-center px-4 py-16">
+              <MessageSquare className="w-8 h-8 text-[#27272a] mb-4" />
               <p className="text-sm text-[#71717a]">
                 Your team is ready. Send a message to get started.
               </p>
@@ -369,7 +372,7 @@ function CommandCenter({ team }: { team: TeamData }) {
         </div>
 
         {/* Chat section */}
-        <div className="border-t border-white/[0.06]">
+        <div className="border-t border-white/[0.04]">
           {/* Chat messages */}
           <div
             ref={chatRef}
@@ -420,12 +423,12 @@ function CommandCenter({ team }: { team: TeamData }) {
                   }
                 }}
                 placeholder={`Talk to ${team.lead.name}...`}
-                className="flex-1 bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 py-2.5 text-sm text-[#fafafa] placeholder-[#52525b] outline-none focus:border-white/[0.12] transition-colors duration-200"
+                className="flex-1 h-14 bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 text-sm text-[#fafafa] placeholder-[#52525b] outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/30 transition-all duration-200"
               />
               <button
                 onClick={handleSend}
                 disabled={!chatInput.trim()}
-                className="shrink-0 rounded-xl p-2.5 bg-white/[0.03] border border-white/[0.06] transition-all duration-200 hover:bg-white/[0.06] disabled:opacity-30"
+                className="shrink-0 rounded-xl p-3 bg-white/[0.03] border border-white/[0.06] transition-all duration-200 hover:bg-white/[0.06] hover:brightness-110 disabled:opacity-30 active:scale-[0.98]"
               >
                 <Send className="w-4 h-4 text-[#a1a1aa]" />
               </button>
@@ -445,14 +448,14 @@ function LegacyDashboard() {
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-lg font-medium text-[#fafafa]">Your Agents</h2>
+          <h2 className="text-lg font-light text-[#fafafa] tracking-[-0.02em]">Your Agents</h2>
           <p className="text-sm text-[#71717a]">
             {agents.length} agent{agents.length !== 1 ? "s" : ""} deployed
           </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 rounded-lg bg-[#7c3aed] px-4 py-2 text-sm font-medium text-[#fafafa] hover:bg-[#6d28d9] transition-colors duration-200"
+          className="flex items-center gap-2 rounded-lg bg-[#7c3aed] px-4 py-2 text-sm font-medium text-[#fafafa] hover:bg-[#6d28d9] transition-all duration-200 active:scale-[0.98]"
         >
           <Plus className="w-4 h-4" />
           Create Agent

@@ -20,13 +20,13 @@ function FadeIn({
   delay?: number;
 }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
+  const isInView = useInView(ref, { once: true, margin: "-10%" });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
       transition={{ duration: 0.6, delay, ease }}
       className={className}
     >
@@ -43,10 +43,10 @@ function TeamShowcaseCard({ team }: { team: (typeof TEAMS)[number] }) {
   }));
 
   return (
-    <GlassCard className="flex-shrink-0 w-[200px] p-6 cursor-pointer">
+    <GlassCard className="flex-shrink-0 w-[200px] p-7 cursor-pointer">
       <div className="text-2xl mb-3">{team.emoji}</div>
-      <h3 className="font-semibold text-sm text-[#fafafa] mb-1">{team.name}</h3>
-      <div className="flex items-center gap-2 my-4">
+      <h3 className="font-medium text-sm text-[#fafafa] mb-1">{team.name}</h3>
+      <div className="flex items-center gap-3 my-4">
         {leadChar && (
           <div
             className="rounded-full p-0.5"
@@ -92,21 +92,21 @@ export default function LandingPage() {
     <div className="min-h-screen" style={{ background: "#09090b" }}>
       {/* Hero */}
       <section className="relative min-h-screen flex items-center justify-center px-6 py-24">
-        {/* Subtle mesh gradient background */}
+        {/* Subtle radial gradient background */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-violet-600/[0.07] blur-[120px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-blue-600/[0.05] blur-[100px]" />
+          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-violet-600/[0.04] blur-[120px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-blue-600/[0.03] blur-[100px]" />
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
           <motion.h1
-            className="text-[clamp(48px,6vw,80px)] font-light tracking-[-0.03em] leading-[1.05]"
+            className="text-[clamp(32px,6vw,72px)] font-extralight tracking-[-0.03em] leading-[1.05]"
             style={{
               background: "linear-gradient(180deg, #fff 40%, rgba(255,255,255,0.5) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease }}
           >
@@ -115,7 +115,7 @@ export default function LandingPage() {
 
           <motion.p
             className="mt-6 text-lg text-[#a1a1aa] max-w-xl mx-auto leading-relaxed"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.15, ease }}
           >
@@ -124,15 +124,15 @@ export default function LandingPage() {
 
           <motion.div
             className="mt-10"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease }}
           >
             <Link
               href="/teams"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#22c55e] text-white font-medium text-lg transition-all duration-300 hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#22c55e] text-white font-medium text-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(34,197,94,0.35)] active:scale-[0.98]"
               style={{
-                boxShadow: "0 0 32px rgba(34,197,94,0.3)",
+                boxShadow: "0 0 24px rgba(34,197,94,0.25)",
               }}
             >
               Assemble Your Team
@@ -140,14 +140,18 @@ export default function LandingPage() {
             </Link>
           </motion.div>
 
-          <motion.p
-            className="mt-6 text-sm text-[#71717a]"
+          <motion.div
+            className="mt-8 flex items-center justify-center gap-3 text-2xl font-light text-[#a1a1aa]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.45, ease }}
           >
-            8,247 teams deployed · Free to start
-          </motion.p>
+            <span>8,247 teams</span>
+            <span className="text-[#52525b]">·</span>
+            <span>47K+ tasks</span>
+            <span className="text-[#52525b]">·</span>
+            <span>Free to start</span>
+          </motion.div>
         </div>
       </section>
 
@@ -170,9 +174,9 @@ export default function LandingPage() {
             </p>
           </FadeIn>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 max-w-xl md:max-w-none mx-auto">
             <FadeIn delay={0.1}>
-              <GlassCard className="p-8" hover={false}>
+              <GlassCard className="p-8 max-w-xl mx-auto" hover={false}>
                 <div className="text-3xl mb-4">💰</div>
                 <h3 className="text-lg font-medium text-[#fafafa] mb-3">
                   Make Money While You Sleep
@@ -182,17 +186,17 @@ export default function LandingPage() {
                   at the optimal moment, and catches opportunities you&apos;d miss.
                 </p>
                 <div className="rounded-lg p-4 bg-white/[0.02] border border-white/[0.04]">
-                  <p className="text-sm text-[#a1a1aa] italic">
+                  <p className="text-sm text-[#71717a] italic">
                     &ldquo;Foundry&apos;s DCA bot caught the March dip at $88 SOL.
                     I was sleeping.&rdquo;
                   </p>
-                  <p className="text-xs text-[#71717a] mt-2">— @early_user</p>
+                  <p className="text-xs text-[#52525b] mt-2">— @early_user</p>
                 </div>
               </GlassCard>
             </FadeIn>
 
             <FadeIn delay={0.2}>
-              <GlassCard className="p-8" hover={false}>
+              <GlassCard className="p-8 max-w-xl mx-auto" hover={false}>
                 <div className="text-3xl mb-4">🛡️</div>
                 <h3 className="text-lg font-medium text-[#fafafa] mb-3">
                   Don&apos;t Get Replaced — Lead It
@@ -202,11 +206,11 @@ export default function LandingPage() {
                   your job — it&apos;s whether you&apos;re the one leading it.
                 </p>
                 <div className="rounded-lg p-4 bg-white/[0.02] border border-white/[0.04]">
-                  <p className="text-sm text-[#a1a1aa] italic">
+                  <p className="text-sm text-[#71717a] italic">
                     &ldquo;I run a 4-agent team that does the research output of
                     3 analysts. My boss thinks I&apos;m magic.&rdquo;
                   </p>
-                  <p className="text-xs text-[#71717a] mt-2">— @anon_user</p>
+                  <p className="text-xs text-[#52525b] mt-2">— @anon_user</p>
                 </div>
               </GlassCard>
             </FadeIn>
@@ -231,7 +235,7 @@ export default function LandingPage() {
           </FadeIn>
 
           <FadeIn delay={0.15}>
-            <div className="flex gap-4 overflow-x-auto pb-4 justify-center flex-wrap">
+            <div className="flex gap-6 overflow-x-auto pb-4 justify-center flex-wrap">
               {TEAMS.map((team) => (
                 <TeamShowcaseCard key={team.id} team={team} />
               ))}
@@ -279,7 +283,7 @@ export default function LandingPage() {
                   <div className="text-sm font-mono text-[#7c3aed] mb-4">
                     {item.num}
                   </div>
-                  <h3 className="text-lg font-medium text-[#fafafa] mb-3">
+                  <h3 className="text-lg font-light text-[#fafafa] mb-3 tracking-[-0.02em]">
                     {item.title}
                   </h3>
                   <p className="text-sm text-[#a1a1aa] leading-relaxed">
@@ -295,25 +299,6 @@ export default function LandingPage() {
       {/* Social Proof */}
       <section className="relative py-32 px-6">
         <div className="max-w-5xl mx-auto">
-          <FadeIn>
-            <div className="flex flex-wrap items-center justify-center gap-12 mb-16">
-              {[
-                { number: "8,247", label: "Teams" },
-                { number: "47,000+", label: "Tasks" },
-                { number: "$2.4M", label: "Executed" },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <div className="text-3xl font-light text-[#fafafa] tracking-tight">
-                    {stat.number}
-                  </div>
-                  <div className="text-xs text-[#71717a] mt-1">
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </FadeIn>
-
           <div className="grid sm:grid-cols-3 gap-4">
             {[
               "I replaced 3 hours of morning research with one agent team.",
@@ -351,9 +336,9 @@ export default function LandingPage() {
             </p>
             <Link
               href="/teams"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#22c55e] text-white font-medium text-lg transition-all duration-300 hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#22c55e] text-white font-medium text-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(34,197,94,0.35)] active:scale-[0.98]"
               style={{
-                boxShadow: "0 0 32px rgba(34,197,94,0.3)",
+                boxShadow: "0 0 24px rgba(34,197,94,0.25)",
               }}
             >
               Assemble Your Team
@@ -364,15 +349,15 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] py-8 px-6">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[#71717a]">
+      <footer className="border-t border-white/[0.06] py-16 px-6">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#52525b]">
           <span>TenX Protocols (TSX-V: TNX) &copy; 2026</span>
           <div className="flex items-center gap-6">
-            <span className="hover:text-[#a1a1aa] cursor-pointer transition-colors duration-200">About</span>
-            <span className="hover:text-[#a1a1aa] cursor-pointer transition-colors duration-200">Docs</span>
-            <span className="hover:text-[#a1a1aa] cursor-pointer transition-colors duration-200">Terms</span>
-            <span className="hover:text-[#a1a1aa] cursor-pointer transition-colors duration-200">X/Twitter</span>
-            <span className="hover:text-[#a1a1aa] cursor-pointer transition-colors duration-200">Discord</span>
+            <span className="hover:text-[#71717a] cursor-pointer transition-colors duration-200">About</span>
+            <span className="hover:text-[#71717a] cursor-pointer transition-colors duration-200">Docs</span>
+            <span className="hover:text-[#71717a] cursor-pointer transition-colors duration-200">Terms</span>
+            <span className="hover:text-[#71717a] cursor-pointer transition-colors duration-200">X/Twitter</span>
+            <span className="hover:text-[#71717a] cursor-pointer transition-colors duration-200">Discord</span>
           </div>
         </div>
       </footer>

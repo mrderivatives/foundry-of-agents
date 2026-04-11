@@ -150,19 +150,21 @@ export default function AgentDetailPage() {
     }
   }, [agentId]);
 
+  // Load wallet on mount (for banner) and when wallet tab is selected
   useEffect(() => {
-    if (tab === "wallet") {
-      loadWallet();
-    }
-  }, [tab, loadWallet]);
+    loadWallet();
+  }, [loadWallet]);
 
+  const [walletError, setWalletError] = useState<string | null>(null);
   const handleCreateWallet = async () => {
     setCreatingWallet(true);
+    setWalletError(null);
     try {
       await api.post(`/api/agents/${agentId}/wallet`);
       await loadWallet();
-    } catch {
-      // ignore
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to create wallet";
+      setWalletError(msg);
     } finally {
       setCreatingWallet(false);
     }
@@ -341,7 +343,7 @@ export default function AgentDetailPage() {
             )}
           </div>
         ) : !walletLoading ? (
-          <div className="mb-4">
+          <div className="mb-4 space-y-2">
             <button
               onClick={handleCreateWallet}
               disabled={creatingWallet}
@@ -349,6 +351,9 @@ export default function AgentDetailPage() {
             >
               {creatingWallet ? 'Creating...' : '💰 Enable Wallet for this Agent'}
             </button>
+            {walletError && (
+              <p className="text-xs text-red-400">{walletError}</p>
+            )}
           </div>
         ) : null}
 

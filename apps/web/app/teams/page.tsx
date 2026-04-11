@@ -8,6 +8,7 @@ import Link from "next/link";
 import { TEAMS } from "@/shared/data/teams";
 import { CharacterAvatar } from "@/shared/components/characters";
 import { GlassCard } from "@/shared/components/glass-card";
+import { TeamIcon } from "@/shared/components/team-icon";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -33,7 +34,7 @@ function TeamCard({
           {/* Left: Team info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl">{team.emoji}</span>
+              <TeamIcon teamId={team.id} size="md" />
               <h3 className="text-lg font-light text-[#fafafa] tracking-[-0.02em]">{team.name}</h3>
             </div>
             <p className="text-sm text-[#a1a1aa] mb-3">

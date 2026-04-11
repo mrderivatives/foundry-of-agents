@@ -15,6 +15,9 @@ import {
   Copy,
   Snowflake,
   Play,
+  Coins,
+  RefreshCw,
+  ClipboardCopy,
 } from "lucide-react";
 import type { Agent, ChatSession, WalletInfo, WalletPolicy, WalletTransaction } from "@/shared/types";
 import { AgentAvatar } from "@/shared/components/agent-avatar";
@@ -306,7 +309,7 @@ export default function AgentDetailPage() {
           <div className="rounded-lg border border-border bg-card/50 p-3 sm:p-4 mb-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                <span className="text-sm">💰</span>
+                <Coins className="w-4 h-4 text-amber-400" />
                 <code className="text-xs font-mono text-muted-foreground">
                   {walletData.wallet.public_key.slice(0, 6)}...{walletData.wallet.public_key.slice(-4)}
                 </code>
@@ -314,7 +317,7 @@ export default function AgentDetailPage() {
                   onClick={() => { navigator.clipboard.writeText(walletData.wallet.public_key); }}
                   className="text-muted-foreground hover:text-foreground text-xs"
                   title="Copy address"
-                >📋</button>
+                ><ClipboardCopy className="w-3 h-3" /></button>
                 <a
                   href={`https://solscan.io/account/${walletData.wallet.public_key}`}
                   target="_blank"
@@ -326,7 +329,7 @@ export default function AgentDetailPage() {
                 <span className="text-muted-foreground">SOL: <span className="text-foreground font-medium">{walletBalance?.sol.amount ?? '...'}</span></span>
                 <span className="text-muted-foreground">USDC: <span className="text-foreground font-medium">{walletBalance?.usdc.amount ?? '...'}</span></span>
                 {walletBalance && <span className="text-muted-foreground">≈ ${walletBalance.total_usd}</span>}
-                <button onClick={loadWallet} className="text-muted-foreground hover:text-primary" title="Refresh">🔄</button>
+                <button onClick={loadWallet} className="text-muted-foreground hover:text-primary" title="Refresh"><RefreshCw className="w-3 h-3" /></button>
                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                   walletData.wallet.status === 'active' ? 'bg-green-500/10 text-green-400' :
                   walletData.wallet.status === 'frozen' ? 'bg-red-500/10 text-red-400' : 'bg-zinc-500/10 text-zinc-400'
@@ -349,7 +352,7 @@ export default function AgentDetailPage() {
               disabled={creatingWallet}
               className="rounded-lg border border-dashed border-border px-4 py-2 text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
             >
-              {creatingWallet ? 'Creating...' : '💰 Enable Wallet for this Agent'}
+              {creatingWallet ? 'Creating...' : 'Enable Wallet for this Agent'}
             </button>
             {walletError && (
               <p className="text-xs text-red-400">{walletError}</p>

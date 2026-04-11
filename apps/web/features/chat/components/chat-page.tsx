@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
-import { ArrowUp, RotateCcw } from "lucide-react";
+import { ArrowUp, RotateCcw, RefreshCw, Search, CheckCircle2, XCircle } from "lucide-react";
 import { api } from "@/shared/api/client";
 import type { ChatMessage } from "@/shared/types";
 import { AgentAvatar } from "@/shared/components/agent-avatar";
@@ -60,7 +60,7 @@ function WalletCard({ event }: { event: {
     <div className={`rounded-lg border ${borderColor} bg-card/50 p-3 mb-2 text-xs space-y-2`}>
       {/* Proposal */}
       <div className="flex items-center gap-2">
-        <span>🔄</span>
+        <RefreshCw className="w-3 h-3 text-violet-400" />
         <span className="font-medium">
           Swap {event.amount} {event.input_token} → {event.output_amount || '...'} {event.output_token}
         </span>
@@ -69,7 +69,7 @@ function WalletCard({ event }: { event: {
       {/* Policy */}
       {(event.type === 'policy' || event.type === 'executed' || event.type === 'blocked') && (
         <div className={`flex items-center gap-1 ${event.approved ? 'text-green-400' : 'text-red-400'}`}>
-          <span>{event.approved ? '✅' : '❌'}</span>
+          {event.approved ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
           <span>Policy: {event.approved ? 'Approved' : 'Blocked'}</span>
         </div>
       )}
@@ -89,7 +89,7 @@ function WalletCard({ event }: { event: {
       {/* Executed */}
       {event.type === 'executed' && event.tx_signature && (
         <div className="flex items-center gap-2 text-green-400">
-          <span>✅ Executed</span>
+          <CheckCircle2 className="w-3 h-3" /><span>Executed</span>
           <a href={`https://solscan.io/tx/${event.tx_signature}`} target="_blank"
              rel="noopener noreferrer"
              className="underline hover:text-green-300">
@@ -101,7 +101,7 @@ function WalletCard({ event }: { event: {
       {/* Blocked */}
       {event.type === 'blocked' && (
         <div className="text-red-400">
-          ❌ {event.reason || 'Transaction blocked'}
+          <span className="flex items-center gap-1"><XCircle className="w-3 h-3" /> {event.reason || 'Transaction blocked'}</span>
         </div>
       )}
 
@@ -441,7 +441,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
                 {walletEvent && <WalletCard event={walletEvent} />}
                 {toolStatus && (
                   <div className={`flex items-center gap-2 text-xs mb-2 px-2 py-1.5 rounded-lg ${toolStatus.done ? 'bg-green-500/5 text-green-400' : 'bg-primary/5 text-muted-foreground'}`}>
-                    <span>{toolStatus.done ? '✓' : '🔍'}</span>
+                    {toolStatus.done ? <span>✓</span> : <Search className="w-3 h-3" />}
                     <span className={!toolStatus.done ? 'animate-pulse' : ''}>
                       {toolStatus.done ? 'Searched' : 'Searching'}: "{toolStatus.query}"
                     </span>

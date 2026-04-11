@@ -8,6 +8,7 @@ import Link from "next/link";
 import { TEAMS, ALL_SPECIALISTS, type Specialist } from "@/shared/data/teams";
 import { CharacterAvatar } from "@/shared/components/characters";
 import { GlassCard } from "@/shared/components/glass-card";
+import { TeamIcon } from "@/shared/components/team-icon";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -214,7 +215,10 @@ function SpecialistPicker({
               <p className="text-xs font-medium text-[#fafafa] truncate">
                 {spec.role}
               </p>
-              <p className="text-[10px] text-[#71717a]">{team?.emoji} {spec.name}</p>
+              <p className="text-[10px] text-[#71717a] flex items-center justify-center gap-1">
+                {spec.teamId && <TeamIcon teamId={spec.teamId} size="sm" />}
+                {spec.name}
+              </p>
             </button>
           );
         })}
@@ -453,10 +457,7 @@ export default function AssemblePage({
                 <button
                   onClick={handleActivate}
                   disabled={activating}
-                  className="inline-flex items-center gap-2 rounded-xl px-10 py-4 text-lg font-medium text-white bg-[#22c55e] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(34,197,94,0.35)] disabled:opacity-70 active:scale-[0.98]"
-                  style={{
-                    boxShadow: "0 0 24px rgba(34,197,94,0.25)",
-                  }}
+                  className="inline-flex items-center gap-2 rounded-xl px-10 py-4 text-lg font-medium text-white border border-violet-500/50 bg-violet-500/10 hover:bg-violet-500/20 hover:border-violet-500/70 transition-all duration-200 disabled:opacity-70 active:scale-[0.98]"
                 >
                   <Zap className="w-5 h-5" />
                   {activating ? "Activating..." : "Activate Team"}

@@ -4,10 +4,21 @@ import { useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useInView } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Coins, Shield, Brain, Bell, Lock, Puzzle } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { TEAMS } from "@/shared/data/teams";
 import { CharacterAvatar } from "@/shared/components/characters";
 import { GlassCard } from "@/shared/components/glass-card";
+import { TeamIcon } from "@/shared/components/team-icon";
+
+function FeatureIcon({ icon: Icon, color }: { icon: LucideIcon; color: string }) {
+  return (
+    <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+         style={{ background: color + '15', border: `1px solid ${color}30` }}>
+      <Icon className="w-5 h-5" style={{ color }} />
+    </div>
+  );
+}
 
 function GradientOrbs() {
   return (
@@ -73,7 +84,7 @@ function FadeIn({
 function TeamShowcaseCard({ team }: { team: (typeof TEAMS)[number] }) {
   return (
     <GlassCard className="flex-shrink-0 w-[200px] p-7 cursor-pointer" style={{ borderLeft: `2px solid ${team.accentColor}30` }}>
-      <div className="text-2xl mb-3">{team.emoji}</div>
+      <div className="mb-3"><TeamIcon teamId={team.id} size="md" /></div>
       <h3 className="font-medium text-sm text-[#fafafa] mb-1">{team.name}</h3>
       <div className="flex items-center justify-center gap-3 my-4">
         <CharacterAvatar
@@ -159,10 +170,7 @@ export default function LandingPage() {
           >
             <Link
               href="/teams"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#22c55e] text-white font-medium text-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(34,197,94,0.35)] active:scale-[0.98]"
-              style={{
-                boxShadow: "0 0 24px rgba(34,197,94,0.25)",
-              }}
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-violet-500/50 bg-violet-500/10 text-white font-medium text-lg hover:bg-violet-500/20 hover:border-violet-500/70 transition-all duration-200"
             >
               Assemble Your Team
               <ArrowRight className="w-5 h-5" />
@@ -218,7 +226,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-6 max-w-xl md:max-w-none mx-auto">
             <FadeIn delay={0.1}>
               <GlassCard className="p-8 max-w-xl mx-auto" hover={false}>
-                <div className="text-3xl mb-4">💰</div>
+                <div className="mb-4"><FeatureIcon icon={Coins} color="#f59e0b" /></div>
                 <h3 className="text-lg font-medium text-[#fafafa] mb-3">
                   Make Money While You Sleep
                 </h3>
@@ -238,7 +246,7 @@ export default function LandingPage() {
 
             <FadeIn delay={0.2}>
               <GlassCard className="p-8 max-w-xl mx-auto" hover={false}>
-                <div className="text-3xl mb-4">🛡️</div>
+                <div className="mb-4"><FeatureIcon icon={Shield} color="#3b82f6" /></div>
                 <h3 className="text-lg font-medium text-[#fafafa] mb-3">
                   Don&apos;t Get Replaced — Lead It
                 </h3>
@@ -375,10 +383,7 @@ export default function LandingPage() {
             </p>
             <Link
               href="/teams"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-[#22c55e] text-white font-medium text-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_24px_rgba(34,197,94,0.35)] active:scale-[0.98]"
-              style={{
-                boxShadow: "0 0 24px rgba(34,197,94,0.25)",
-              }}
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-violet-500/50 bg-violet-500/10 text-white font-medium text-lg hover:bg-violet-500/20 hover:border-violet-500/70 transition-all duration-200"
             >
               Assemble Your Team
               <ArrowRight className="w-5 h-5" />

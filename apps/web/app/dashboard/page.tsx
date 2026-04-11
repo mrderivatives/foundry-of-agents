@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Plus, MessageSquare } from "lucide-react";
 import { CharacterAvatar } from "@/shared/components/characters";
+import { TeamIcon } from "@/shared/components/team-icon";
 import { useAgentStore } from "@/features/agents/store";
 import { AgentList } from "@/features/agents/components/agent-list";
 import { CreateAgentDialog } from "@/features/agents/components/create-agent-dialog";
@@ -82,7 +83,7 @@ function OrgChartSidebar({
       {/* Team header */}
       <div className="px-4 py-4 border-b border-white/[0.04]">
         <div className="flex items-center gap-2">
-          <span className="text-base">{team.emoji}</span>
+          <TeamIcon teamId={team.templateId} size="sm" />
           <span className="text-sm font-medium text-[#fafafa]">{team.teamName}</span>
         </div>
       </div>
@@ -345,7 +346,7 @@ function CommandCenter({ team }: { team: TeamData }) {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile org strip */}
         <div className="lg:hidden flex items-center gap-2 px-4 py-3 border-b border-white/[0.04] overflow-x-auto">
-          <span className="text-sm">{team.emoji}</span>
+          <TeamIcon teamId={team.templateId} size="sm" />
           {[team.lead, ...team.specialists].map((member, i) => {
             const memberId = i === 0 ? "lead" : team.specialists[i - 1]?.id;
             const status = statuses[memberId ?? "lead"] ?? "offline";

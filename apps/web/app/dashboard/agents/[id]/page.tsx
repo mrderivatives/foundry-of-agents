@@ -18,6 +18,8 @@ import {
   Coins,
   RefreshCw,
   ClipboardCopy,
+  Users,
+  Trash2,
 } from "lucide-react";
 import type { Agent, ChatSession, WalletInfo, WalletPolicy, WalletTransaction } from "@/shared/types";
 import { AgentAvatar } from "@/shared/components/agent-avatar";
@@ -57,7 +59,7 @@ interface CronJob {
   created_at: string;
 }
 
-type Tab = "chat" | "memory" | "skills" | "schedule" | "wallet";
+type Tab = "chat" | "memory" | "skills" | "schedule" | "wallet" | "team";
 
 const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "chat", label: "Chat", icon: MessageSquare },
@@ -65,6 +67,7 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
   { id: "skills", label: "Skills", icon: Puzzle },
   { id: "schedule", label: "Schedule", icon: Clock },
   { id: "wallet", label: "Wallet", icon: Wallet },
+  { id: "team", label: "Team", icon: Users },
 ];
 
 export default function AgentDetailPage() {
@@ -94,6 +97,10 @@ export default function AgentDetailPage() {
   const [creatingWallet, setCreatingWallet] = useState(false);
   const [copied, setCopied] = useState(false);
   const [subAgents, setSubAgents] = useState<Agent[]>([]);
+  const [showAddSpecialist, setShowAddSpecialist] = useState(false);
+  const [newSpecName, setNewSpecName] = useState("");
+  const [newSpecDesc, setNewSpecDesc] = useState("");
+  const [addingSpec, setAddingSpec] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -267,6 +274,30 @@ export default function AgentDetailPage() {
     try {
       await api.delete(`/api/cron-jobs/${cronId}`);
       setCronJobs((prev) => prev.filter((j) => j.id !== cronId));
+    } catch { /* ignore */ }
+  };
+
+  const handleAddSpecialist = async () => {
+    if (!newSpecName.trim()) return;
+    setAddingSpec(true);
+    try {
+      const spec = await api.post<Agent>(`/api/agents/${agentId}/team/add`, {
+        name: newSpecName.trim(),
+        description: newSpecDesc.trim() || undefined,
+      });
+      setSubAgents(prev => [...prev, spec]);
+      setNewSpecName("");
+      setNewSpecDesc("");
+      setShowAddSpecialist(false);
+    } catch { /* ignore */ } finally {
+      setAddingSpec(false);
+    }
+  };
+
+  const handleRemoveSpecialist = async (subId: string) => {
+    try {
+      await api.delete(`/api/agents/${agentId}/team/${subId}`);
+      setSubAgents(prev => prev.filter(a => a.id !== subId));
     } catch { /* ignore */ }
   };
 
@@ -903,6 +934,115 @@ export default function AgentDetailPage() {
                   )}
                 </div>
               </>
+            )}
+          </div>
+        )}
+
+        {tab === "team" && (
+          <div className="p-4 sm:p-6 overflow-y-auto h-full space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Team Members</h3>
+              <button
+                onClick={() => setShowAddSpecialist(!showAddSpecialist)}
+                className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+                Add Specialist
+              </button>
+            </div>
+
+            {showAddSpecialist && (
+              <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                <input
+                  value={newSpecName}
+                  onChange={(e) => setNewSpecName(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Specialist name"
+                />
+                <input
+                  value={newSpecDesc}
+                  onChange={(e) => setNewSpecDesc(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Role / description (optional)"
+                />
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => setShowAddSpecialist(false)}
+                    className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent/50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddSpecialist}
+                    disabled={addingSpec || !newSpecName.trim()}
+                    className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  >
+                    {addingSpec ? "Adding..." : "Add"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {subAgents.length === 0 && !showAddSpecialist ? (
+              <div className="rounded-xl border border-border bg-card/50 p-12 text-center">
+                <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <h3 className="text-lg font-semibold mb-1">Solo Agent</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  This is a solo agent. Add specialists to build a team.
+                </p>
+                <button
+                  onClick={() => setShowAddSpecialist(true)}
+                  className="flex items-center gap-2 mx-auto rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Specialist
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Lead agent card */}
+                <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-4">
+                  <CharacterAvatar characterId="default-lead" size={48} accentColor="#7c3aed" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">{agent.name}</span>
+                      <span className="rounded-full bg-violet-500/10 text-violet-400 px-2 py-0.5 text-[10px] font-medium">Lead</span>
+                    </div>
+                    {agent.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{agent.description}</p>
+                    )}
+                  </div>
+                  <span className={`h-2 w-2 rounded-full ${
+                    agent.status === 'idle' ? 'bg-green-400' : agent.status === 'working' ? 'bg-blue-400' : 'bg-zinc-500'
+                  }`} />
+                </div>
+
+                {/* Specialist cards */}
+                {subAgents.map(sub => (
+                  <div key={sub.id} className="rounded-xl border border-border bg-card p-4 flex items-center gap-4">
+                    <CharacterAvatar characterId="default-lead" size={48} accentColor="#7c3aed" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{sub.name}</span>
+                        <span className="rounded-full bg-zinc-500/10 text-zinc-400 px-2 py-0.5 text-[10px] font-medium">Specialist</span>
+                      </div>
+                      {sub.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">{sub.description}</p>
+                      )}
+                    </div>
+                    <span className={`h-2 w-2 rounded-full shrink-0 ${
+                      sub.status === 'idle' ? 'bg-green-400' : sub.status === 'working' ? 'bg-blue-400' : 'bg-zinc-500'
+                    }`} />
+                    <button
+                      onClick={() => handleRemoveSpecialist(sub.id)}
+                      className="text-muted-foreground hover:text-red-400 transition-colors shrink-0"
+                      title="Remove specialist"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}

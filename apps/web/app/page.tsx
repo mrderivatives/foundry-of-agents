@@ -123,10 +123,11 @@ export default function LandingPage() {
     <div className="min-h-screen" style={{ background: "#09090b" }}>
       {/* Hero */}
       <section className="relative min-h-screen flex items-center justify-center px-6 py-24">
-        {/* Hero background */}
-        <div className="absolute inset-0">
-          <Image src="/hero-bg-mesh.png" alt="" fill className="object-cover opacity-30" priority />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#09090b]/60 via-[#09090b]/40 to-[#09090b]" />
+        {/* Hero background — extends beyond hero into team showcase */}
+        <div className="absolute inset-0 h-[150vh] overflow-hidden">
+          <Image src="/hero-bg-network-complex.png" alt="" fill className="object-cover opacity-[0.12] scale-110" priority />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#09090b]/40 via-transparent to-[#09090b]" />
+          <div className="absolute bottom-0 h-64 w-full bg-gradient-to-t from-[#09090b] to-transparent" />
         </div>
 
         {/* Slow-moving gradient orbs */}

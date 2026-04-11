@@ -133,6 +133,9 @@ export default function DashboardLayout({
                 <AgentAvatar emoji={agent.avatar_url} size={32} />
                 <div className="flex-1 min-w-0">
                   <p className="truncate font-medium">{agent.name}</p>
+                  {agent.team_count && agent.team_count > 0 && (
+                    <p className="text-[10px] text-muted-foreground/60">{agent.team_count} specialist{agent.team_count > 1 ? 's' : ''}</p>
+                  )}
                 </div>
                 <span
                   className={`h-2 w-2 shrink-0 rounded-full ${

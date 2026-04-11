@@ -37,6 +37,8 @@ export interface Agent {
   archived_at?: string;
   created_at: string;
   updated_at: string;
+  parent_agent_id?: string;
+  team_count?: number;
 }
 
 export interface Task {

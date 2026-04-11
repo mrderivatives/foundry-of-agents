@@ -77,6 +77,12 @@ func MountRoutes(r chi.Router, h *Handler) {
 			})
 		})
 
+		r.Route("/api/teams", func(r chi.Router) {
+			r.Get("/", h.handleListTeams)
+			r.Post("/", h.handleCreateTeam)
+			r.Get("/{teamId}", h.handleGetTeam)
+		})
+
 		r.Route("/api/notifications", func(r chi.Router) {
 			r.Get("/preferences", h.handleListNotifPrefs)
 			r.Post("/preferences", h.handleSaveNotifPref)

@@ -392,7 +392,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-3">
         {messages.length === 0 && !isStreaming && (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <div className="text-4xl mb-3">&#x1F44B;</div>
@@ -480,7 +480,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
                 handleSend();
               }
             }}
-            placeholder="Send a message..."
+            placeholder="Message your team lead..."
             disabled={sending}
             rows={1}
             className="w-full rounded-xl border border-input bg-background pl-4 pr-12 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 resize-none"

@@ -3,7 +3,7 @@ import "./globals.css";
 import { SolanaWalletProvider } from "@/shared/providers/wallet-provider";
 
 export const metadata: Metadata = {
-  title: "Foundry of Agents | Crypto-Native AI Agent Platform",
+  title: "Foundry — Build Your AI Army",
   description:
     "Deploy autonomous AI agents that manage your crypto portfolio, execute trades, and send daily briefings — with guardrails you control.",
   openGraph: {

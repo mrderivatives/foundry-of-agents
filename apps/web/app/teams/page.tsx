@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -28,7 +29,7 @@ function TeamCard({
       onClick={() => router.push(`/teams/${team.id}/assemble`)}
       className="group cursor-pointer"
     >
-      <GlassCard className="p-8 transition-all duration-200 group-hover:translate-y-[-2px] group-hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+      <GlassCard className="p-8 transition-all duration-200 group-hover:translate-y-[-2px] group-hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]" style={{ borderLeft: `2px solid ${team.accentColor}30` }}>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
           {/* Left: Team info */}
           <div className="flex-1 min-w-0">
@@ -112,6 +113,10 @@ function TeamCard({
 }
 
 export default function TeamsPage() {
+  useEffect(() => {
+    document.title = "Foundry — Choose Your Squad";
+  }, []);
+
   return (
     <div className="min-h-screen" style={{ background: "#09090b" }}>
       {/* Header */}

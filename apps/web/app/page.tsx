@@ -8,6 +8,40 @@ import { TEAMS } from "@/shared/data/teams";
 import { getCharacter } from "@/shared/components/characters";
 import { GlassCard } from "@/shared/components/glass-card";
 
+function GradientOrbs() {
+  return (
+    <>
+      <motion.div
+        className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-violet-600/[0.04] blur-[120px]"
+        animate={{
+          x: [0, 40, -20, 0],
+          y: [0, -30, 20, 0],
+          opacity: [0.03, 0.05, 0.03],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-blue-600/[0.03] blur-[100px]"
+        animate={{
+          x: [0, -30, 25, 0],
+          y: [0, 20, -25, 0],
+          opacity: [0.03, 0.05, 0.03],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute top-1/2 right-1/3 w-[300px] h-[300px] rounded-full bg-emerald-600/[0.02] blur-[80px]"
+        animate={{
+          x: [0, 20, -15, 0],
+          y: [0, -15, 30, 0],
+          opacity: [0.02, 0.04, 0.02],
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+      />
+    </>
+  );
+}
+
 const ease = [0.16, 1, 0.3, 1] as const;
 
 function FadeIn({
@@ -43,10 +77,10 @@ function TeamShowcaseCard({ team }: { team: (typeof TEAMS)[number] }) {
   }));
 
   return (
-    <GlassCard className="flex-shrink-0 w-[200px] p-7 cursor-pointer">
+    <GlassCard className="flex-shrink-0 w-[200px] p-7 cursor-pointer" style={{ borderLeft: `2px solid ${team.accentColor}30` }}>
       <div className="text-2xl mb-3">{team.emoji}</div>
       <h3 className="font-medium text-sm text-[#fafafa] mb-1">{team.name}</h3>
-      <div className="flex items-center gap-3 my-4">
+      <div className="flex items-center justify-center gap-4 my-4">
         {leadChar && (
           <div
             className="rounded-full p-0.5"
@@ -92,17 +126,18 @@ export default function LandingPage() {
     <div className="min-h-screen" style={{ background: "#09090b" }}>
       {/* Hero */}
       <section className="relative min-h-screen flex items-center justify-center px-6 py-24">
-        {/* Subtle radial gradient background */}
+        {/* Slow-moving gradient orbs */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-violet-600/[0.04] blur-[120px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-blue-600/[0.03] blur-[100px]" />
+          <GradientOrbs />
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
           <motion.h1
             className="text-[clamp(32px,6vw,72px)] font-extralight tracking-[-0.03em] leading-[1.05]"
             style={{
-              background: "linear-gradient(180deg, #fff 40%, rgba(255,255,255,0.5) 100%)",
+              background: "linear-gradient(135deg, #fff 0%, #7c3aed 50%, rgba(255,255,255,0.4) 100%)",
+              backgroundSize: "200% 200%",
+              animation: "gradient-shift 8s ease infinite",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
@@ -113,14 +148,16 @@ export default function LandingPage() {
             Build Your AI Army
           </motion.h1>
 
-          <motion.p
-            className="mt-6 text-lg text-[#a1a1aa] max-w-xl mx-auto leading-relaxed"
+          <motion.div
+            className="mt-8"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.15, ease }}
           >
-            The agents that trade, research, and plan — while you live your life.
-          </motion.p>
+            <p className="text-lg text-[#a1a1aa] leading-loose">A team of AI agents.</p>
+            <p className="text-lg text-[#a1a1aa] leading-loose">Working for you.</p>
+            <p className="text-lg text-[#a1a1aa] leading-loose">24 hours a day.</p>
+          </motion.div>
 
           <motion.div
             className="mt-10"
@@ -260,33 +297,31 @@ export default function LandingPage() {
             </h2>
           </FadeIn>
 
-          <div className="grid md:grid-cols-3 gap-12">
+          <div className="flex flex-col md:flex-row gap-12 md:gap-16 max-w-4xl mx-auto">
             {[
               {
-                num: "01",
-                title: "Pick Your Team",
-                desc: "Choose a pre-built squad or mix your own from 16+ specialist agents.",
+                num: "1",
+                title: "Choose Your Mission",
+                desc: "Pick a team template or build your own from 16+ specialists.",
               },
               {
-                num: "02",
-                title: "Activate",
-                desc: "Your agents go live. Watch them coordinate in real-time.",
+                num: "2",
+                title: "Assemble Your Team",
+                desc: "Name your agents. Set their roles. One click to deploy.",
               },
               {
-                num: "03",
-                title: "Sit Back",
-                desc: "They research, trade, monitor, and report back — 24/7.",
+                num: "3",
+                title: "Watch Them Work",
+                desc: "Your team researches, trades, and reports back — 24/7.",
               },
             ].map((item, i) => (
               <FadeIn key={item.num} delay={i * 0.15}>
-                <div className="text-center">
-                  <div className="text-sm font-mono text-[#7c3aed] mb-4">
+                <div className="flex-1 text-center">
+                  <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center mx-auto mb-4 text-lg font-light text-[#a1a1aa]">
                     {item.num}
                   </div>
-                  <h3 className="text-lg font-light text-[#fafafa] mb-3 tracking-[-0.02em]">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm text-[#a1a1aa] leading-relaxed">
+                  <h3 className="text-lg font-light mb-2">{item.title}</h3>
+                  <p className="text-sm text-[#71717a] leading-relaxed">
                     {item.desc}
                   </p>
                 </div>

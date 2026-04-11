@@ -55,6 +55,21 @@ function formatTime(date: Date): string {
   });
 }
 
+function formatRelativeTime(timestamp: string): string {
+  const now = Date.now();
+  const then = new Date(timestamp).getTime() || now;
+  const diff = Math.floor((now - then) / 1000);
+  if (diff < 10) return "just now";
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+function Skeleton({ className = "" }: { className?: string }) {
+  return <div className={`animate-pulse bg-white/[0.04] rounded-lg ${className}`} />;
+}
+
 function OrgChartSidebar({
   team,
   statuses,
@@ -158,16 +173,19 @@ function FeedItem({ event }: { event: FeedEvent }) {
     : event.type === "user" ? "↑"
     : "↓";
 
+  const agentAccentColor = event.type === "complete" ? "#22c55e" : event.type === "alert" ? "#ef4444" : "#3b82f6";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-4"
+      className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-4 border-l-2"
+      style={{ borderLeftColor: agentAccentColor + "40" }}
     >
       <div className="flex gap-3">
         <span className="text-[10px] text-[#71717a] font-mono shrink-0 pt-1 w-10">
-          {event.timestamp}
+          {formatRelativeTime(event.timestamp)}
         </span>
         <div className="shrink-0 pt-0.5">
           {AgentChar ? (
@@ -485,10 +503,25 @@ export default function DashboardPage() {
     setLoaded(true);
   }, []);
 
+  useEffect(() => {
+    document.title = "Foundry — Command Center";
+  }, []);
+
   if (!loaded) {
     return (
-      <div className="flex items-center justify-center h-full" style={{ background: "#09090b" }}>
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#7c3aed] border-t-transparent" />
+      <div className="flex h-full" style={{ background: "#09090b" }}>
+        <div className="hidden lg:block w-60 shrink-0 border-r border-white/[0.04] p-4 space-y-4">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="flex-1 p-4 space-y-3">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
       </div>
     );
   }

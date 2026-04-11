@@ -233,6 +233,10 @@ export default function AssemblePage({
   const [activating, setActivating] = useState(false);
   const [showOrgChart, setShowOrgChart] = useState(templateId !== "custom");
 
+  useEffect(() => {
+    document.title = "Foundry — Assemble Your Team";
+  }, []);
+
   const isCustom = templateId === "custom";
   const accentColor = team?.accentColor ?? "#ec4899";
 

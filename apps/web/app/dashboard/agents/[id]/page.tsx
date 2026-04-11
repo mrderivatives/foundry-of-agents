@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import type { Agent, ChatSession, WalletInfo, WalletPolicy, WalletTransaction } from "@/shared/types";
 import { AgentAvatar } from "@/shared/components/agent-avatar";
+import { CharacterAvatar } from "@/shared/components/characters";
 
 interface AgentSkill {
   agent_id: string;
@@ -92,6 +93,7 @@ export default function AgentDetailPage() {
   const [walletLoading, setWalletLoading] = useState(false);
   const [creatingWallet, setCreatingWallet] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [subAgents, setSubAgents] = useState<Agent[]>([]);
 
   useEffect(() => {
     Promise.all([
@@ -99,12 +101,14 @@ export default function AgentDetailPage() {
       api.get<AgentSkill[]>(`/api/agents/${agentId}/skills`),
       api.get<Skill[]>(`/api/skills`),
       api.get<CronJob[]>(`/api/agents/${agentId}/cron-jobs`).catch(() => []),
+      api.get<Agent[]>(`/api/agents/${agentId}/team`).catch(() => []),
     ])
-      .then(([a, as2, sk, cj]) => {
+      .then(([a, as2, sk, cj, team]) => {
         setAgent(a);
         setAgentSkills(as2);
         setAllSkills(sk);
         setCronJobs(cj as CronJob[]);
+        setSubAgents(team as Agent[]);
       })
       .catch(() => router.replace("/dashboard"))
       .finally(() => setLoading(false));
@@ -359,6 +363,26 @@ export default function AgentDetailPage() {
             )}
           </div>
         ) : null}
+
+        {/* Roster Strip */}
+        {subAgents.length > 0 && (
+          <div className="flex items-center gap-4 px-4 sm:px-6 py-2.5 border-b border-white/[0.06] overflow-x-auto mb-2">
+            <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-medium flex-shrink-0">Team</span>
+            {subAgents.map(sub => {
+              const charId = sub.avatar_url && sub.avatar_url in {} ? sub.avatar_url : 'default-lead';
+              return (
+                <div key={sub.id} className="flex items-center gap-1.5 flex-shrink-0">
+                  <CharacterAvatar characterId={charId} size={24} accentColor="#7c3aed" />
+                  <span className="text-xs text-zinc-400">{sub.name}</span>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    sub.status === 'working' ? 'bg-blue-400' :
+                    sub.status === 'idle' ? 'bg-emerald-400/60' : 'bg-zinc-600'
+                  }`} />
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex gap-1 overflow-x-auto">

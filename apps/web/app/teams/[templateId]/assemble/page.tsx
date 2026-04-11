@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Pencil, Check, Zap } from "lucide-react";
 import Link from "next/link";
 import { TEAMS, ALL_SPECIALISTS, type Specialist } from "@/shared/data/teams";
 import { CharacterAvatar } from "@/shared/components/characters";
+import { api } from "@/shared/api/client";
 import { GlassCard } from "@/shared/components/glass-card";
 import { TeamIcon } from "@/shared/components/team-icon";
 
@@ -272,30 +273,62 @@ export default function AssemblePage({
 
   const handleActivate = async () => {
     setActivating(true);
-    await new Promise((r) => setTimeout(r, 1500));
+    try {
+      const result = await api.post<{
+        id: string;
+        lead_agent_id: string;
+        members: { agent_id: string; role: string }[];
+      }>("/api/teams", {
+        template_id: templateId,
+        lead_name: leadName,
+        specialist_names: specialists.map((s) => getSpecName(s)),
+        accent_color: accentColor,
+      });
 
-    const teamData = {
-      templateId,
-      teamName: team?.name ?? "Custom Team",
-      emoji: team?.emoji ?? "⚡",
-      accentColor,
-      lead: {
-        name: leadName,
-        role: team?.lead.role ?? "Chief of Staff",
-        characterId: team?.lead.characterId ?? "default-lead",
-        tagline: team?.lead.tagline ?? "Your mission, my team.",
-      },
-      specialists: specialists.map((s) => ({
-        id: s.id,
-        name: getSpecName(s),
-        role: s.role,
-        characterId: s.characterId,
-        tagline: s.tagline,
-        description: s.description,
-      })),
-    };
-    localStorage.setItem("foundry_team", JSON.stringify(teamData));
-    router.push("/dashboard");
+      // Also save to localStorage for the dashboard command center
+      const teamData = {
+        templateId,
+        teamName: team?.name ?? "Custom Team",
+        emoji: team?.emoji ?? "⚡",
+        accentColor,
+        lead: {
+          name: leadName,
+          role: team?.lead.role ?? "Chief of Staff",
+          characterId: team?.lead.characterId ?? "default-lead",
+          tagline: team?.lead.tagline ?? "Your mission, my team.",
+        },
+        specialists: specialists.map((s) => ({
+          id: s.id,
+          name: getSpecName(s),
+          role: s.role,
+          characterId: s.characterId,
+          tagline: s.tagline,
+          description: s.description,
+        })),
+      };
+      localStorage.setItem("foundry_team", JSON.stringify(teamData));
+
+      // Redirect to lead agent's detail page
+      if (result.lead_agent_id) {
+        router.push(`/dashboard/agents/${result.lead_agent_id}`);
+      } else {
+        router.push("/dashboard");
+      }
+    } catch {
+      // Fallback: save to localStorage and go to dashboard
+      const teamData = {
+        templateId,
+        teamName: team?.name ?? "Custom Team",
+        emoji: team?.emoji ?? "⚡",
+        accentColor,
+        lead: { name: leadName, role: team?.lead.role ?? "Chief of Staff", characterId: team?.lead.characterId ?? "default-lead", tagline: team?.lead.tagline ?? "Your mission, my team." },
+        specialists: specialists.map((s) => ({ id: s.id, name: getSpecName(s), role: s.role, characterId: s.characterId, tagline: s.tagline, description: s.description })),
+      };
+      localStorage.setItem("foundry_team", JSON.stringify(teamData));
+      router.push("/dashboard");
+    } finally {
+      setActivating(false);
+    }
   };
 
   if (!team) {

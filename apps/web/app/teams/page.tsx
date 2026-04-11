@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { TEAMS } from "@/shared/data/teams";
-import { getCharacter } from "@/shared/components/characters";
+import { CharacterAvatar } from "@/shared/components/characters";
 import { GlassCard } from "@/shared/components/glass-card";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -19,7 +19,6 @@ function TeamCard({
   index: number;
 }) {
   const router = useRouter();
-  const LeadChar = getCharacter(team.lead.characterId);
 
   return (
     <motion.div
@@ -69,25 +68,19 @@ function TeamCard({
 
           {/* Center: Character avatars */}
           <div className="flex items-center gap-3">
-            {LeadChar && (
-              <div
-                className="rounded-xl p-1 transition-all duration-200 group-hover:scale-105"
-                style={{ border: `2px solid ${team.accentColor}` }}
-              >
-                <LeadChar size={48} />
-              </div>
-            )}
-            {team.specialists.map((s) => {
-              const SpecChar = getCharacter(s.characterId);
-              return SpecChar ? (
-                <div
-                  key={s.id}
-                  className="rounded-xl p-1 border border-white/[0.06] transition-all duration-200 group-hover:scale-105"
-                >
-                  <SpecChar size={48} />
-                </div>
-              ) : null;
-            })}
+            <CharacterAvatar
+              characterId={team.lead.characterId}
+              size={48}
+              accentColor={team.accentColor}
+            />
+            {team.specialists.map((s) => (
+              <CharacterAvatar
+                key={s.id}
+                characterId={s.characterId}
+                size={48}
+                accentColor={team.accentColor}
+              />
+            ))}
             {team.id === "custom" &&
               [1, 2, 3].map((i) => (
                 <div

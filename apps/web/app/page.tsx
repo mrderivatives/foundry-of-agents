@@ -2,10 +2,11 @@
 
 import { useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { TEAMS } from "@/shared/data/teams";
-import { getCharacter } from "@/shared/components/characters";
+import { CharacterAvatar } from "@/shared/components/characters";
 import { GlassCard } from "@/shared/components/glass-card";
 
 function GradientOrbs() {
@@ -70,39 +71,24 @@ function FadeIn({
 }
 
 function TeamShowcaseCard({ team }: { team: (typeof TEAMS)[number] }) {
-  const leadChar = getCharacter(team.lead.characterId);
-  const specChars = team.specialists.map((s) => ({
-    Component: getCharacter(s.characterId),
-    name: s.name,
-  }));
-
   return (
     <GlassCard className="flex-shrink-0 w-[200px] p-7 cursor-pointer" style={{ borderLeft: `2px solid ${team.accentColor}30` }}>
       <div className="text-2xl mb-3">{team.emoji}</div>
       <h3 className="font-medium text-sm text-[#fafafa] mb-1">{team.name}</h3>
-      <div className="flex items-center justify-center gap-4 my-4">
-        {leadChar && (
-          <div
-            className="rounded-full p-0.5"
-            style={{ border: `2px solid ${team.accentColor}` }}
-          >
-            {(() => {
-              const C = leadChar;
-              return <C size={32} />;
-            })()}
-          </div>
-        )}
-        {specChars.map(
-          (sc, i) =>
-            sc.Component && (
-              <div key={i} className="rounded-full p-0.5 border border-white/[0.06]">
-                {(() => {
-                  const C = sc.Component;
-                  return <C size={32} />;
-                })()}
-              </div>
-            )
-        )}
+      <div className="flex items-center justify-center gap-3 my-4">
+        <CharacterAvatar
+          characterId={team.lead.characterId}
+          size={36}
+          accentColor={team.accentColor}
+        />
+        {team.specialists.map((spec) => (
+          <CharacterAvatar
+            key={spec.id}
+            characterId={spec.characterId}
+            size={36}
+            accentColor={team.accentColor}
+          />
+        ))}
         {team.id === "custom" && (
           <>
             {[1, 2, 3].map((i) => (
@@ -126,6 +112,12 @@ export default function LandingPage() {
     <div className="min-h-screen" style={{ background: "#09090b" }}>
       {/* Hero */}
       <section className="relative min-h-screen flex items-center justify-center px-6 py-24">
+        {/* Hero background */}
+        <div className="absolute inset-0">
+          <Image src="/hero-bg-mesh.png" alt="" fill className="object-cover opacity-30" priority />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#09090b]/60 via-[#09090b]/40 to-[#09090b]" />
+        </div>
+
         {/* Slow-moving gradient orbs */}
         <div className="absolute inset-0 overflow-hidden">
           <GradientOrbs />
@@ -175,6 +167,18 @@ export default function LandingPage() {
               Assemble Your Team
               <ArrowRight className="w-5 h-5" />
             </Link>
+          </motion.div>
+
+          {/* Character showcase row below CTA */}
+          <motion.div
+            className="mt-12 flex justify-center gap-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4, ease }}
+          >
+            {['coach', 'managing-director', 'analyst', 'trader', 'cto'].map(id => (
+              <CharacterAvatar key={id} characterId={id} size={56} accentColor="#7c3aed" />
+            ))}
           </motion.div>
 
           <motion.div

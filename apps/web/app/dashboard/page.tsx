@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Plus, MessageSquare } from "lucide-react";
-import { getCharacter } from "@/shared/components/characters";
+import { CharacterAvatar } from "@/shared/components/characters";
 import { useAgentStore } from "@/features/agents/store";
 import { AgentList } from "@/features/agents/components/agent-list";
 import { CreateAgentDialog } from "@/features/agents/components/create-agent-dialog";
@@ -77,8 +77,6 @@ function OrgChartSidebar({
   team: TeamData;
   statuses: Record<string, AgentStatus>;
 }) {
-  const LeadChar = getCharacter(team.lead.characterId);
-
   return (
     <div className="w-60 shrink-0 border-r border-white/[0.04] flex flex-col h-full overflow-y-auto" style={{ background: "#09090b" }}>
       {/* Team header */}
@@ -93,7 +91,11 @@ function OrgChartSidebar({
       <div className="px-3 pt-4">
         <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/[0.03] transition-all duration-200 cursor-pointer">
           <div className="relative">
-            {LeadChar && <LeadChar size={32} />}
+            <CharacterAvatar
+              characterId={team.lead.characterId}
+              size={32}
+              accentColor={team.accentColor}
+            />
             <div
               className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2"
               style={{
@@ -118,7 +120,6 @@ function OrgChartSidebar({
         {/* Specialists */}
         <div className="space-y-0.5">
           {team.specialists.map((spec) => {
-            const SpecChar = getCharacter(spec.characterId);
             const status = statuses[spec.id] ?? "idle";
 
             return (
@@ -127,7 +128,11 @@ function OrgChartSidebar({
                 className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/[0.03] transition-all duration-200 cursor-pointer"
               >
                 <div className="relative">
-                  {SpecChar && <SpecChar size={32} />}
+                  <CharacterAvatar
+                    characterId={spec.characterId}
+                    size={32}
+                    accentColor={team.accentColor}
+                  />
                   <motion.div
                     className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2"
                     style={{
@@ -162,10 +167,6 @@ function OrgChartSidebar({
 }
 
 function FeedItem({ event }: { event: FeedEvent }) {
-  const AgentChar = event.agentCharacterId
-    ? getCharacter(event.agentCharacterId)
-    : null;
-
   const icon =
     event.type === "dispatch" ? "→"
     : event.type === "complete" ? "✓"
@@ -188,8 +189,12 @@ function FeedItem({ event }: { event: FeedEvent }) {
           {formatRelativeTime(event.timestamp)}
         </span>
         <div className="shrink-0 pt-0.5">
-          {AgentChar ? (
-            <AgentChar size={24} />
+          {event.agentCharacterId ? (
+            <CharacterAvatar
+              characterId={event.agentCharacterId}
+              size={24}
+              accentColor={agentAccentColor}
+            />
           ) : (
             <span className="text-xs text-[#71717a] w-6 h-6 flex items-center justify-center">{icon}</span>
           )}
@@ -342,13 +347,16 @@ function CommandCenter({ team }: { team: TeamData }) {
         <div className="lg:hidden flex items-center gap-2 px-4 py-3 border-b border-white/[0.04] overflow-x-auto">
           <span className="text-sm">{team.emoji}</span>
           {[team.lead, ...team.specialists].map((member, i) => {
-            const Char = getCharacter(member.characterId);
             const memberId = i === 0 ? "lead" : team.specialists[i - 1]?.id;
             const status = statuses[memberId ?? "lead"] ?? "offline";
 
             return (
               <div key={i} className="relative shrink-0">
-                {Char && <Char size={28} />}
+                <CharacterAvatar
+                  characterId={member.characterId}
+                  size={28}
+                  accentColor={team.accentColor}
+                />
                 <div
                   className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border"
                   style={{
@@ -401,10 +409,13 @@ function CommandCenter({ team }: { team: TeamData }) {
                 key={i}
                 className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}
               >
-                {msg.role === "assistant" && (() => {
-                  const LeadChar = getCharacter(team.lead.characterId);
-                  return LeadChar ? <LeadChar size={24} /> : null;
-                })()}
+                {msg.role === "assistant" && (
+                  <CharacterAvatar
+                    characterId={team.lead.characterId}
+                    size={28}
+                    accentColor={accentColor}
+                  />
+                )}
                 <div
                   className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
                     msg.role === "user"

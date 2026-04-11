@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Pencil, Check, Zap } from "lucide-react";
 import Link from "next/link";
 import { TEAMS, ALL_SPECIALISTS, type Specialist } from "@/shared/data/teams";
-import { getCharacter } from "@/shared/components/characters";
+import { CharacterAvatar } from "@/shared/components/characters";
 import { GlassCard } from "@/shared/components/glass-card";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -85,8 +85,6 @@ function AgentCard({
   delay: number;
   isLead?: boolean;
 }) {
-  const Character = getCharacter(characterId);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: isLead ? -16 : 16, scale: 0.95 }}
@@ -109,7 +107,11 @@ function AgentCard({
           </div>
         )}
         <div className="flex justify-center mb-3 mt-1">
-          {Character && <Character size={size} />}
+          <CharacterAvatar
+            characterId={characterId}
+            size={size}
+            accentColor={accentColor}
+          />
         </div>
         <EditableName value={name} onChange={onNameChange} />
         <p className="text-xs text-[#71717a] mt-1">{role}</p>
@@ -178,7 +180,6 @@ function SpecialistPicker({
         {ALL_SPECIALISTS.map((spec) => {
           const isSelected = selected.includes(spec.id);
           const team = TEAMS.find((t) => t.id === spec.teamId);
-          const Character = getCharacter(spec.characterId);
 
           return (
             <button
@@ -204,7 +205,11 @@ function SpecialistPicker({
                 </div>
               )}
               <div className="flex justify-center mb-1">
-                {Character && <Character size={48} />}
+                <CharacterAvatar
+                  characterId={spec.characterId}
+                  size={48}
+                  accentColor={accentColor}
+                />
               </div>
               <p className="text-xs font-medium text-[#fafafa] truncate">
                 {spec.role}
@@ -349,10 +354,11 @@ export default function AssemblePage({
                 Your Lead
               </p>
               <div className="flex items-center gap-4">
-                {(() => {
-                  const LeadChar = getCharacter(team.lead.characterId);
-                  return LeadChar ? <LeadChar size={64} /> : null;
-                })()}
+                <CharacterAvatar
+                  characterId={team.lead.characterId}
+                  size={64}
+                  accentColor={accentColor}
+                />
                 <div>
                   <EditableName value={leadName} onChange={setLeadName} />
                   <p className="text-xs text-[#71717a]">{team.lead.role}</p>

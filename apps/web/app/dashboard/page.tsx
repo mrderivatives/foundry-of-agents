@@ -2,13 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ChevronRight } from "lucide-react";
+import { Send, Plus } from "lucide-react";
 import { getCharacter } from "@/shared/components/characters";
-import { TEAMS } from "@/shared/data/teams";
 import { useAgentStore } from "@/features/agents/store";
 import { AgentList } from "@/features/agents/components/agent-list";
 import { CreateAgentDialog } from "@/features/agents/components/create-agent-dialog";
-import { Plus } from "lucide-react";
 
 interface TeamData {
   templateId: string;
@@ -31,40 +29,22 @@ interface TeamData {
   }[];
 }
 
-type AgentStatus = "idle" | "working" | "waiting" | "error" | "offline";
+type AgentStatus = "idle" | "working" | "offline";
 
 interface FeedEvent {
   id: string;
   timestamp: string;
-  type:
-    | "dispatch"
-    | "working"
-    | "complete"
-    | "alert"
-    | "system"
-    | "user"
-    | "lead";
+  type: "dispatch" | "complete" | "alert" | "user" | "lead";
   agentName?: string;
   agentCharacterId?: string;
   targetName?: string;
   text: string;
-  color?: string;
 }
 
 const STATUS_COLORS: Record<AgentStatus, string> = {
   idle: "#22c55e",
   working: "#3b82f6",
-  waiting: "#eab308",
-  error: "#ef4444",
-  offline: "#6b7280",
-};
-
-const STATUS_LABELS: Record<AgentStatus, string> = {
-  idle: "Idle",
-  working: "Working",
-  waiting: "Waiting",
-  error: "Error",
-  offline: "Offline",
+  offline: "#52525b",
 };
 
 function formatTime(date: Date): string {
@@ -78,65 +58,50 @@ function formatTime(date: Date): string {
 function OrgChartSidebar({
   team,
   statuses,
-  accentColor,
 }: {
   team: TeamData;
   statuses: Record<string, AgentStatus>;
-  accentColor: string;
 }) {
   const LeadChar = getCharacter(team.lead.characterId);
 
   return (
-    <div className="w-[240px] shrink-0 border-r border-white/[0.06] bg-[#0c0c14] flex flex-col h-full overflow-y-auto">
+    <div className="w-[240px] shrink-0 border-r border-white/[0.06] flex flex-col h-full overflow-y-auto" style={{ background: "#09090b" }}>
       {/* Team header */}
       <div className="px-4 py-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-2">
-          <span className="text-lg">{team.emoji}</span>
-          <span className="text-sm font-bold text-white">{team.teamName}</span>
+          <span className="text-base">{team.emoji}</span>
+          <span className="text-sm font-medium text-[#fafafa]">{team.teamName}</span>
         </div>
       </div>
 
-      {/* Lead card */}
+      {/* Lead */}
       <div className="px-3 pt-4">
-        <div
-          className="rounded-xl p-3 transition-all hover:bg-white/[0.03] cursor-pointer"
-          style={{ border: `1px solid ${accentColor}30` }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              {LeadChar && <LeadChar size={48} />}
-              <div
-                className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#0c0c14]"
-                style={{
-                  backgroundColor:
-                    STATUS_COLORS[statuses["lead"] ?? "idle"],
-                }}
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1">
-                <span
-                  className="text-xs font-bold px-1.5 py-0.5 rounded"
-                  style={{ background: `${accentColor}20`, color: accentColor }}
-                >
-                  LEAD
-                </span>
-              </div>
-              <p className="text-sm font-semibold text-white truncate mt-0.5">
-                {team.lead.name}
-              </p>
-              <p className="text-[10px] text-white/30">{team.lead.role}</p>
-            </div>
+        <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/[0.03] transition-all duration-200 cursor-pointer">
+          <div className="relative">
+            {LeadChar && <LeadChar size={32} />}
+            <div
+              className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2"
+              style={{
+                borderColor: "#09090b",
+                backgroundColor: STATUS_COLORS[statuses["lead"] ?? "idle"],
+              }}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-[#fafafa] truncate">
+              {team.lead.name}
+            </p>
+            <p className="text-[10px] text-[#71717a]">{team.lead.role}</p>
           </div>
         </div>
 
         {/* Connection line */}
         <div className="flex justify-center">
-          <div className="w-px h-4 bg-white/10" />
+          <div className="w-px h-3 bg-white/[0.06]" />
         </div>
 
         {/* Specialists */}
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {team.specialists.map((spec) => {
             const SpecChar = getCharacter(spec.characterId);
             const status = statuses[spec.id] ?? "idle";
@@ -144,128 +109,90 @@ function OrgChartSidebar({
             return (
               <div
                 key={spec.id}
-                className="rounded-xl p-2.5 transition-all hover:bg-white/[0.03] cursor-pointer border border-white/[0.04]"
+                className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/[0.03] transition-all duration-200 cursor-pointer"
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="relative">
-                    {SpecChar && <SpecChar size={36} />}
-                    <motion.div
-                      className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0c0c14]"
-                      style={{
-                        backgroundColor: STATUS_COLORS[status],
-                      }}
-                      animate={
-                        status === "working"
-                          ? { scale: [1, 1.3, 1] }
-                          : {}
-                      }
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                      }}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-white truncate">
-                      {spec.name}
-                    </p>
-                    <p className="text-[10px] text-white/30">{spec.role}</p>
-                  </div>
-                  <span
-                    className="text-[9px] px-1.5 py-0.5 rounded-full"
+                <div className="relative">
+                  {SpecChar && <SpecChar size={32} />}
+                  <motion.div
+                    className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2"
                     style={{
-                      color: STATUS_COLORS[status],
-                      background: `${STATUS_COLORS[status]}15`,
+                      borderColor: "#09090b",
+                      backgroundColor: STATUS_COLORS[status],
                     }}
-                  >
-                    {STATUS_LABELS[status]}
-                  </span>
+                    animate={
+                      status === "working"
+                        ? { opacity: [0.7, 1, 0.7] }
+                        : {}
+                    }
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-[#fafafa] truncate">
+                    {spec.name}
+                  </p>
+                  <p className="text-[10px] text-[#71717a]">{spec.role}</p>
                 </div>
               </div>
             );
           })}
         </div>
       </div>
-
-      {/* Team stats */}
-      <div className="mt-auto px-4 py-4 border-t border-white/[0.06]">
-        <p className="text-[10px] text-white/20 uppercase tracking-wider font-bold mb-2">
-          Status Legend
-        </p>
-        <div className="grid grid-cols-2 gap-1">
-          {(["idle", "working", "waiting", "error"] as AgentStatus[]).map(
-            (s) => (
-              <div key={s} className="flex items-center gap-1.5">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: STATUS_COLORS[s] }}
-                />
-                <span className="text-[10px] text-white/30 capitalize">
-                  {s}
-                </span>
-              </div>
-            )
-          )}
-        </div>
-      </div>
     </div>
   );
 }
 
-function FeedItem({ event, accentColor }: { event: FeedEvent; accentColor: string }) {
+function FeedItem({ event }: { event: FeedEvent }) {
   const AgentChar = event.agentCharacterId
     ? getCharacter(event.agentCharacterId)
     : null;
 
   const icon =
-    event.type === "dispatch"
-      ? "📋"
-      : event.type === "working"
-        ? "⏳"
-        : event.type === "complete"
-          ? "✅"
-          : event.type === "alert"
-            ? "⚠️"
-            : event.type === "system"
-              ? "⚙️"
-              : event.type === "user"
-                ? "💬"
-                : "🤖";
+    event.type === "dispatch" ? "→"
+    : event.type === "complete" ? "✓"
+    : event.type === "alert" ? "!"
+    : event.type === "user" ? "↑"
+    : "↓";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex gap-3 px-4 py-2.5 hover:bg-white/[0.02] transition-colors"
+      className="flex gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors duration-200"
     >
-      <span className="text-[10px] text-white/20 font-mono shrink-0 pt-1 w-10">
+      <span className="text-[10px] text-[#71717a] font-mono shrink-0 pt-1 w-10">
         {event.timestamp}
       </span>
       <div className="shrink-0 pt-0.5">
-        {AgentChar ? <AgentChar size={24} /> : <span className="text-sm">{icon}</span>}
+        {AgentChar ? (
+          <AgentChar size={24} />
+        ) : (
+          <span className="text-xs text-[#71717a] w-6 h-6 flex items-center justify-center">{icon}</span>
+        )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-white/70 leading-relaxed">
+        <p className="text-sm text-[#a1a1aa] leading-relaxed">
           {event.agentName && (
-            <span
-              className="font-bold"
-              style={{ color: event.color ?? accentColor }}
-            >
+            <span className="font-medium text-[#fafafa]">
               {event.agentName}
             </span>
           )}
           {event.targetName && (
             <>
               {" "}
-              <span className="text-white/30">→</span>{" "}
-              <span className="font-semibold text-white/60">
+              <span className="text-[#71717a]">→</span>{" "}
+              <span className="font-medium text-[#a1a1aa]">
                 {event.targetName}
               </span>
             </>
           )}
           {event.agentName ? ": " : ""}
-          {event.text}
+          <span className="text-[#a1a1aa]">{event.text}</span>
         </p>
       </div>
     </motion.div>
@@ -279,7 +206,6 @@ function CommandCenter({ team }: { team: TeamData }) {
   const [chatMessages, setChatMessages] = useState<
     { role: "user" | "assistant"; content: string }[]
   >([]);
-  const feedRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
 
   const accentColor = team.accentColor;
@@ -293,55 +219,31 @@ function CommandCenter({ team }: { team: TeamData }) {
     setEvents((prev) => [newEvent, ...prev]);
   }, []);
 
-  // Activation sequence on mount
+  // Quiet activation — just set statuses, no noise in feed
   useEffect(() => {
     const timers: NodeJS.Timeout[] = [];
 
     timers.push(
       setTimeout(() => {
         setStatuses((s) => ({ ...s, lead: "idle" }));
-        addEvent({
-          type: "system",
-          text: `${team.lead.name} activated`,
+        team.specialists.forEach((spec) => {
+          setStatuses((s) => ({ ...s, [spec.id]: "idle" }));
         });
       }, 500)
     );
 
-    team.specialists.forEach((spec, i) => {
-      timers.push(
-        setTimeout(() => {
-          setStatuses((s) => ({ ...s, [spec.id]: "idle" }));
-          addEvent({
-            type: "system",
-            text: `${spec.name} online`,
-          });
-        }, 1000 + i * 300)
-      );
-    });
-
+    // Single greeting from lead
     timers.push(
       setTimeout(() => {
-        addEvent({
-          type: "system",
-          text: "All agents operational",
-        });
-      }, 2000)
-    );
-
-    timers.push(
-      setTimeout(() => {
-        addEvent({
-          type: "lead",
-          agentName: team.lead.name,
-          agentCharacterId: team.lead.characterId,
-          text: "Team's online. Ready for your first command.",
-          color: accentColor,
-        });
-      }, 2500)
+        setChatMessages([{
+          role: "assistant",
+          content: "Team's online. Ready for your first command.",
+        }]);
+      }, 1000)
     );
 
     return () => timers.forEach(clearTimeout);
-  }, [team, accentColor, addEvent]);
+  }, [team]);
 
   const simulateTeamWork = useCallback(
     (userMessage: string) => {
@@ -357,20 +259,8 @@ function CommandCenter({ team }: { team: TeamData }) {
           agentCharacterId: team.lead.characterId,
           targetName: spec.name,
           text: `"${userMessage.slice(0, 60)}${userMessage.length > 60 ? "..." : ""}"`,
-          color: accentColor,
         });
       }, 800);
-
-      // Specialist working
-      setTimeout(() => {
-        addEvent({
-          type: "working",
-          agentName: spec.name,
-          agentCharacterId: spec.characterId,
-          text: "Processing request...",
-          color: accentColor,
-        });
-      }, 2000);
 
       // Specialist complete
       setTimeout(() => {
@@ -380,11 +270,10 @@ function CommandCenter({ team }: { team: TeamData }) {
           agentName: spec.name,
           agentCharacterId: spec.characterId,
           text: "Analysis complete",
-          color: accentColor,
         });
       }, 4000);
 
-      // Lead synthesizes response
+      // Lead response
       setTimeout(() => {
         setChatMessages((prev) => [
           ...prev,
@@ -395,7 +284,7 @@ function CommandCenter({ team }: { team: TeamData }) {
         ]);
       }, 4500);
     },
-    [team, accentColor, addEvent]
+    [team, addEvent]
   );
 
   const handleSend = () => {
@@ -421,14 +310,10 @@ function CommandCenter({ team }: { team: TeamData }) {
   }, [chatMessages]);
 
   return (
-    <div className="flex h-full" style={{ background: "#0a0a0f" }}>
-      {/* Left sidebar: Org chart */}
+    <div className="flex h-full" style={{ background: "#09090b" }}>
+      {/* Left sidebar */}
       <div className="hidden lg:block">
-        <OrgChartSidebar
-          team={team}
-          statuses={statuses}
-          accentColor={accentColor}
-        />
+        <OrgChartSidebar team={team} statuses={statuses} />
       </div>
 
       {/* Center: Activity feed + chat */}
@@ -436,53 +321,49 @@ function CommandCenter({ team }: { team: TeamData }) {
         {/* Mobile org strip */}
         <div className="lg:hidden flex items-center gap-2 px-4 py-3 border-b border-white/[0.06] overflow-x-auto">
           <span className="text-sm">{team.emoji}</span>
-          {[team.lead, ...team.specialists.map((s) => ({ ...s }))].map(
-            (member, i) => {
-              const Char = getCharacter(
-                "characterId" in member
-                  ? member.characterId
-                  : team.lead.characterId
-              );
-              const memberId = i === 0 ? "lead" : team.specialists[i - 1]?.id;
-              const status = statuses[memberId ?? "lead"] ?? "offline";
+          {[team.lead, ...team.specialists].map((member, i) => {
+            const Char = getCharacter(member.characterId);
+            const memberId = i === 0 ? "lead" : team.specialists[i - 1]?.id;
+            const status = statuses[memberId ?? "lead"] ?? "offline";
 
-              return (
-                <div key={i} className="relative shrink-0">
-                  {Char && <Char size={32} />}
-                  <div
-                    className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#0a0a0f]"
-                    style={{
-                      backgroundColor: STATUS_COLORS[status],
-                    }}
-                  />
-                </div>
-              );
-            }
-          )}
+            return (
+              <div key={i} className="relative shrink-0">
+                {Char && <Char size={28} />}
+                <div
+                  className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border"
+                  style={{
+                    borderColor: "#09090b",
+                    backgroundColor: STATUS_COLORS[status],
+                  }}
+                />
+              </div>
+            );
+          })}
         </div>
 
         {/* Activity feed header */}
         <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-xs font-bold text-white/40 uppercase tracking-wider">
-            LIVE ACTIVITY
+          <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+          <span className="text-xs text-[#71717a] font-medium">
+            Activity
           </span>
         </div>
 
         {/* Activity feed */}
         <div
-          ref={feedRef}
           className="flex-1 overflow-y-auto min-h-0"
           style={{ maxHeight: "calc(100vh - 360px)" }}
         >
           <AnimatePresence>
             {events.map((event) => (
-              <FeedItem key={event.id} event={event} accentColor={accentColor} />
+              <FeedItem key={event.id} event={event} />
             ))}
           </AnimatePresence>
           {events.length === 0 && (
-            <div className="flex items-center justify-center h-32 text-sm text-white/20">
-              Waiting for activity...
+            <div className="flex flex-col items-center justify-center h-40 text-center px-4">
+              <p className="text-sm text-[#71717a]">
+                Your team is ready. Send a message to get started.
+              </p>
             </div>
           )}
         </div>
@@ -506,13 +387,13 @@ function CommandCenter({ team }: { team: TeamData }) {
                 <div
                   className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
                     msg.role === "user"
-                      ? "bg-white/10 text-white"
-                      : "bg-white/[0.03] text-white/70"
+                      ? "bg-white/[0.06] text-[#fafafa]"
+                      : "bg-white/[0.03] text-[#a1a1aa]"
                   }`}
                 >
                   {msg.role === "assistant" && (
                     <span
-                      className="text-xs font-bold block mb-1"
+                      className="text-xs font-medium block mb-1"
                       style={{ color: accentColor }}
                     >
                       {team.lead.name}
@@ -538,20 +419,15 @@ function CommandCenter({ team }: { team: TeamData }) {
                     handleSend();
                   }
                 }}
-                placeholder={`Chat with ${team.lead.name}...`}
-                className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-white/20 transition-colors"
+                placeholder={`Talk to ${team.lead.name}...`}
+                className="flex-1 bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 py-2.5 text-sm text-[#fafafa] placeholder-[#52525b] outline-none focus:border-white/[0.12] transition-colors duration-200"
               />
               <button
                 onClick={handleSend}
                 disabled={!chatInput.trim()}
-                className="shrink-0 rounded-xl p-2.5 transition-all disabled:opacity-30"
-                style={{
-                  background: chatInput.trim()
-                    ? `linear-gradient(135deg, ${accentColor}, ${accentColor}cc)`
-                    : "rgba(255,255,255,0.05)",
-                }}
+                className="shrink-0 rounded-xl p-2.5 bg-white/[0.03] border border-white/[0.06] transition-all duration-200 hover:bg-white/[0.06] disabled:opacity-30"
               >
-                <Send className="w-4 h-4 text-white" />
+                <Send className="w-4 h-4 text-[#a1a1aa]" />
               </button>
             </div>
           </div>
@@ -561,7 +437,6 @@ function CommandCenter({ team }: { team: TeamData }) {
   );
 }
 
-// Fallback: original dashboard if no team is set
 function LegacyDashboard() {
   const [showCreate, setShowCreate] = useState(false);
   const { agents } = useAgentStore();
@@ -570,14 +445,14 @@ function LegacyDashboard() {
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-lg font-semibold">Your Agents</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-lg font-medium text-[#fafafa]">Your Agents</h2>
+          <p className="text-sm text-[#71717a]">
             {agents.length} agent{agents.length !== 1 ? "s" : ""} deployed
           </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-2 rounded-lg bg-[#7c3aed] px-4 py-2 text-sm font-medium text-[#fafafa] hover:bg-[#6d28d9] transition-colors duration-200"
         >
           <Plus className="w-4 h-4" />
           Create Agent
@@ -609,8 +484,8 @@ export default function DashboardPage() {
 
   if (!loaded) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div className="flex items-center justify-center h-full" style={{ background: "#09090b" }}>
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#7c3aed] border-t-transparent" />
       </div>
     );
   }

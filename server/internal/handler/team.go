@@ -142,10 +142,10 @@ Your lead is %s — they coordinate the team.`, specName, body.LeadName, body.Le
 
 		var specAgent agentRow
 		err = tx.QueryRow(ctx,
-			`INSERT INTO agent (workspace_id, name, description, instructions, model, owner_id, status)
-			 VALUES ($1, $2, $3, $4, 'claude-sonnet-4-6', $5, 'idle')
+			`INSERT INTO agent (workspace_id, parent_agent_id, name, description, instructions, model, owner_id, status)
+			 VALUES ($1, $2, $3, $4, $5, 'claude-sonnet-4-6', $6, 'idle')
 			 RETURNING id, workspace_id, name, description, instructions, avatar_url, model, status, visibility, owner_id, archived_at, created_at, updated_at`,
-			wsID, specName, "Specialist agent", specInstructions, userID).Scan(
+			wsID, leadAgent.ID, specName, "Specialist agent", specInstructions, userID).Scan(
 			&specAgent.ID, &specAgent.WorkspaceID, &specAgent.Name, &specAgent.Description, &specAgent.Instructions,
 			&specAgent.AvatarURL, &specAgent.Model, &specAgent.Status, &specAgent.Visibility, &specAgent.OwnerID, &specAgent.ArchivedAt, &specAgent.CreatedAt, &specAgent.UpdatedAt)
 		if err != nil {

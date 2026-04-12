@@ -281,7 +281,14 @@ export default function AssemblePage({
       }>("/api/teams", {
         template_id: templateId,
         lead_name: leadName,
-        specialist_names: specialists.map((s) => getSpecName(s)),
+        lead_role: team?.lead.role ?? "Chief of Staff",
+        lead_character_id: team?.lead.characterId ?? "default-lead",
+        specialists: specialists.map((s) => ({
+          name: getSpecName(s),
+          role: s.role,
+          character_id: s.characterId,
+          description: s.description,
+        })),
         accent_color: accentColor,
       });
 
@@ -291,6 +298,7 @@ export default function AssemblePage({
         teamName: team?.name ?? "Custom Team",
         emoji: team?.emoji ?? "⚡",
         accentColor,
+        leadAgentId: result.lead_agent_id,
         lead: {
           name: leadName,
           role: team?.lead.role ?? "Chief of Staff",

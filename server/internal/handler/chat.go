@@ -458,10 +458,14 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 						outputTokens = chunk.Usage.OutputTokens
 					}
 				}
+				responseText := fullContent.String()
+
+				// Emit specialist_active for any team members mentioned
+				h.emitSpecialistActive(ctx, agentID, responseText, w, sseFlusher)
+
 				fmt.Fprintf(w, "data: {\"type\":\"message_end\",\"usage\":{\"input_tokens\":%d,\"output_tokens\":%d}}\n\n", inputTokens, outputTokens)
 				sseFlusher.Flush()
 
-				responseText := fullContent.String()
 				h.DB.Exec(ctx,
 					`INSERT INTO chat_message (id, chat_session_id, workspace_id, role, content, input_tokens, output_tokens, model)
 					 VALUES ($1, $2, $3, 'assistant', $4, $5, $6, $7)`,
@@ -566,15 +570,16 @@ func (h *Handler) streamResponse(
 			}
 		}
 
+		// Emit specialist_active for any team members mentioned
+		responseText := fullContent.String()
+		h.emitSpecialistActive(ctx, agentID, responseText, w, flusher)
+
 		// message_end
 		fmt.Fprintf(w, "data: {\"type\":\"message_end\",\"usage\":{\"input_tokens\":%d,\"output_tokens\":%d}}\n\n",
 			inputTokens, outputTokens)
 		if flusher != nil {
 			flusher.Flush()
 		}
-
-		// Persist assistant message
-		responseText := fullContent.String()
 		h.DB.Exec(ctx,
 			`INSERT INTO chat_message (id, chat_session_id, workspace_id, role, content, input_tokens, output_tokens, model)
 			 VALUES ($1, $2, $3, 'assistant', $4, $5, $6, $7)`,
@@ -637,6 +642,29 @@ func (h *Handler) streamResponse(
 	h.extractAndStoreMemories(agentID, wsID, sessionID.String(), userContent, responseText)
 
 	writeJSON(w, http.StatusOK, savedMsg)
+}
+
+// emitSpecialistActive checks if any team member names are mentioned in the response
+// and emits specialist_active SSE events for the frontend roster strip flash.
+func (h *Handler) emitSpecialistActive(ctx context.Context, agentID uuid.UUID, responseText string, w http.ResponseWriter, flusher http.Flusher) {
+	subRows, err := h.DB.Query(ctx,
+		`SELECT id, name FROM agent WHERE parent_agent_id = $1 AND archived_at IS NULL`, agentID)
+	if err != nil || subRows == nil {
+		return
+	}
+	defer subRows.Close()
+	for subRows.Next() {
+		var subID, subName string
+		if err := subRows.Scan(&subID, &subName); err != nil {
+			continue
+		}
+		if strings.Contains(responseText, subName) {
+			fmt.Fprintf(w, "data: {\"type\":\"specialist_active\",\"agent_id\":\"%s\",\"name\":\"%s\"}\n\n", subID, subName)
+			if flusher != nil {
+				flusher.Flush()
+			}
+		}
+	}
 }
 
 // handleWalletProposeTool processes the wallet_propose tool call from the LLM.

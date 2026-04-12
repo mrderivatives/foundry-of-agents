@@ -263,6 +263,9 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
                 } : null;
                 walletEventRef.current = we;
                 setWalletEvent(we);
+              } else if (evt.type === "specialist_active") {
+                // Flash specialist status in roster strip
+                window.dispatchEvent(new CustomEvent('specialist-active', { detail: { agentId: evt.agent_id, name: evt.name } }));
               } else if (evt.type === "content_delta" && evt.delta) {
                 setToolStatus(null); // Clear tool status when content starts
                 accumulated += evt.delta;

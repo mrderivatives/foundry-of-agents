@@ -97,6 +97,7 @@ export default function AgentDetailPage() {
   const [creatingWallet, setCreatingWallet] = useState(false);
   const [copied, setCopied] = useState(false);
   const [subAgents, setSubAgents] = useState<Agent[]>([]);
+  const [activeSpecialist, setActiveSpecialist] = useState<string | null>(null);
   const [showAddSpecialist, setShowAddSpecialist] = useState(false);
   const [newSpecName, setNewSpecName] = useState("");
   const [newSpecDesc, setNewSpecDesc] = useState("");
@@ -168,6 +169,19 @@ export default function AgentDetailPage() {
   useEffect(() => {
     loadWallet();
   }, [loadWallet]);
+
+  // Listen for specialist-active events from SSE chat stream
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.agentId) {
+        setActiveSpecialist(detail.agentId);
+        setTimeout(() => setActiveSpecialist(null), 5000);
+      }
+    };
+    window.addEventListener('specialist-active', handler);
+    return () => window.removeEventListener('specialist-active', handler);
+  }, []);
 
   const [walletError, setWalletError] = useState<string | null>(null);
   const handleCreateWallet = async () => {
@@ -405,7 +419,8 @@ export default function AgentDetailPage() {
                 <div key={sub.id} className="flex items-center gap-1.5 flex-shrink-0">
                   <CharacterAvatar characterId={charId} size={24} accentColor="#7c3aed" />
                   <span className="text-xs text-zinc-400">{sub.name}</span>
-                  <span className={`w-1.5 h-1.5 rounded-full ${
+                  <span className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
+                    activeSpecialist === sub.id ? 'bg-blue-400 animate-pulse' :
                     sub.status === 'working' ? 'bg-blue-400' :
                     sub.status === 'idle' ? 'bg-emerald-400/60' : 'bg-zinc-600'
                   }`} />

@@ -35,16 +35,46 @@ type teamDetailOut struct {
 	Members []teamMemberOut `json:"members"`
 }
 
+// characterImages maps character IDs to their avatar image paths.
+var characterImages = map[string]string{
+	"coach":             "/characters/char-coach.png",
+	"fantasy-manager":   "/characters/char-planner.png",
+	"gambling-guru":     "/characters/char-gambling-guru.png",
+	"sports-journalist": "/characters/char-analyst.png",
+	"managing-director": "/characters/char-commander.png",
+	"analyst":           "/characters/char-analyst.png",
+	"quant":             "/characters/char-quant.png",
+	"trader":            "/characters/char-trader.png",
+	"chief-of-staff":    "/characters/char-commander.png",
+	"planner":           "/characters/char-planner.png",
+	"career-analyst":    "/characters/char-analyst.png",
+	"networking-growth": "/characters/char-growth-hacker.png",
+	"product-chief":     "/characters/char-commander.png",
+	"cto":               "/characters/char-cto.png",
+	"growth-hacker":     "/characters/char-growth-hacker.png",
+	"cfo":               "/characters/char-cfo.png",
+	"default-lead":      "/characters/char-commander.png",
+}
+
 // POST /api/teams
 func (h *Handler) handleCreateTeam(w http.ResponseWriter, r *http.Request) {
 	wsID, _ := auth.GetWorkspaceID(r.Context())
 	userID, _ := auth.GetUserID(r.Context())
 
 	var body struct {
-		TemplateID      string   `json:"template_id"`
-		LeadName        string   `json:"lead_name"`
+		TemplateID  string  `json:"template_id"`
+		LeadName    string  `json:"lead_name"`
+		LeadRole    string  `json:"lead_role"`
+		LeadCharID  string  `json:"lead_character_id"`
+		AccentColor *string `json:"accent_color"`
+		Specialists []struct {
+			Name        string `json:"name"`
+			Role        string `json:"role"`
+			CharacterID string `json:"character_id"`
+			Description string `json:"description"`
+		} `json:"specialists"`
+		// Legacy field: ignored if Specialists is provided
 		SpecialistNames []string `json:"specialist_names"`
-		AccentColor     *string  `json:"accent_color"`
 	}
 	if err := readJSON(r, &body); err != nil || body.TemplateID == "" || body.LeadName == "" {
 		errJSON(w, http.StatusBadRequest, "template_id and lead_name are required")
@@ -60,38 +90,68 @@ func (h *Handler) handleCreateTeam(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback(ctx)
 
-	// Build lead system prompt
-	var specLines []string
-	for i, name := range body.SpecialistNames {
-		specLines = append(specLines, fmt.Sprintf("- %s (Specialist %d)", name, i+1))
+	// Resolve lead avatar
+	leadCharID := body.LeadCharID
+	if leadCharID == "" {
+		leadCharID = "default-lead"
 	}
-	leadInstructions := fmt.Sprintf(`You are %s, the Lead of an AI team.
+	leadAvatar := characterImages[leadCharID]
+	if leadAvatar == "" {
+		leadAvatar = characterImages["default-lead"]
+	}
 
-Your team members:
+	// Resolve lead role
+	leadRole := body.LeadRole
+	if leadRole == "" {
+		leadRole = "Lead"
+	}
+
+	// Build specialist description lines for lead prompt
+	var specDescriptions []string
+	var specNames []string
+	if len(body.Specialists) > 0 {
+		for _, spec := range body.Specialists {
+			specDescriptions = append(specDescriptions, fmt.Sprintf("- %s (%s): %s", spec.Name, spec.Role, spec.Description))
+			specNames = append(specNames, spec.Name)
+		}
+	} else {
+		// Legacy path: specialist_names only
+		for i, name := range body.SpecialistNames {
+			specDescriptions = append(specDescriptions, fmt.Sprintf("- %s (Specialist %d)", name, i+1))
+			specNames = append(specNames, name)
+		}
+	}
+
+	// Pick two names for the lead prompt examples
+	firstName := "a specialist"
+	secondName := "another specialist"
+	if len(specNames) > 0 {
+		firstName = specNames[0]
+	}
+	if len(specNames) > 1 {
+		secondName = specNames[1]
+	}
+
+	leadInstructions := fmt.Sprintf(`You are %s, the %s of your AI team.
+
+YOUR TEAM:
 %s
 
-When users ask for help, acknowledge which team member would handle it. Use their names. Example:
-"Let me have %s look into that for you."
-Then provide the answer yourself (you have all their capabilities).
+BEHAVIOR:
+- When the user asks for help, acknowledge which team member would handle it
+- Say things like "Let me have %s look into this..." or "I'll get %s on that"
+- Then answer the question yourself — you have all their capabilities
+- Always make the user feel like they have a full team working for them
+- Reference your team members by name naturally in conversation`,
+		body.LeadName, leadRole, strings.Join(specDescriptions, "\n"), firstName, secondName)
 
-Always reference your team. Make the user feel like they have a full team working for them.`,
-		body.LeadName,
-		strings.Join(specLines, "\n"),
-		func() string {
-			if len(body.SpecialistNames) > 0 {
-				return body.SpecialistNames[0]
-			}
-			return "a specialist"
-		}(),
-	)
-
-	// Create lead agent
+	// Create lead agent with avatar_url
 	var leadAgent agentRow
 	err = tx.QueryRow(ctx,
-		`INSERT INTO agent (workspace_id, name, description, instructions, model, owner_id, status)
-		 VALUES ($1, $2, $3, $4, 'claude-sonnet-4-6', $5, 'idle')
+		`INSERT INTO agent (workspace_id, name, description, instructions, avatar_url, model, owner_id, status)
+		 VALUES ($1, $2, $3, $4, $5, 'claude-sonnet-4-6', $6, 'idle')
 		 RETURNING id, workspace_id, name, description, instructions, avatar_url, model, status, visibility, owner_id, archived_at, created_at, updated_at`,
-		wsID, body.LeadName, "Team Lead agent", leadInstructions, userID).Scan(
+		wsID, body.LeadName, fmt.Sprintf("Team %s", leadRole), leadInstructions, leadAvatar, userID).Scan(
 		&leadAgent.ID, &leadAgent.WorkspaceID, &leadAgent.Name, &leadAgent.Description, &leadAgent.Instructions,
 		&leadAgent.AvatarURL, &leadAgent.Model, &leadAgent.Status, &leadAgent.Visibility, &leadAgent.OwnerID, &leadAgent.ArchivedAt, &leadAgent.CreatedAt, &leadAgent.UpdatedAt)
 	if err != nil {
@@ -135,43 +195,89 @@ Always reference your team. Make the user feel like they have a full team workin
 	}}
 
 	// Create specialist agents
-	for i, specName := range body.SpecialistNames {
-		specInstructions := fmt.Sprintf(`You are %s, a specialist on %s's team.
+	if len(body.Specialists) > 0 {
+		// New path: full specialist data
+		for i, spec := range body.Specialists {
+			specAvatar := characterImages[spec.CharacterID]
+			if specAvatar == "" {
+				specAvatar = characterImages["default-lead"]
+			}
+
+			specPrompt := fmt.Sprintf("You are %s, a %s specialist. %s", spec.Name, spec.Role, spec.Description)
+
+			var specAgent agentRow
+			err = tx.QueryRow(ctx,
+				`INSERT INTO agent (workspace_id, parent_agent_id, name, description, instructions, avatar_url, model, owner_id, status)
+				 VALUES ($1, $2, $3, $4, $5, $6, 'claude-sonnet-4-6', $7, 'idle')
+				 RETURNING id, workspace_id, name, description, instructions, avatar_url, model, status, visibility, owner_id, archived_at, created_at, updated_at`,
+				wsID, leadAgent.ID, spec.Name, fmt.Sprintf("%s specialist", spec.Role), specPrompt, specAvatar, userID).Scan(
+				&specAgent.ID, &specAgent.WorkspaceID, &specAgent.Name, &specAgent.Description, &specAgent.Instructions,
+				&specAgent.AvatarURL, &specAgent.Model, &specAgent.Status, &specAgent.Visibility, &specAgent.OwnerID, &specAgent.ArchivedAt, &specAgent.CreatedAt, &specAgent.UpdatedAt)
+			if err != nil {
+				h.Logger.Error().Err(err).Msg("create specialist agent")
+				errJSON(w, http.StatusInternalServerError, "failed to create specialist agent")
+				return
+			}
+
+			specRole := spec.Role
+			_, err = tx.Exec(ctx,
+				`INSERT INTO team_member (team_id, agent_id, role, specialist_role, position)
+				 VALUES ($1, $2, 'specialist', $3, $4)`,
+				t.ID, specAgent.ID, specRole, i+1)
+			if err != nil {
+				h.Logger.Error().Err(err).Msg("add specialist member")
+				errJSON(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+
+			members = append(members, teamMemberOut{
+				AgentID:        specAgent.ID,
+				AgentName:      specAgent.Name,
+				Role:           "specialist",
+				SpecialistRole: &specRole,
+				Position:       i + 1,
+			})
+		}
+	} else {
+		// Legacy path: specialist_names only
+		for i, specName := range body.SpecialistNames {
+			specInstructions := fmt.Sprintf(`You are %s, a specialist on %s's team.
 You focus on your area of expertise. Provide thorough, detailed analysis when asked.
 Your lead is %s — they coordinate the team.`, specName, body.LeadName, body.LeadName)
 
-		var specAgent agentRow
-		err = tx.QueryRow(ctx,
-			`INSERT INTO agent (workspace_id, parent_agent_id, name, description, instructions, model, owner_id, status)
-			 VALUES ($1, $2, $3, $4, $5, 'claude-sonnet-4-6', $6, 'idle')
-			 RETURNING id, workspace_id, name, description, instructions, avatar_url, model, status, visibility, owner_id, archived_at, created_at, updated_at`,
-			wsID, leadAgent.ID, specName, "Specialist agent", specInstructions, userID).Scan(
-			&specAgent.ID, &specAgent.WorkspaceID, &specAgent.Name, &specAgent.Description, &specAgent.Instructions,
-			&specAgent.AvatarURL, &specAgent.Model, &specAgent.Status, &specAgent.Visibility, &specAgent.OwnerID, &specAgent.ArchivedAt, &specAgent.CreatedAt, &specAgent.UpdatedAt)
-		if err != nil {
-			h.Logger.Error().Err(err).Msg("create specialist agent")
-			errJSON(w, http.StatusInternalServerError, "failed to create specialist agent")
-			return
-		}
+			var specAgent agentRow
+			err = tx.QueryRow(ctx,
+				`INSERT INTO agent (workspace_id, parent_agent_id, name, description, instructions, model, owner_id, status)
+				 VALUES ($1, $2, $3, $4, $5, 'claude-sonnet-4-6', $6, 'idle')
+				 RETURNING id, workspace_id, name, description, instructions, avatar_url, model, status, visibility, owner_id, archived_at, created_at, updated_at`,
+				wsID, leadAgent.ID, specName, "Specialist agent", specInstructions, userID).Scan(
+				&specAgent.ID, &specAgent.WorkspaceID, &specAgent.Name, &specAgent.Description, &specAgent.Instructions,
+				&specAgent.AvatarURL, &specAgent.Model, &specAgent.Status, &specAgent.Visibility, &specAgent.OwnerID, &specAgent.ArchivedAt, &specAgent.CreatedAt, &specAgent.UpdatedAt)
+			if err != nil {
+				h.Logger.Error().Err(err).Msg("create specialist agent")
+				errJSON(w, http.StatusInternalServerError, "failed to create specialist agent")
+				return
+			}
 
-		specRole := fmt.Sprintf("Specialist %d", i+1)
-		_, err = tx.Exec(ctx,
-			`INSERT INTO team_member (team_id, agent_id, role, specialist_role, position)
-			 VALUES ($1, $2, 'specialist', $3, $4)`,
-			t.ID, specAgent.ID, specRole, i+1)
-		if err != nil {
-			h.Logger.Error().Err(err).Msg("add specialist member")
-			errJSON(w, http.StatusInternalServerError, "internal error")
-			return
-		}
+			specRole := fmt.Sprintf("Specialist %d", i+1)
+			_, err = tx.Exec(ctx,
+				`INSERT INTO team_member (team_id, agent_id, role, specialist_role, position)
+				 VALUES ($1, $2, 'specialist', $3, $4)`,
+				t.ID, specAgent.ID, specRole, i+1)
+			if err != nil {
+				h.Logger.Error().Err(err).Msg("add specialist member")
+				errJSON(w, http.StatusInternalServerError, "internal error")
+				return
+			}
 
-		members = append(members, teamMemberOut{
-			AgentID:        specAgent.ID,
-			AgentName:      specAgent.Name,
-			Role:           "specialist",
-			SpecialistRole: &specRole,
-			Position:       i + 1,
-		})
+			members = append(members, teamMemberOut{
+				AgentID:        specAgent.ID,
+				AgentName:      specAgent.Name,
+				Role:           "specialist",
+				SpecialistRole: &specRole,
+				Position:       i + 1,
+			})
+		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {

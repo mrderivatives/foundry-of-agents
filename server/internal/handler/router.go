@@ -42,6 +42,7 @@ func MountRoutes(r chi.Router, h *Handler) {
 				r.Get("/", h.handleGetAgent)
 				r.Patch("/", h.handleUpdateAgent)
 				r.Delete("/", h.handleDeleteAgent)
+				r.Get("/activity", h.handleGetActivity)
 				r.Get("/team", h.handleGetAgentTeam)
 				r.Post("/team/add", h.handleAddTeamMember)
 				r.Delete("/team/{subId}", h.handleRemoveTeamMember)

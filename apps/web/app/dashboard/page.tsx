@@ -3,17 +3,20 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Plus, MessageSquare } from "lucide-react";
+import Image from "next/image";
 import { CharacterAvatar } from "@/shared/components/characters";
 import { TeamIcon } from "@/shared/components/team-icon";
 import { useAgentStore } from "@/features/agents/store";
 import { AgentList } from "@/features/agents/components/agent-list";
 import { CreateAgentDialog } from "@/features/agents/components/create-agent-dialog";
+import { api } from "@/shared/api/client";
 
 interface TeamData {
   templateId: string;
   teamName: string;
   emoji: string;
   accentColor: string;
+  leadAgentId?: string;
   lead: {
     name: string;
     role: string;
@@ -32,14 +35,14 @@ interface TeamData {
 
 type AgentStatus = "idle" | "working" | "offline";
 
-interface FeedEvent {
+interface ActivityEvent {
   id: string;
-  timestamp: string;
-  type: "dispatch" | "complete" | "alert" | "user" | "lead";
-  agentName?: string;
-  agentCharacterId?: string;
-  targetName?: string;
-  text: string;
+  type: string;
+  agent_id: string;
+  agent_name: string;
+  avatar_url: string;
+  content: string;
+  created_at: string;
 }
 
 const STATUS_COLORS: Record<AgentStatus, string> = {
@@ -47,14 +50,6 @@ const STATUS_COLORS: Record<AgentStatus, string> = {
   working: "#3b82f6",
   offline: "#52525b",
 };
-
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
 
 function formatRelativeTime(timestamp: string): string {
   const now = Date.now();
@@ -167,66 +162,32 @@ function OrgChartSidebar({
   );
 }
 
-function FeedItem({ event }: { event: FeedEvent }) {
-  const icon =
-    event.type === "dispatch" ? "→"
-    : event.type === "complete" ? "✓"
-    : event.type === "alert" ? "!"
-    : event.type === "user" ? "↑"
-    : "↓";
-
-  const agentAccentColor = event.type === "complete" ? "#22c55e" : event.type === "alert" ? "#ef4444" : "#3b82f6";
+function ActivityItem({ event }: { event: ActivityEvent }) {
+  const borderColor =
+    event.type === "memory" ? "#22c55e40" :
+    event.type === "chat" ? "#3b82f640" :
+    "#71717a40";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-4 border-l-2"
-      style={{ borderLeftColor: agentAccentColor + "40" }}
-    >
-      <div className="flex gap-3">
-        <span className="text-[10px] text-[#71717a] font-mono shrink-0 pt-1 w-10">
-          {formatRelativeTime(event.timestamp)}
-        </span>
-        <div className="shrink-0 pt-0.5">
-          {event.agentCharacterId ? (
-            <CharacterAvatar
-              characterId={event.agentCharacterId}
-              size={24}
-              accentColor={agentAccentColor}
-            />
-          ) : (
-            <span className="text-xs text-[#71717a] w-6 h-6 flex items-center justify-center">{icon}</span>
-          )}
+    <div className="flex gap-3 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]" style={{ borderLeftColor: borderColor, borderLeftWidth: 2 }}>
+      {event.avatar_url ? (
+        <Image src={event.avatar_url} width={24} height={24} alt="" className="rounded-full flex-shrink-0" />
+      ) : (
+        <div className="w-6 h-6 rounded-full bg-white/[0.06] flex-shrink-0" />
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-zinc-300">{event.agent_name}</span>
+          <span className="text-[10px] text-zinc-600">{formatRelativeTime(event.created_at)}</span>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm text-[#a1a1aa] leading-relaxed">
-            {event.agentName && (
-              <span className="font-medium text-[#fafafa]">
-                {event.agentName}
-              </span>
-            )}
-            {event.targetName && (
-              <>
-                {" "}
-                <span className="text-[#71717a]">→</span>{" "}
-                <span className="font-medium text-[#a1a1aa]">
-                  {event.targetName}
-                </span>
-              </>
-            )}
-            {event.agentName ? ": " : ""}
-            <span className="text-[#a1a1aa]">{event.text}</span>
-          </p>
-        </div>
+        <p className="text-xs text-zinc-400 mt-0.5 truncate">{event.content}</p>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 function CommandCenter({ team }: { team: TeamData }) {
-  const [events, setEvents] = useState<FeedEvent[]>([]);
+  const [activityEvents, setActivityEvents] = useState<ActivityEvent[]>([]);
   const [statuses, setStatuses] = useState<Record<string, AgentStatus>>({});
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<
@@ -236,39 +197,42 @@ function CommandCenter({ team }: { team: TeamData }) {
 
   const accentColor = team.accentColor;
 
-  const addEvent = useCallback((event: Omit<FeedEvent, "id" | "timestamp">) => {
-    const newEvent: FeedEvent = {
-      ...event,
-      id: crypto.randomUUID(),
-      timestamp: formatTime(new Date()),
-    };
-    setEvents((prev) => [newEvent, ...prev]);
-  }, []);
+  // Fetch activity feed from API
+  const fetchActivity = useCallback(async () => {
+    if (!team.leadAgentId) return;
+    try {
+      const events = await api.get<ActivityEvent[]>(`/api/agents/${team.leadAgentId}/activity`);
+      setActivityEvents(events);
+    } catch {
+      // silently fail
+    }
+  }, [team.leadAgentId]);
 
-  // Quiet activation — just set statuses, no noise in feed
+  // Initial load + auto-refresh every 30s
   useEffect(() => {
-    const timers: NodeJS.Timeout[] = [];
+    fetchActivity();
+    const interval = setInterval(fetchActivity, 30000);
+    return () => clearInterval(interval);
+  }, [fetchActivity]);
 
-    timers.push(
-      setTimeout(() => {
-        setStatuses((s) => ({ ...s, lead: "idle" }));
-        team.specialists.forEach((spec) => {
-          setStatuses((s) => ({ ...s, [spec.id]: "idle" }));
-        });
-      }, 500)
-    );
+  // Quiet activation — just set statuses
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setStatuses((s) => ({ ...s, lead: "idle" }));
+      team.specialists.forEach((spec) => {
+        setStatuses((s) => ({ ...s, [spec.id]: "idle" }));
+      });
+    }, 500);
 
     // Single greeting from lead
-    timers.push(
-      setTimeout(() => {
-        setChatMessages([{
-          role: "assistant",
-          content: "Team's online. Ready for your first command.",
-        }]);
-      }, 1000)
-    );
+    const greetTimer = setTimeout(() => {
+      setChatMessages([{
+        role: "assistant",
+        content: "Team's online. Ready for your first command.",
+      }]);
+    }, 1000);
 
-    return () => timers.forEach(clearTimeout);
+    return () => { clearTimeout(timer); clearTimeout(greetTimer); };
   }, [team]);
 
   const simulateTeamWork = useCallback(
@@ -279,24 +243,11 @@ function CommandCenter({ team }: { team: TeamData }) {
       // Lead dispatches
       setTimeout(() => {
         setStatuses((s) => ({ ...s, [spec.id]: "working" }));
-        addEvent({
-          type: "dispatch",
-          agentName: team.lead.name,
-          agentCharacterId: team.lead.characterId,
-          targetName: spec.name,
-          text: `"${userMessage.slice(0, 60)}${userMessage.length > 60 ? "..." : ""}"`,
-        });
       }, 800);
 
       // Specialist complete
       setTimeout(() => {
         setStatuses((s) => ({ ...s, [spec.id]: "idle" }));
-        addEvent({
-          type: "complete",
-          agentName: spec.name,
-          agentCharacterId: spec.characterId,
-          text: "Analysis complete",
-        });
       }, 4000);
 
       // Lead response
@@ -308,9 +259,11 @@ function CommandCenter({ team }: { team: TeamData }) {
             content: `Based on ${spec.name}'s analysis, here's what I found regarding "${userMessage.slice(0, 40)}..."\n\nI've dispatched ${spec.name} to look into this further. The initial results look promising — I'll have a full report shortly.`,
           },
         ]);
+        // Refresh activity feed after response
+        fetchActivity();
       }, 4500);
     },
-    [team, addEvent]
+    [team, fetchActivity]
   );
 
   const handleSend = () => {
@@ -320,11 +273,6 @@ function CommandCenter({ team }: { team: TeamData }) {
     setChatInput("");
 
     setChatMessages((prev) => [...prev, { role: "user", content: message }]);
-
-    addEvent({
-      type: "user",
-      text: `"${message}"`,
-    });
 
     simulateTeamWork(message);
   };
@@ -380,15 +328,22 @@ function CommandCenter({ team }: { team: TeamData }) {
 
         {/* Activity feed */}
         <div
-          className="flex-1 overflow-y-auto min-h-0 p-3 space-y-3"
+          className="flex-1 overflow-y-auto min-h-0 p-3 space-y-2"
           style={{ maxHeight: "calc(100vh - 360px)" }}
         >
           <AnimatePresence>
-            {events.map((event) => (
-              <FeedItem key={event.id} event={event} />
+            {activityEvents.map((event) => (
+              <motion.div
+                key={event.id}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ActivityItem event={event} />
+              </motion.div>
             ))}
           </AnimatePresence>
-          {events.length === 0 && (
+          {activityEvents.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center px-4 py-16">
               <MessageSquare className="w-8 h-8 text-[#27272a] mb-4" />
               <p className="text-sm text-[#71717a]">

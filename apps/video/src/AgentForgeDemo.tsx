@@ -11,376 +11,360 @@ import {
   useVideoConfig,
 } from "remotion";
 import {
-  Coins, Shield, Brain, Search, Lock, Bell, BarChart3, Zap,
-  ClipboardList, CheckCircle2, TrendingUp,
+  Search, BarChart3, Zap, CheckCircle2, Brain, Shield, Bell, Lock,
 } from "lucide-react";
 
 const C = {
   bg: "#09090b",
-  surface: "#18181b",
   text: "#fafafa",
   muted: "#a1a1aa",
   dim: "#71717a",
   violet: "#7c3aed",
+  violetLight: "#a78bfa",
   green: "#22c55e",
-  amber: "#f59e0b",
   emerald: "#10b981",
   blue: "#3b82f6",
-  border: "rgba(255,255,255,0.06)",
-};
-
-const glass: React.CSSProperties = {
-  background: "rgba(255,255,255,0.03)",
-  border: "1px solid rgba(255,255,255,0.06)",
-  borderRadius: 16,
+  amber: "#f59e0b",
 };
 
 const center: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  height: "100%",
-  width: "100%",
+  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+  height: "100%", width: "100%",
 };
 
-function FadeText({
-  children,
-  fadeIn,
-  fadeOut,
-  y = 16,
-  style,
-}: {
-  children: React.ReactNode;
-  fadeIn: [number, number];
-  fadeOut: [number, number];
-  y?: number;
-  style?: React.CSSProperties;
-}) {
+// ─── Reusable Animations ───
+
+function SnapText({ children, style, delay = 0 }: { children: React.ReactNode; style?: React.CSSProperties; delay?: number }) {
   const frame = useCurrentFrame();
-  const opacity = interpolate(
-    frame,
-    [fadeIn[0], fadeIn[1], fadeOut[0], fadeOut[1]],
-    [0, 1, 1, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-  );
-  const translateY = interpolate(frame, fadeIn, [y, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const { fps } = useVideoConfig();
+  const s = spring({ frame: frame - delay, fps, config: { damping: 18, stiffness: 200 } });
   return (
-    <div style={{ opacity, transform: `translateY(${translateY}px)`, ...style }}>
+    <div style={{
+      opacity: Math.min(s * 2, 1),
+      transform: `scale(${0.95 + s * 0.05})`,
+      ...style,
+    }}>
       {children}
     </div>
   );
 }
 
-function CharAvatar({
-  src,
-  size,
-  glow,
-  delay = 0,
-}: {
-  src: string;
-  size: number;
-  glow: string;
-  delay?: number;
-}) {
+function SlideIn({ children, from = "right", delay = 0, style }: { children: React.ReactNode; from?: "left" | "right" | "bottom"; delay?: number; style?: React.CSSProperties }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const s = spring({ frame: frame - delay, fps, config: { damping: 15, stiffness: 80 } });
+  const s = spring({ frame: frame - delay, fps, config: { damping: 20, stiffness: 120 } });
+  const axis = from === "bottom" ? "Y" : "X";
+  const dir = from === "left" ? -1 : 1;
+  const dist = from === "bottom" ? 80 : 120;
   return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        borderRadius: "50%",
-        overflow: "hidden",
-        border: "2px solid rgba(255,255,255,0.1)",
-        boxShadow: `0 0 ${size / 3}px ${glow}`,
-        transform: `scale(${s}) translateY(${(1 - s) * 40}px)`,
-        opacity: s,
-      }}
-    >
+    <div style={{ transform: `translate${axis}(${(1 - s) * dist * dir}px)`, opacity: s, ...style }}>
+      {children}
+    </div>
+  );
+}
+
+function WordReveal({ text, style, startDelay = 0, perWord = 6 }: { text: string; style?: React.CSSProperties; startDelay?: number; perWord?: number }) {
+  const frame = useCurrentFrame();
+  const words = text.split(" ");
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "0 16px", justifyContent: "center", ...style }}>
+      {words.map((w, i) => {
+        const d = startDelay + i * perWord;
+        const opacity = interpolate(frame, [d, d + 4], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+        const y = interpolate(frame, [d, d + 4], [8, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+        return <span key={i} style={{ opacity, transform: `translateY(${y}px)`, display: "inline-block" }}>{w}</span>;
+      })}
+    </div>
+  );
+}
+
+function CountUp({ target, suffix = "", duration = 20, style }: { target: number; suffix?: string; duration?: number; style?: React.CSSProperties }) {
+  const frame = useCurrentFrame();
+  const val = Math.round(interpolate(frame, [0, duration], [0, target], { extrapolateRight: "clamp" }));
+  return <span style={style}>{val.toLocaleString()}{suffix}</span>;
+}
+
+function MockupImg({ src, style }: { src: string; style?: React.CSSProperties }) {
+  return (
+    <div style={{ position: "relative", ...style }}>
+      <div style={{ position: "absolute", inset: -20, background: `radial-gradient(ellipse, ${C.violet}15 0%, transparent 70%)`, filter: "blur(40px)" }} />
+      <Img src={staticFile(src)} style={{ position: "relative", width: "100%", borderRadius: 12, boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }} />
+    </div>
+  );
+}
+
+function CharCircle({ src, size = 80, glow = C.violet, delay = 0 }: { src: string; size?: number; glow?: string; delay?: number }) {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const s = spring({ frame: frame - delay, fps, config: { damping: 15, stiffness: 100 } });
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%", overflow: "hidden",
+      border: "2px solid rgba(255,255,255,0.15)", boxShadow: `0 0 ${size / 3}px ${glow}50`,
+      transform: `scale(${s})`, opacity: s, flexShrink: 0,
+    }}>
       <Img src={staticFile(src)} style={{ width: size, height: size, objectFit: "cover" }} />
     </div>
   );
 }
 
-// ─── Scene 1: The Hook ───
-function SceneHook() {
+// ─── SCENES ───
+
+// Scene 01: Cold open on product (0-3s = 0-90)
+function S01() {
   return (
     <AbsoluteFill style={{ backgroundColor: C.bg }}>
-      <Img
-        src={staticFile("hero-bg-network-complex.png")}
-        style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", opacity: 0.08 }}
-      />
-      <div style={center}>
-        <FadeText fadeIn={[0, 30]} fadeOut={[140, 175]} style={{
-          fontSize: 64, fontWeight: 200, color: C.text, letterSpacing: "-0.03em",
-          textAlign: "center", maxWidth: 900, lineHeight: 1.2,
-        }}>
-          The way we work is about to change forever.
-        </FadeText>
+      <div style={{ ...center, padding: "60px 120px" }}>
+        <SlideIn from="bottom" delay={5}>
+          <MockupImg src="product-mockup-dashboard.png" style={{ maxWidth: 1200 }} />
+        </SlideIn>
       </div>
     </AbsoluteFill>
   );
 }
 
-// ─── Scene 2: The Problem ───
-function SceneProblem() {
-  const frame = useCurrentFrame();
+// Scene 02: "THE FUTURE OF WORK" (3-5s = 90-150)
+function S02() {
   return (
     <AbsoluteFill style={{ backgroundColor: C.bg }}>
-      <Img src={staticFile("hero-bg-network-complex.png")}
-        style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", opacity: 0.05 }} />
-      <div style={{ ...center, flexDirection: "row", gap: 48, padding: "0 120px" }}>
-        {/* Left card */}
-        <FadeText fadeIn={[0, 30]} fadeOut={[180, 210]} style={{ flex: 1 }}>
-          <div style={{ ...glass, padding: 48, borderLeft: `3px solid ${C.amber}40` }}>
-            <div style={{ fontSize: 36, fontWeight: 200, color: C.text, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14 }}>
-              <Coins size={32} color={C.amber} strokeWidth={1.5} />
-              Make money while you sleep
-            </div>
-            <div style={{ fontSize: 18, color: C.muted, lineHeight: 1.6 }}>
-              Your AI team monitors markets 24/7, executes trades at optimal moments,
-              and catches opportunities you'd miss asleep.
-            </div>
-            <div style={{ fontSize: 14, color: C.dim, fontStyle: "italic", marginTop: 24 }}>
-              "My DCA bot caught the March dip at $88 SOL. I was sleeping." — @early_user
-            </div>
-          </div>
-        </FadeText>
-        {/* Right card */}
-        <FadeText fadeIn={[15, 45]} fadeOut={[180, 210]} style={{ flex: 1 }}>
-          <div style={{ ...glass, padding: 48, borderLeft: `3px solid ${C.blue}40` }}>
-            <div style={{ fontSize: 36, fontWeight: 200, color: C.text, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14 }}>
-              <Shield size={32} color={C.blue} strokeWidth={1.5} />
-              Don't get replaced — lead the AI
-            </div>
-            <div style={{ fontSize: 18, color: C.muted, lineHeight: 1.6 }}>
-              Everyone's hiring AI. The question isn't whether AI replaces your job —
-              it's whether you're leading the AI or being replaced by it.
-            </div>
-            <div style={{ fontSize: 14, color: C.dim, fontStyle: "italic", marginTop: 24 }}>
-              "I run a 4-agent team that does the research of 3 analysts." — @anon_user
-            </div>
-          </div>
-        </FadeText>
+      <div style={center}>
+        <WordReveal text="THE FUTURE OF WORK" style={{ fontSize: 72, fontWeight: 200, color: C.text, letterSpacing: "-0.03em" }} />
       </div>
     </AbsoluteFill>
   );
 }
 
-// ─── Scene 3: The Solution ───
-function SceneSolution() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const titleScale = spring({ frame, fps, config: { damping: 12, stiffness: 60 } });
-  const chars = ["characters/char-coach.png", "characters/char-commander.png", "characters/char-analyst.png", "characters/char-trader.png", "characters/char-cto.png"];
+// Scene 03: "IS NOT ONE AI" (5-7s = 150-210)
+function S03() {
   return (
     <AbsoluteFill style={{ backgroundColor: C.bg }}>
       <div style={center}>
-        <div style={{
-          fontSize: 80, fontWeight: 200, color: C.text, letterSpacing: "-0.03em",
-          transform: `scale(${titleScale})`, opacity: titleScale,
-          background: "linear-gradient(135deg, #fff, #7c3aed, rgba(255,255,255,0.5))",
+        <SnapText style={{ fontSize: 72, fontWeight: 200, color: C.muted, letterSpacing: "-0.03em" }}>
+          IS NOT ONE AI
+        </SnapText>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+// Scene 04: "IT'S AN ARMY" (7-9s = 210-270)
+function S04() {
+  return (
+    <AbsoluteFill style={{ backgroundColor: C.bg }}>
+      <div style={center}>
+        <SnapText style={{
+          fontSize: 96, fontWeight: 300, letterSpacing: "-0.03em",
+          background: `linear-gradient(135deg, ${C.text}, ${C.violetLight})`,
           backgroundClip: "text", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
         }}>
-          Agent Forge
-        </div>
-        <FadeText fadeIn={[20, 50]} fadeOut={[180, 210]} style={{
-          fontSize: 24, color: C.muted, marginTop: 16, fontWeight: 300,
-        }}>
-          Your AI Army. Deployed in 3 Minutes.
-        </FadeText>
-        <div style={{ display: "flex", gap: 24, marginTop: 48 }}>
-          {chars.map((c, i) => (
-            <CharAvatar key={c} src={c} size={72} glow={`${C.violet}40`} delay={40 + i * 10} />
-          ))}
-        </div>
+          IT'S AN ARMY
+        </SnapText>
       </div>
     </AbsoluteFill>
   );
 }
 
-// ─── Scene 4: Team Assembly ───
-function SceneAssembly() {
+// Scene 05: Assembly mockup (9-12s = 270-360)
+function S05() {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const specs = [
-    { src: "characters/char-analyst.png", name: "Atlas", role: "Analyst", color: C.emerald },
-    { src: "characters/char-quant.png", name: "Sigma", role: "Quant", color: C.blue },
-    { src: "characters/char-trader.png", name: "Flash", role: "Trader", color: C.green },
-  ];
-
-  const leadS = spring({ frame, fps, config: { damping: 15 } });
-  const lineProgress = interpolate(frame, [30, 60], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-
   return (
     <AbsoluteFill style={{ backgroundColor: C.bg }}>
-      <div style={{ ...center, gap: 0 }}>
-        {/* Title */}
-        <FadeText fadeIn={[0, 20]} fadeOut={[290, 320]} style={{
-          fontSize: 32, fontWeight: 200, color: C.muted, marginBottom: 48, letterSpacing: "-0.02em",
-        }}>
-          Your Team is Assembling...
-        </FadeText>
-
-        {/* Lead */}
-        <div style={{ textAlign: "center", transform: `translateY(${(1 - leadS) * -60}px)`, opacity: leadS }}>
-          <div style={{ ...glass, padding: 24, display: "inline-block" }}>
-            <CharAvatar src="characters/char-commander.png" size={96} glow={`${C.violet}50`} />
-            <div style={{ fontSize: 20, fontWeight: 400, color: C.text, marginTop: 12 }}>Director</div>
-            <div style={{ fontSize: 14, color: C.dim }}>Managing Director</div>
-          </div>
-        </div>
-
-        {/* Connection lines */}
-        <svg width={600} height={60} style={{ margin: "8px 0" }}>
-          {[-200, 0, 200].map((x, i) => (
-            <line key={i} x1={300} y1={0} x2={300 + x} y2={60}
-              stroke="rgba(255,255,255,0.08)" strokeWidth={1}
-              strokeDasharray={80}
-              strokeDashoffset={80 * (1 - lineProgress)} />
-          ))}
-        </svg>
-
-        {/* Specialists */}
-        <div style={{ display: "flex", gap: 48 }}>
-          {specs.map((spec, i) => {
-            const s = spring({ frame: frame - 50 - i * 15, fps, config: { damping: 15 } });
-            return (
-              <div key={spec.name} style={{
-                textAlign: "center",
-                transform: `translateY(${(1 - s) * 50}px)`,
-                opacity: s,
-              }}>
-                <div style={{ ...glass, padding: 20 }}>
-                  <CharAvatar src={spec.src} size={80} glow={`${spec.color}40`} delay={0} />
-                  <div style={{ fontSize: 18, fontWeight: 400, color: C.text, marginTop: 10 }}>{spec.name}</div>
-                  <div style={{ fontSize: 13, color: C.dim }}>{spec.role}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div style={{ ...center, padding: "40px 120px" }}>
+        <SlideIn from="bottom" delay={5}>
+          <MockupImg src="product-mockup-assembly.png" style={{ maxWidth: 1100 }} />
+        </SlideIn>
+        <SnapText delay={25} style={{ fontSize: 24, color: C.muted, fontWeight: 300, marginTop: 32 }}>
+          Choose your team. Name your agents. One click to deploy.
+        </SnapText>
       </div>
     </AbsoluteFill>
   );
 }
 
-// ─── Scene 5: Command Center ───
-function SceneCommandCenter() {
-  const frame = useCurrentFrame();
-  const events = [
-    { Icon: ClipboardList, agent: "Director", text: "Dispatched task to Atlas", color: C.violet },
-    { Icon: Search, agent: "Atlas", text: "Scanning market conditions...", color: C.emerald },
-    { Icon: BarChart3, agent: "Sigma", text: "Running technical analysis on SOL...", color: C.blue },
-    { Icon: Zap, agent: "Flash", text: "Monitoring order books...", color: C.green },
-    { Icon: CheckCircle2, agent: "Atlas", text: "Analysis complete — SOL bullish", color: C.emerald },
-    { Icon: Coins, agent: "Flash", text: "Executed: 50 USDC → 0.38 SOL", color: C.green },
-  ];
-
+// Scene 06: "3 MINUTES TO DEPLOY" (12-14s = 360-420)
+function S06() {
   return (
     <AbsoluteFill style={{ backgroundColor: C.bg }}>
-      <div style={{ display: "flex", height: "100%", padding: "60px 80px" }}>
-        {/* Sidebar */}
-        <div style={{ width: 240, borderRight: "1px solid rgba(255,255,255,0.04)", paddingRight: 24, paddingTop: 24 }}>
-          <div style={{ fontSize: 12, color: C.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 24 }}>Team</div>
-          {[
-            { name: "Director", role: "Lead", src: "characters/char-commander.png" },
-            { name: "Atlas", role: "Analyst", src: "characters/char-analyst.png" },
-            { name: "Sigma", role: "Quant", src: "characters/char-quant.png" },
-            { name: "Flash", role: "Trader", src: "characters/char-trader.png" },
-          ].map((a, i) => {
-            const active = frame > 30 + i * 30;
-            return (
-              <div key={a.name} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
-                  <Img src={staticFile(a.src)} style={{ width: 36, height: 36, objectFit: "cover" }} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, color: C.text }}>{a.name}</div>
-                  <div style={{ fontSize: 11, color: C.dim }}>{a.role}</div>
-                </div>
-                <div style={{
-                  width: 8, height: 8, borderRadius: "50%", marginLeft: "auto",
-                  backgroundColor: active ? C.green : "#333",
-                  transition: "all 0.3s",
-                }} />
-              </div>
-            );
-          })}
+      <div style={center}>
+        <div style={{ fontSize: 120, fontWeight: 200, color: C.green, letterSpacing: "-0.03em" }}>
+          <CountUp target={3} duration={15} />
         </div>
+        <SnapText delay={10} style={{ fontSize: 36, fontWeight: 200, color: C.muted, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>
+          Minutes to Deploy
+        </SnapText>
+      </div>
+    </AbsoluteFill>
+  );
+}
 
-        {/* Activity Feed */}
-        <div style={{ flex: 1, paddingLeft: 48, paddingTop: 24, overflow: "hidden" }}>
-          <div style={{ fontSize: 14, color: C.dim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 24 }}>
-            Activity Feed
+// Scene 07-09: RESEARCH / TRADE / ANALYZE with character (14-20s = 420-600)
+function SCharacterVerb({ verb, src, glow }: { verb: string; src: string; glow: string }) {
+  return (
+    <AbsoluteFill style={{ backgroundColor: C.bg }}>
+      <div style={{ ...center, flexDirection: "row", gap: 48 }}>
+        <CharCircle src={src} size={120} glow={glow} delay={3} />
+        <SnapText delay={5} style={{ fontSize: 80, fontWeight: 200, color: C.text, letterSpacing: "-0.03em" }}>
+          {verb}
+        </SnapText>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+// Scene 10: "24/7" all three (20-22s = 600-660)
+function S10() {
+  return (
+    <AbsoluteFill style={{ backgroundColor: C.bg }}>
+      <div style={center}>
+        <div style={{ display: "flex", gap: 32, marginBottom: 32 }}>
+          <CharCircle src="characters/char-analyst.png" size={80} glow={C.emerald} delay={0} />
+          <CharCircle src="characters/char-quant.png" size={80} glow={C.blue} delay={5} />
+          <CharCircle src="characters/char-trader.png" size={80} glow={C.green} delay={10} />
+        </div>
+        <SnapText delay={12} style={{ fontSize: 96, fontWeight: 200, color: C.violetLight, letterSpacing: "-0.02em" }}>
+          24 / 7
+        </SnapText>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+// Scene 11: Dashboard full screen (22-26s = 660-780)
+function S11() {
+  return (
+    <AbsoluteFill style={{ backgroundColor: C.bg }}>
+      <div style={{ ...center, padding: "40px 80px" }}>
+        <SlideIn from="bottom" delay={3}>
+          <MockupImg src="product-mockup-dashboard.png" style={{ maxWidth: 1400 }} />
+        </SlideIn>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+// Scene 12: Activity event close-up (26-28s = 780-840)
+function S12() {
+  return (
+    <AbsoluteFill style={{ backgroundColor: C.bg }}>
+      <div style={center}>
+        <SlideIn from="right" delay={3}>
+          <div style={{
+            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: 16, padding: "24px 40px", borderLeft: `3px solid ${C.emerald}`,
+            display: "flex", alignItems: "center", gap: 16,
+          }}>
+            <CheckCircle2 size={28} color={C.emerald} strokeWidth={1.5} />
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 500, color: C.emerald }}>Atlas</div>
+              <div style={{ fontSize: 18, color: C.muted }}>SOL analysis complete — bullish signal detected</div>
+            </div>
           </div>
-          {events.map((evt, i) => {
-            const appearFrame = 30 + i * 35;
-            const opacity = interpolate(frame, [appearFrame, appearFrame + 15], [0, 1], {
-              extrapolateLeft: "clamp", extrapolateRight: "clamp",
-            });
-            const y = interpolate(frame, [appearFrame, appearFrame + 15], [12, 0], {
-              extrapolateLeft: "clamp", extrapolateRight: "clamp",
-            });
-            return (
-              <div key={i} style={{
-                ...glass, padding: "14px 18px", marginBottom: 10,
-                borderLeft: `2px solid ${evt.color}40`,
-                opacity, transform: `translateY(${y}px)`,
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <evt.Icon size={18} color={evt.color} strokeWidth={1.5} />
-                  <span style={{ fontSize: 14, fontWeight: 500, color: evt.color }}>{evt.agent}</span>
-                  <span style={{ fontSize: 14, color: C.muted }}>{evt.text}</span>
-                </div>
-              </div>
-            );
-          })}
+        </SlideIn>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+// Scene 13: Wallet card (28-30s = 840-900)
+function S13() {
+  return (
+    <AbsoluteFill style={{ backgroundColor: C.bg }}>
+      <div style={center}>
+        <SlideIn from="left" delay={3}>
+          <div style={{
+            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: 16, padding: "24px 40px", borderLeft: `3px solid ${C.green}`,
+            display: "flex", alignItems: "center", gap: 16,
+          }}>
+            <Shield size={28} color={C.green} strokeWidth={1.5} />
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 500, color: C.green }}>Swap Executed</div>
+              <div style={{ fontSize: 18, color: C.muted }}>25 USDC → 0.30 SOL · Policy approved</div>
+            </div>
+          </div>
+        </SlideIn>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+// Scene 14: Telegram mockup (30-32s = 900-960)
+function S14() {
+  return (
+    <AbsoluteFill style={{ backgroundColor: C.bg }}>
+      <div style={{ ...center, padding: "40px 200px" }}>
+        <SlideIn from="right" delay={3}>
+          <MockupImg src="product-mockup-telegram.png" style={{ maxWidth: 400 }} />
+        </SlideIn>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+// Scene 15: Split screen (32-36s = 960-1080)
+function S15() {
+  return (
+    <AbsoluteFill style={{ backgroundColor: C.bg }}>
+      <div style={{ display: "flex", height: "100%", padding: "60px 80px", gap: 48, alignItems: "center" }}>
+        <SlideIn from="left" delay={3} style={{ flex: 2 }}>
+          <MockupImg src="product-mockup-dashboard.png" />
+        </SlideIn>
+        <SlideIn from="right" delay={10} style={{ flex: 1 }}>
+          <MockupImg src="product-mockup-telegram.png" style={{ maxWidth: 350 }} />
+        </SlideIn>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+// Scene 16: Stats counter (36-40s = 1080-1200)
+function S16() {
+  return (
+    <AbsoluteFill style={{ backgroundColor: C.bg }}>
+      <div style={{ ...center, flexDirection: "row", gap: 120 }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 72, fontWeight: 200, color: C.text }}>
+            <CountUp target={10000} suffix="+" duration={25} />
+          </div>
+          <div style={{ fontSize: 18, color: C.dim, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Agents Deployed</div>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <SnapText delay={10} style={{ fontSize: 72, fontWeight: 200, color: C.green }}>
+            $2.4M
+          </SnapText>
+          <div style={{ fontSize: 18, color: C.dim, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Traded</div>
         </div>
       </div>
     </AbsoluteFill>
   );
 }
 
-// ─── Scene 6: Features ───
-function SceneFeatures() {
+// Scene 17: Feature rapid fire (40-45s = 1200-1350)
+function S17() {
   const frame = useCurrentFrame();
   const features = [
-    { title: "Memory", desc: "Your agents remember everything", Icon: Brain, color: "#a78bfa" },
-    { title: "Web Search", desc: "Live market data via Perplexity", Icon: Search, color: C.emerald },
-    { title: "Wallet", desc: "Policy-controlled crypto execution", Icon: Shield, color: C.amber },
-    { title: "Notifications", desc: "Telegram alerts, 24/7", Icon: Bell, color: C.blue },
+    { text: "PERSISTENT MEMORY", Icon: Brain, color: C.violetLight },
+    { text: "REAL CRYPTO WALLETS", Icon: Shield, color: C.amber },
+    { text: "POLICY GUARDRAILS", Icon: Lock, color: C.emerald },
+    { text: "TELEGRAM ALERTS", Icon: Bell, color: C.blue },
   ];
-
+  const perFeature = 36; // 1.2s each
   return (
     <AbsoluteFill style={{ backgroundColor: C.bg }}>
       <div style={center}>
         {features.map((f, i) => {
-          const start = i * 60;
-          const opacity = interpolate(frame, [start, start + 20, start + 50, start + 70], [0, 1, 1, 0], {
+          const start = i * perFeature;
+          const opacity = interpolate(frame, [start, start + 6, start + perFeature - 6, start + perFeature], [0, 1, 1, 0], {
             extrapolateLeft: "clamp", extrapolateRight: "clamp",
           });
-          const x = interpolate(frame, [start, start + 20], [60, 0], {
-            extrapolateLeft: "clamp", extrapolateRight: "clamp",
-          });
+          const scale = interpolate(frame, [start, start + 6], [1.05, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
           return (
-            <div key={f.title} style={{
-              ...glass, padding: "32px 48px", position: "absolute",
-              display: "flex", alignItems: "center", gap: 24, minWidth: 500,
-              opacity, transform: `translateX(${x}px)`,
+            <div key={f.text} style={{
+              position: "absolute", display: "flex", alignItems: "center", gap: 24,
+              opacity, transform: `scale(${scale})`,
             }}>
-              <div style={{ width: 56, height: 56, borderRadius: 12, background: `${f.color}15`, border: `1px solid ${f.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <f.Icon size={28} color={f.color} strokeWidth={1.5} />
-              </div>
-              <div>
-                <div style={{ fontSize: 28, fontWeight: 300, color: C.text }}>{f.title}</div>
-                <div style={{ fontSize: 16, color: C.muted }}>{f.desc}</div>
-              </div>
+              <f.Icon size={40} color={f.color} strokeWidth={1.5} />
+              <span style={{ fontSize: 48, fontWeight: 200, color: C.text, letterSpacing: "-0.02em" }}>{f.text}</span>
             </div>
           );
         })}
@@ -389,49 +373,51 @@ function SceneFeatures() {
   );
 }
 
-// ─── Scene 7: CTA ───
-function SceneCTA() {
+// Scene 18: "NOT A CHATBOT" → "YOUR AI ARMY" (45-50s = 1350-1500)
+function S18() {
   const frame = useCurrentFrame();
-  const lines = [
-    { text: "This is not a chatbot.", start: 0 },
-    { text: "This is your AI army.", start: 30 },
-    { text: "Deploy yours today.", start: 60 },
-  ];
+  const phase2Start = 60;
+  const showPhase2 = frame >= phase2Start;
   return (
     <AbsoluteFill style={{ backgroundColor: C.bg }}>
       <div style={center}>
-        {lines.map((l) => {
-          const opacity = interpolate(frame, [l.start, l.start + 20], [0, 1], {
-            extrapolateLeft: "clamp", extrapolateRight: "clamp",
-          });
-          const y = interpolate(frame, [l.start, l.start + 20], [16, 0], {
-            extrapolateLeft: "clamp", extrapolateRight: "clamp",
-          });
-          return (
-            <div key={l.text} style={{
-              fontSize: l.start === 60 ? 56 : 44,
-              fontWeight: l.start === 60 ? 300 : 200,
-              color: l.start === 60 ? C.text : C.muted,
-              opacity, transform: `translateY(${y}px)`,
-              marginBottom: 16,
-              letterSpacing: "-0.02em",
-            }}>
-              {l.text}
-            </div>
-          );
-        })}
-        <FadeText fadeIn={[90, 110]} fadeOut={[190, 210]} style={{
-          fontSize: 20, color: C.dim, fontFamily: "monospace", marginTop: 32,
-        }}>
+        {!showPhase2 ? (
+          <SnapText style={{ fontSize: 64, fontWeight: 200, color: C.muted, letterSpacing: "-0.03em" }}>
+            THIS IS NOT A CHATBOT
+          </SnapText>
+        ) : (
+          <SnapText style={{
+            fontSize: 80, fontWeight: 300, letterSpacing: "-0.03em",
+            background: `linear-gradient(135deg, ${C.text}, ${C.violetLight})`,
+            backgroundClip: "text", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            textShadow: `0 0 60px ${C.violet}40`,
+          }}>
+            THIS IS YOUR AI ARMY
+          </SnapText>
+        )}
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+// Scene 19: CTA (50-55s = 1500-1650)
+function S19() {
+  return (
+    <AbsoluteFill style={{ backgroundColor: C.bg }}>
+      <div style={center}>
+        <SnapText style={{ fontSize: 48, fontWeight: 300, color: C.text, letterSpacing: "-0.02em", marginBottom: 24 }}>
+          DEPLOY YOURS TODAY
+        </SnapText>
+        <SnapText delay={15} style={{ fontSize: 22, fontFamily: "monospace", color: C.dim, marginBottom: 32 }}>
           forge-of-agents.vercel.app
-        </FadeText>
-        <FadeText fadeIn={[110, 130]} fadeOut={[190, 210]} style={{
-          fontSize: 32, fontWeight: 200, marginTop: 24,
-          background: "linear-gradient(135deg, #fff, #7c3aed)",
+        </SnapText>
+        <SnapText delay={25} style={{
+          fontSize: 36, fontWeight: 200,
+          background: `linear-gradient(135deg, ${C.text}, ${C.violetLight})`,
           backgroundClip: "text", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
         }}>
           Agent Forge
-        </FadeText>
+        </SnapText>
       </div>
     </AbsoluteFill>
   );
@@ -441,17 +427,33 @@ function SceneCTA() {
 export const AgentForgeDemo: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: C.bg, fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}>
-      {/* Audio */}
       <Audio src={staticFile("voiceover-adam.mp3")} />
 
-      {/* Scenes */}
-      <Sequence from={0} durationInFrames={180}><SceneHook /></Sequence>
-      <Sequence from={150} durationInFrames={210}><SceneProblem /></Sequence>
-      <Sequence from={330} durationInFrames={210}><SceneSolution /></Sequence>
-      <Sequence from={510} durationInFrames={330}><SceneAssembly /></Sequence>
-      <Sequence from={810} durationInFrames={450}><SceneCommandCenter /></Sequence>
-      <Sequence from={1200} durationInFrames={300}><SceneFeatures /></Sequence>
-      <Sequence from={1440} durationInFrames={210}><SceneCTA /></Sequence>
+      <Sequence from={0} durationInFrames={90}><S01 /></Sequence>
+      <Sequence from={90} durationInFrames={60}><S02 /></Sequence>
+      <Sequence from={150} durationInFrames={60}><S03 /></Sequence>
+      <Sequence from={210} durationInFrames={60}><S04 /></Sequence>
+      <Sequence from={270} durationInFrames={90}><S05 /></Sequence>
+      <Sequence from={360} durationInFrames={60}><S06 /></Sequence>
+      <Sequence from={420} durationInFrames={60}>
+        <SCharacterVerb verb="RESEARCH" src="characters/char-analyst.png" glow={C.emerald} />
+      </Sequence>
+      <Sequence from={480} durationInFrames={60}>
+        <SCharacterVerb verb="TRADE" src="characters/char-trader.png" glow={C.green} />
+      </Sequence>
+      <Sequence from={540} durationInFrames={60}>
+        <SCharacterVerb verb="ANALYZE" src="characters/char-quant.png" glow={C.blue} />
+      </Sequence>
+      <Sequence from={600} durationInFrames={60}><S10 /></Sequence>
+      <Sequence from={660} durationInFrames={120}><S11 /></Sequence>
+      <Sequence from={780} durationInFrames={60}><S12 /></Sequence>
+      <Sequence from={840} durationInFrames={60}><S13 /></Sequence>
+      <Sequence from={900} durationInFrames={60}><S14 /></Sequence>
+      <Sequence from={960} durationInFrames={120}><S15 /></Sequence>
+      <Sequence from={1080} durationInFrames={120}><S16 /></Sequence>
+      <Sequence from={1200} durationInFrames={150}><S17 /></Sequence>
+      <Sequence from={1350} durationInFrames={150}><S18 /></Sequence>
+      <Sequence from={1500} durationInFrames={150}><S19 /></Sequence>
     </AbsoluteFill>
   );
 };

@@ -7,7 +7,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/shared/api/client';
 import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList } from 'lucide-react';
 import type { Agent } from '@/shared/types';
-import dagre from 'dagre';
+// dagre removed — using custom compact layout
 
 // --- Custom Node Components ---
 
@@ -71,12 +71,14 @@ function TriggerNode({ data }: { data: any }) {
 }
 
 function OutputNode({ data }: { data: any }) {
-  const Icon = data.channel === 'telegram' ? Send : data.channel === 'email' ? Bell : MessageSquare;
+  const Icon = data.channel === 'telegram' ? Send : MessageSquare;
   return (
-    <div className='px-3 py-2.5 rounded-lg min-w-[130px]' style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)' }}>
-      <Handle type='target' position={Position.Left} style={{ background: '#10b981', border: 'none', width: 6, height: 6 }} />
+    <div className='px-3 py-2 rounded-lg min-w-[130px]' style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+      <Handle type='target' position={Position.Top} style={{ background: '#a78bfa', border: 'none', width: 6, height: 6 }} />
       <div className='flex items-center gap-2'>
-        <Icon size={14} className='text-emerald-400' />
+        <div className='w-7 h-7 rounded flex items-center justify-center' style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}>
+          <Icon size={14} className='text-violet-400' />
+        </div>
         <div className='text-xs text-zinc-400'>{data.name}</div>
       </div>
     </div>
@@ -85,18 +87,38 @@ function OutputNode({ data }: { data: any }) {
 
 const nodeTypes = { agent: AgentNode, tool: ToolNode, trigger: TriggerNode, output: OutputNode };
 
-// --- Layout ---
-function layoutWithDagre(nodes: Node[], edges: Edge[]): Node[] {
-  const g = new dagre.graphlib.Graph();
-  g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: 'TB', nodesep: 100, ranksep: 120, marginx: 40, marginy: 40 });
-  nodes.forEach(n => g.setNode(n.id, { width: 200, height: 60 }));
-  edges.forEach(e => g.setEdge(e.source, e.target));
-  dagre.layout(g);
-  return nodes.map(n => {
-    const pos = g.node(n.id);
-    return { ...n, position: { x: pos.x - 100, y: pos.y - 30 } };
-  });
+// --- Custom compact layout ---
+function compactLayout(nodes: Node[]): Node[] {
+  const lead = nodes.find(n => n.type === 'agent' && n.data.role === 'Lead');
+  const specs = nodes.filter(n => n.type === 'agent' && n.data.role !== 'Lead');
+  const tools = nodes.filter(n => n.type === 'tool');
+  const triggers = nodes.filter(n => n.type === 'trigger');
+  const outputs = nodes.filter(n => n.type === 'output');
+
+  const cx = 400; // center x
+
+  // Lead: center
+  if (lead) lead.position = { x: cx - 90, y: 100 };
+
+  // Tools: left column
+  tools.forEach((n, i) => { n.position = { x: 60, y: 30 + i * 65 }; });
+
+  // Triggers: above lead, left
+  triggers.forEach((n, i) => { n.position = { x: cx - 200 + i * 200, y: 0 }; });
+
+  // Specialists: row below lead, centered
+  const specW = 200;
+  const totalSpecW = specs.length * specW;
+  const specStartX = cx - 90 - (totalSpecW - specW) / 2;
+  specs.forEach((n, i) => { n.position = { x: specStartX + i * specW, y: 260 }; });
+
+  // Outputs: below specialists, centered
+  const outW = 160;
+  const totalOutW = outputs.length * outW;
+  const outStartX = cx - 90 - (totalOutW - outW) / 2;
+  outputs.forEach((n, i) => { n.position = { x: outStartX + i * outW, y: 400 }; });
+
+  return nodes;
 }
 
 // --- Character image mapping ---
@@ -183,12 +205,12 @@ export default function CanvasPage() {
 
         // Output nodes
         n.push({ id: 'output-chat', type: 'output', data: { name: 'Chat', channel: 'chat' }, position: { x: 0, y: 0 } });
-        e.push({ id: 'e-lead-chat', source: agent.id, target: 'output-chat', style: { stroke: 'rgba(16,185,129,0.3)', strokeWidth: 1.5 } });
+        e.push({ id: 'e-lead-chat', source: agent.id, target: 'output-chat', style: { stroke: 'rgba(167,139,250,0.2)', strokeWidth: 1.5 } });
         n.push({ id: 'output-telegram', type: 'output', data: { name: 'Telegram', channel: 'telegram' }, position: { x: 0, y: 0 } });
-        e.push({ id: 'e-lead-telegram', source: agent.id, target: 'output-telegram', style: { stroke: 'rgba(16,185,129,0.3)', strokeWidth: 1.5 } });
+        e.push({ id: 'e-lead-telegram', source: agent.id, target: 'output-telegram', style: { stroke: 'rgba(167,139,250,0.2)', strokeWidth: 1.5 } });
 
         // Auto-layout
-        const laid = layoutWithDagre(n, e);
+        const laid = compactLayout(n);
         setNodes(laid);
         setEdges(e);
       } catch (err) {

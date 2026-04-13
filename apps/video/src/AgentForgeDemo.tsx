@@ -10,6 +10,10 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import {
+  Coins, Shield, Brain, Search, Lock, Bell, BarChart3, Zap,
+  ClipboardList, CheckCircle2, TrendingUp,
+} from "lucide-react";
 
 const C = {
   bg: "#09090b",
@@ -134,8 +138,9 @@ function SceneProblem() {
         {/* Left card */}
         <FadeText fadeIn={[0, 30]} fadeOut={[180, 210]} style={{ flex: 1 }}>
           <div style={{ ...glass, padding: 48, borderLeft: `3px solid ${C.amber}40` }}>
-            <div style={{ fontSize: 36, fontWeight: 200, color: C.text, marginBottom: 16 }}>
-              💰 Make money while you sleep
+            <div style={{ fontSize: 36, fontWeight: 200, color: C.text, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14 }}>
+              <Coins size={32} color={C.amber} strokeWidth={1.5} />
+              Make money while you sleep
             </div>
             <div style={{ fontSize: 18, color: C.muted, lineHeight: 1.6 }}>
               Your AI team monitors markets 24/7, executes trades at optimal moments,
@@ -149,8 +154,9 @@ function SceneProblem() {
         {/* Right card */}
         <FadeText fadeIn={[15, 45]} fadeOut={[180, 210]} style={{ flex: 1 }}>
           <div style={{ ...glass, padding: 48, borderLeft: `3px solid ${C.blue}40` }}>
-            <div style={{ fontSize: 36, fontWeight: 200, color: C.text, marginBottom: 16 }}>
-              🛡️ Don't get replaced — lead the AI
+            <div style={{ fontSize: 36, fontWeight: 200, color: C.text, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14 }}>
+              <Shield size={32} color={C.blue} strokeWidth={1.5} />
+              Don't get replaced — lead the AI
             </div>
             <div style={{ fontSize: 18, color: C.muted, lineHeight: 1.6 }}>
               Everyone's hiring AI. The question isn't whether AI replaces your job —
@@ -268,12 +274,12 @@ function SceneAssembly() {
 function SceneCommandCenter() {
   const frame = useCurrentFrame();
   const events = [
-    { icon: "📋", agent: "Director", text: "Dispatched task to Atlas", color: C.violet },
-    { icon: "🔍", agent: "Atlas", text: "Scanning market conditions...", color: C.emerald },
-    { icon: "📊", agent: "Sigma", text: "Running technical analysis on SOL...", color: C.blue },
-    { icon: "⚡", agent: "Flash", text: "Monitoring order books...", color: C.green },
-    { icon: "✅", agent: "Atlas", text: "Analysis complete — SOL bullish", color: C.emerald },
-    { icon: "💰", agent: "Flash", text: "Executed: 50 USDC → 0.38 SOL", color: C.green },
+    { Icon: ClipboardList, agent: "Director", text: "Dispatched task to Atlas", color: C.violet },
+    { Icon: Search, agent: "Atlas", text: "Scanning market conditions...", color: C.emerald },
+    { Icon: BarChart3, agent: "Sigma", text: "Running technical analysis on SOL...", color: C.blue },
+    { Icon: Zap, agent: "Flash", text: "Monitoring order books...", color: C.green },
+    { Icon: CheckCircle2, agent: "Atlas", text: "Analysis complete — SOL bullish", color: C.emerald },
+    { Icon: Coins, agent: "Flash", text: "Executed: 50 USDC → 0.38 SOL", color: C.green },
   ];
 
   return (
@@ -328,7 +334,7 @@ function SceneCommandCenter() {
                 opacity, transform: `translateY(${y}px)`,
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 16 }}>{evt.icon}</span>
+                  <evt.Icon size={18} color={evt.color} strokeWidth={1.5} />
                   <span style={{ fontSize: 14, fontWeight: 500, color: evt.color }}>{evt.agent}</span>
                   <span style={{ fontSize: 14, color: C.muted }}>{evt.text}</span>
                 </div>
@@ -345,10 +351,10 @@ function SceneCommandCenter() {
 function SceneFeatures() {
   const frame = useCurrentFrame();
   const features = [
-    { title: "Memory", desc: "Your agents remember everything", icon: "🧠" },
-    { title: "Web Search", desc: "Live market data via Perplexity", icon: "🔍" },
-    { title: "Wallet", desc: "Policy-controlled crypto execution", icon: "🛡️" },
-    { title: "Notifications", desc: "Telegram alerts, 24/7", icon: "🔔" },
+    { title: "Memory", desc: "Your agents remember everything", Icon: Brain, color: "#a78bfa" },
+    { title: "Web Search", desc: "Live market data via Perplexity", Icon: Search, color: C.emerald },
+    { title: "Wallet", desc: "Policy-controlled crypto execution", Icon: Shield, color: C.amber },
+    { title: "Notifications", desc: "Telegram alerts, 24/7", Icon: Bell, color: C.blue },
   ];
 
   return (
@@ -368,7 +374,9 @@ function SceneFeatures() {
               display: "flex", alignItems: "center", gap: 24, minWidth: 500,
               opacity, transform: `translateX(${x}px)`,
             }}>
-              <span style={{ fontSize: 40 }}>{f.icon}</span>
+              <div style={{ width: 56, height: 56, borderRadius: 12, background: `${f.color}15`, border: `1px solid ${f.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <f.Icon size={28} color={f.color} strokeWidth={1.5} />
+              </div>
               <div>
                 <div style={{ fontSize: 28, fontWeight: 300, color: C.text }}>{f.title}</div>
                 <div style={{ fontSize: 16, color: C.muted }}>{f.desc}</div>

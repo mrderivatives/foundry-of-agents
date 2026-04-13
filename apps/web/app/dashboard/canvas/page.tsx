@@ -3,9 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { ReactFlow, MiniMap, Controls, Background, Handle, Position, type Node, type Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import './canvas.css';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/shared/api/client';
-import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet } from 'lucide-react';
+import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList } from 'lucide-react';
+import type { Agent } from '@/shared/types';
 import dagre from 'dagre';
 
 // --- Custom Node Components ---
@@ -107,17 +108,33 @@ function getAvatarUrl(agent: any): string {
 // --- Main Page ---
 export default function CanvasPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const agentId = searchParams.get('agent');
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [loading, setLoading] = useState(true);
+  const [agentName, setAgentName] = useState('');
+
+  // Auto-select first agent if none specified
+  useEffect(() => {
+    if (!agentId) {
+      api.get<Agent[]>('/api/agents').then(agents => {
+        if (agents.length > 0) {
+          router.replace(`/dashboard/canvas?agent=${agents[0].id}`);
+        } else {
+          setLoading(false);
+        }
+      }).catch(() => setLoading(false));
+    }
+  }, [agentId, router]);
 
   useEffect(() => {
-    if (!agentId) { setLoading(false); return; }
+    if (!agentId) return;
 
     async function load() {
       try {
         const agent = await api.get<any>(`/api/agents/${agentId}`);
+        setAgentName(agent.name || '');
         let team: any[] = [];
         try { team = await api.get<any[]>(`/api/agents/${agentId}/team`); } catch {}
         let skills: any[] = [];
@@ -200,7 +217,20 @@ export default function CanvasPage() {
   }
 
   return (
-    <div className='h-full w-full' style={{ background: '#09090b' }}>
+    <div className='h-full w-full relative' style={{ background: '#09090b' }}>
+      {/* Header overlay */}
+      <div className='absolute top-4 left-4 z-10 flex items-center gap-2'>
+        <button
+          onClick={() => router.push(`/dashboard/agents/${agentId}`)}
+          className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-zinc-200 border border-white/[0.06] hover:bg-white/[0.05] transition-all duration-200 backdrop-blur'
+          style={{ background: 'rgba(9,9,11,0.8)' }}
+        >
+          <LayoutList size={13} /> Dashboard
+        </button>
+        {agentName && (
+          <span className='text-xs text-zinc-600 ml-1'>{agentName}</span>
+        )}
+      </div>
       <ReactFlow
         nodes={nodes}
         edges={edges}

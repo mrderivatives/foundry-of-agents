@@ -123,7 +123,7 @@ export default function DashboardLayout({
             {agents.map((agent) => (
               <Link
                 key={agent.id}
-                href={`/dashboard/agents/${agent.id}`}
+                href={pathname.startsWith('/dashboard/canvas') ? `/dashboard/canvas?agent=${agent.id}` : `/dashboard/agents/${agent.id}`}
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                   isAgentActive(agent.id)

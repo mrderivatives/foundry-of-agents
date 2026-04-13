@@ -22,6 +22,7 @@ import {
   Trash2,
   AlertTriangle,
   Shield,
+  Network,
 } from "lucide-react";
 import type { Agent, ChatSession, WalletInfo, WalletPolicy, WalletTransaction } from "@/shared/types";
 import { AgentAvatar } from "@/shared/components/agent-avatar";
@@ -354,6 +355,12 @@ export default function AgentDetailPage() {
             <span className="hidden sm:inline rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
               {agent.model || "claude-sonnet-4-6"}
             </span>
+            <button
+              onClick={() => router.push(`/dashboard/canvas?agent=${agentId}`)}
+              className="hidden sm:flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] text-zinc-500 hover:text-zinc-300 border border-white/[0.06] hover:bg-white/[0.03] transition-all duration-200"
+            >
+              <Network size={12} /> Canvas
+            </button>
           </div>
         </div>
 

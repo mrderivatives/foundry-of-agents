@@ -1,0 +1,12 @@
+.react-flow__controls button {
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  color: #a1a1aa !important;
+  border-radius: 6px !important;
+}
+.react-flow__controls button:hover {
+  background: rgba(255,255,255,0.06) !important;
+}
+.react-flow__handle {
+  border: none !important;
+}

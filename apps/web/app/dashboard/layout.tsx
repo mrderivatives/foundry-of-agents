@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   X,
+  Network,
 } from "lucide-react";
 import { api } from "@/shared/api/client";
 import { useAgentStore } from "@/features/agents/store";
@@ -161,6 +162,18 @@ export default function DashboardLayout({
 
         {/* Nav */}
         <div className="border-t border-border px-3 py-3 space-y-1">
+          <Link
+            href="/dashboard/canvas"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+              pathname.startsWith("/dashboard/canvas")
+                ? "bg-primary/10 text-foreground"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+            }`}
+          >
+            <Network className="w-4 h-4" />
+            Canvas
+          </Link>
           <Link
             href="/dashboard/skills"
             onClick={() => setSidebarOpen(false)}

@@ -20,6 +20,8 @@ import {
   ClipboardCopy,
   Users,
   Trash2,
+  AlertTriangle,
+  Shield,
 } from "lucide-react";
 import type { Agent, ChatSession, WalletInfo, WalletPolicy, WalletTransaction } from "@/shared/types";
 import { AgentAvatar } from "@/shared/components/agent-avatar";
@@ -95,6 +97,8 @@ export default function AgentDetailPage() {
   const [walletTxs, setWalletTxs] = useState<WalletTransaction[]>([]);
   const [walletLoading, setWalletLoading] = useState(false);
   const [creatingWallet, setCreatingWallet] = useState(false);
+  const [showWalletDialog, setShowWalletDialog] = useState(false);
+  const [riskAcknowledged, setRiskAcknowledged] = useState(false);
   const [copied, setCopied] = useState(false);
   const [subAgents, setSubAgents] = useState<Agent[]>([]);
   const [activeSpecialist, setActiveSpecialist] = useState<string | null>(null);
@@ -393,13 +397,14 @@ export default function AgentDetailPage() {
                 </div>
               </div>
             )}
+            <p className="mt-2 text-[10px] text-zinc-600 leading-relaxed">Transactions are subject to policy limits. Cryptocurrency is volatile — only fund what you can afford to lose.</p>
           </div>
         ) : !walletLoading ? (
           <div className="mb-4 space-y-2">
             <button
-              onClick={handleCreateWallet}
+              onClick={() => { setShowWalletDialog(true); setRiskAcknowledged(false); setWalletError(null); }}
               disabled={creatingWallet}
-              className="rounded-lg border border-dashed border-border px-4 py-2 text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+              className="rounded-lg border border-dashed border-white/[0.06] px-4 py-2 text-xs text-zinc-500 hover:border-violet-500/30 hover:text-zinc-300 transition-all duration-200 disabled:opacity-50"
             >
               {creatingWallet ? 'Creating...' : 'Enable Wallet for this Agent'}
             </button>
@@ -1062,6 +1067,75 @@ export default function AgentDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Risk Acknowledgment Dialog */}
+      {showWalletDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md mx-4 rounded-xl border border-white/[0.06] bg-[#18181b]/95 backdrop-blur-xl p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-amber-400" />
+              </div>
+              <h2 className="text-lg font-light text-white">Enable Agent Wallet</h2>
+            </div>
+
+            <div className="space-y-3 text-sm text-zinc-400">
+              <p>This will create a Solana wallet for your agent. Please understand:</p>
+              <ul className="space-y-2.5">
+                <li className="flex items-start gap-2.5">
+                  <Shield className="w-4 h-4 text-zinc-500 mt-0.5 shrink-0" />
+                  <span>Your agent can propose trades within your set spending limits</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Shield className="w-4 h-4 text-zinc-500 mt-0.5 shrink-0" />
+                  <span>All transactions require policy approval — your agent cannot exceed limits</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Shield className="w-4 h-4 text-zinc-500 mt-0.5 shrink-0" />
+                  <span>You can freeze the wallet instantly at any time</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                  <span>Cryptocurrency transactions are irreversible. Only fund with amounts you can afford to lose.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="flex items-center gap-2.5 mt-5 pt-5 border-t border-white/[0.06]">
+              <input
+                type="checkbox"
+                id="risk-ack"
+                checked={riskAcknowledged}
+                onChange={(e) => setRiskAcknowledged(e.target.checked)}
+                className="accent-violet-500 w-4 h-4"
+              />
+              <label htmlFor="risk-ack" className="text-sm text-zinc-300 cursor-pointer">
+                I understand the risks and want to enable the wallet
+              </label>
+            </div>
+
+            {walletError && (
+              <p className="text-xs text-red-400 mt-3">{walletError}</p>
+            )}
+
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={() => setShowWalletDialog(false)}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-white/[0.06] text-sm text-zinc-400 hover:bg-white/[0.03] transition-all duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setShowWalletDialog(false); handleCreateWallet(); }}
+                disabled={!riskAcknowledged || creatingWallet}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-violet-500/10 border border-violet-500/50 text-sm text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-violet-500/20 transition-all duration-200"
+              >
+                {creatingWallet ? 'Creating...' : 'Enable Wallet'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

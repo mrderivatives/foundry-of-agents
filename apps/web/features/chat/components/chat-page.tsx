@@ -128,6 +128,11 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Auto-focus chat input on mount and agent/session change
+  useEffect(() => {
+    setTimeout(() => textareaRef.current?.focus(), 100);
+  }, [agentId, sessionId]);
+
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
@@ -337,6 +342,8 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
       setSending(false);
       setIsStreaming(false);
       setStreamingContent("");
+      // Re-focus input for next message
+      setTimeout(() => textareaRef.current?.focus(), 50);
     }
   };
 

@@ -4,7 +4,8 @@ import type { LucideIcon } from "lucide-react";
 const TEAM_ICONS: Record<string, { icon: LucideIcon; color: string }> = {
   'sports': { icon: Trophy, color: '#f59e0b' },
   'market-research': { icon: TrendingUp, color: '#10b981' },
-  'career-bro': { icon: Briefcase, color: '#3b82f6' },
+  'career-pro': { icon: Briefcase, color: '#3b82f6' },
+  'career-bro': { icon: Briefcase, color: '#3b82f6' }, // legacy
   'product-business': { icon: Rocket, color: '#8b5cf6' },
   'custom': { icon: Zap, color: '#ec4899' },
 };

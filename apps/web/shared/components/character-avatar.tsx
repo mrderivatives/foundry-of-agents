@@ -2,24 +2,35 @@
 import Image from "next/image";
 
 const CHARACTER_IMAGES: Record<string, string> = {
-  // Specific characters
+  // Leads
   'coach': '/characters/char-coach.png',
+  'director': '/characters/char-director.png',
+  'chief': '/characters/char-chief.png',
+  'product-chief': '/characters/char-commander.png',
+  'default-lead': '/characters/char-commander.png',
+  // Legacy lead IDs
+  'managing-director': '/characters/char-director.png',
+  'chief-of-staff': '/characters/char-chief.png',
+  // Sports specialists
+  'oracle': '/characters/char-oracle.png',
   'gambling-guru': '/characters/char-gambling-guru.png',
-  'fantasy-manager': '/characters/char-planner.png',
-  'sports-journalist': '/characters/char-analyst.png',
-  'managing-director': '/characters/char-commander.png',
+  'journalist': '/characters/char-journalist.png',
+  // Legacy sport IDs
+  'fantasy-manager': '/characters/char-oracle.png',
+  'sports-journalist': '/characters/char-journalist.png',
+  // Market Research specialists
   'analyst': '/characters/char-analyst.png',
   'quant': '/characters/char-quant.png',
   'trader': '/characters/char-trader.png',
-  'chief-of-staff': '/characters/char-commander.png',
+  // Career Pro specialists
   'planner': '/characters/char-planner.png',
   'career-analyst': '/characters/char-analyst.png',
-  'networking-growth': '/characters/char-growth-hacker.png',
-  'product-chief': '/characters/char-commander.png',
+  'networker': '/characters/char-networker.png',
+  'networking-growth': '/characters/char-networker.png',
+  // Product & Business specialists
   'cto': '/characters/char-cto.png',
   'growth-hacker': '/characters/char-growth-hacker.png',
   'cfo': '/characters/char-cfo.png',
-  'default-lead': '/characters/char-commander.png',
 };
 
 interface Props {

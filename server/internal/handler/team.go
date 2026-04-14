@@ -57,23 +57,34 @@ var detailedPrompts = map[string]string{
 
 // characterImages maps character IDs to their avatar image paths.
 var characterImages = map[string]string{
+	// Leads
 	"coach":             "/characters/char-coach.png",
-	"fantasy-manager":   "/characters/char-planner.png",
+	"director":          "/characters/char-director.png",
+	"chief":             "/characters/char-chief.png",
+	"product-chief":     "/characters/char-commander.png",
+	"default-lead":      "/characters/char-commander.png",
+	// Legacy lead IDs
+	"managing-director": "/characters/char-director.png",
+	"chief-of-staff":    "/characters/char-chief.png",
+	// Sports
+	"oracle":            "/characters/char-oracle.png",
 	"gambling-guru":     "/characters/char-gambling-guru.png",
-	"sports-journalist": "/characters/char-analyst.png",
-	"managing-director": "/characters/char-commander.png",
+	"journalist":        "/characters/char-journalist.png",
+	"fantasy-manager":   "/characters/char-oracle.png",
+	"sports-journalist": "/characters/char-journalist.png",
+	// Market Research
 	"analyst":           "/characters/char-analyst.png",
 	"quant":             "/characters/char-quant.png",
 	"trader":            "/characters/char-trader.png",
-	"chief-of-staff":    "/characters/char-commander.png",
+	// Career Pro
 	"planner":           "/characters/char-planner.png",
 	"career-analyst":    "/characters/char-analyst.png",
-	"networking-growth": "/characters/char-growth-hacker.png",
-	"product-chief":     "/characters/char-commander.png",
+	"networker":         "/characters/char-networker.png",
+	"networking-growth": "/characters/char-networker.png",
+	// Product & Business
 	"cto":               "/characters/char-cto.png",
 	"growth-hacker":     "/characters/char-growth-hacker.png",
 	"cfo":               "/characters/char-cfo.png",
-	"default-lead":      "/characters/char-commander.png",
 }
 
 // POST /api/teams

@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Plus, MessageSquare } from "lucide-react";
+import { Send, Plus, MessageSquare, Users } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { CharacterAvatar } from "@/shared/components/characters";
 import { TeamIcon } from "@/shared/components/team-icon";
 import { useAgentStore } from "@/features/agents/store";
@@ -428,6 +429,21 @@ function CommandCenter({ team }: { team: TeamData }) {
 function LegacyDashboard() {
   const [showCreate, setShowCreate] = useState(false);
   const { agents } = useAgentStore();
+
+  if (agents.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-8">
+        <div className="w-16 h-16 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-4">
+          <Users size={28} className="text-violet-400" />
+        </div>
+        <h2 className="text-xl font-light text-zinc-200 mb-2">Build Your First Team</h2>
+        <p className="text-sm text-zinc-500 max-w-sm mb-6">Assemble a team of AI specialists that research, trade, and plan — 24/7.</p>
+        <Link href="/teams" className="px-6 py-2.5 rounded-xl text-sm font-medium text-white border border-violet-500/50 bg-violet-500/10 hover:bg-violet-500/20 transition-all">
+          Choose Your Squad
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6">

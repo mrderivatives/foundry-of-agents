@@ -3,9 +3,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ReactFlow, Panel, Controls, Background, Handle, Position, type Node, type Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import './canvas.css';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { api, BASE_URL } from '@/shared/api/client';
-import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList, Shield, Plus, ChevronDown, ChevronUp, Scroll, Cpu, FolderKanban, BookOpen, Mail, X, Loader2, Check, Trash2 } from 'lucide-react';
+import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList, Shield, Plus, ChevronDown, ChevronUp, Scroll, Cpu, FolderKanban, BookOpen, Mail, X, Loader2, Check, Trash2, Users } from 'lucide-react';
 import type { Agent } from '@/shared/types';
 
 // --- Custom Node Components ---
@@ -735,8 +736,15 @@ export default function CanvasPage() {
 
   if (!agentId) {
     return (
-      <div className='flex items-center justify-center h-full'>
-        <p className='text-zinc-600 text-sm'>Select an agent from the sidebar to view their canvas.</p>
+      <div className="flex flex-col items-center justify-center h-full text-center p-8">
+        <div className="w-16 h-16 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-4">
+          <Users size={28} className="text-violet-400" />
+        </div>
+        <h2 className="text-xl font-light text-zinc-200 mb-2">Select or Create a Team</h2>
+        <p className="text-sm text-zinc-500 max-w-sm mb-6">Assemble a team of AI specialists that research, trade, and plan — 24/7.</p>
+        <Link href="/teams" className="px-6 py-2.5 rounded-xl text-sm font-medium text-white border border-violet-500/50 bg-violet-500/10 hover:bg-violet-500/20 transition-all">
+          Choose Your Squad
+        </Link>
       </div>
     );
   }

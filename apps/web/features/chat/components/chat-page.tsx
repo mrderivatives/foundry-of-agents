@@ -16,6 +16,20 @@ interface Props {
   agentName?: string;
   agentModel?: string;
   agentEmoji?: string;
+  agentDescription?: string;
+}
+
+function getSuggestedPrompts(description?: string): string[] {
+  const desc = (description || '').toLowerCase();
+  if (desc.includes('market') || desc.includes('trading') || desc.includes('crypto'))
+    return ["What's the current SOL market outlook?", "Analyze Bitcoin's price action this week", "Find me the best DeFi yields right now"];
+  if (desc.includes('sports') || desc.includes('fantasy') || desc.includes('coach'))
+    return ["Who should I pick up off waivers?", "What are tonight's best bets?", "Any breaking trade rumors?"];
+  if (desc.includes('career') || desc.includes('productivity'))
+    return ["Help me plan my week", "Research salary benchmarks for my role", "Draft a networking outreach message"];
+  if (desc.includes('product') || desc.includes('startup') || desc.includes('business'))
+    return ["Review our product roadmap", "Draft a pitch deck outline", "Analyze our unit economics"];
+  return ["What can you help me with?", "Tell me about your capabilities", "What's happening in the markets today?"];
 }
 
 interface WalletEventData {
@@ -115,7 +129,7 @@ function WalletCard({ event }: { event: {
   );
 }
 
-export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji }: Props) {
+export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji, agentDescription }: Props) {
   const router = useRouter();
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState("");
@@ -431,16 +445,19 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-3">
         {messages.length === 0 && !isStreaming && (
-          <div className="flex h-full flex-col items-center justify-center text-center">
-            <div className="text-4xl mb-3">&#x1F44B;</div>
-            <h2 className="text-lg font-semibold mb-1">
-              Start a conversation...
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {agentName
-                ? `Chat with ${agentName}`
-                : "Send a message to get started"}
+          <div className="flex h-full flex-col items-center justify-center text-center gap-4 p-8">
+            <p className="text-zinc-500 text-sm">
+              {agentName ? `Start a conversation with ${agentName}` : "Send a message to get started"}
             </p>
+            <div className="flex flex-wrap gap-2 justify-center max-w-md">
+              {getSuggestedPrompts(agentDescription).map(prompt => (
+                <button key={prompt} onClick={() => setInput(prompt)}
+                  className="px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  {prompt}
+                </button>
+              ))}
+            </div>
           </div>
         )}
         {messages.map((msg) => (

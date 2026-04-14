@@ -531,6 +531,7 @@ export default function AgentDetailPage() {
                   agentName={agent.name}
                   agentModel={agent.model}
                   agentEmoji={agent.avatar_url}
+                  agentDescription={agent.instructions || agent.description}
                 />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center text-center p-6">

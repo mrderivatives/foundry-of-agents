@@ -35,6 +35,26 @@ type teamDetailOut struct {
 	Members []teamMemberOut `json:"members"`
 }
 
+// detailedPrompts provides rich system prompts for specialist agents by characterId.
+var detailedPrompts = map[string]string{
+	// Market Research
+	"analyst":           "You are a senior market analyst. Your specialty is fundamental research: gathering news, analyzing project fundamentals, reviewing on-chain data, and assessing market sentiment. When given a research task, use web_search to find current data. Be specific — include exact numbers, dates, market caps, volumes, and percentage changes. Structure your findings with clear sections and data points.",
+	"quant":             "You are a quantitative analyst. Your specialty is technical analysis: price patterns, support/resistance levels, moving averages, RSI, MACD, volume analysis, and correlation studies. When given an analysis task, look for specific price levels, trend patterns, and statistical signals. Express confidence levels and timeframes. Be precise with numbers.",
+	"trader":            "You are a trading specialist. Your role is evaluating trade opportunities: entry/exit points, position sizing, risk/reward ratios, and execution strategy. When given a trade evaluation, consider the current market conditions, liquidity, slippage, and timing. Always include risk warnings.",
+	// Sports
+	"fantasy-manager":   "You are a fantasy sports analyst. You analyze player stats, matchups, injury reports, and roster optimization. Use web_search for current player news and stats. Provide specific recommendations for lineup decisions, waiver wire picks, and trade targets.",
+	"gambling-guru":     "You are a sports odds analyst. You analyze betting lines, find value bets, track line movements, and identify market inefficiencies. Use web_search for current odds and injury news. Always include probability assessments and bankroll management advice.",
+	"sports-journalist": "You are a sports journalist. You find breaking news, write compelling analysis, and track developing stories. Use web_search to find the latest sports news. Write with flair but back up takes with data.",
+	// Career
+	"planner":           "You are a career planner and productivity specialist. You manage schedules, set goals, optimize workflows, and keep projects on track. Help users organize their time, prioritize tasks, and build effective routines.",
+	"career-analyst":    "You are a career strategy analyst. You research salary benchmarks, analyze job markets, identify skill gaps, and map career paths. Use web_search for current market data. Provide data-driven career advice.",
+	"networking-growth": "You are a networking and growth specialist. You craft outreach strategies, optimize LinkedIn profiles, build relationship management systems, and identify networking opportunities. Help users expand their professional network strategically.",
+	// Product & Business
+	"cto":               "You are a CTO and technical leader. You evaluate architectures, review technical decisions, plan engineering roadmaps, and assess technology stacks. Provide specific technical guidance with tradeoff analysis.",
+	"growth-hacker":     "You are a growth hacker and marketing specialist. You design viral campaigns, optimize conversion funnels, plan content strategies, and analyze user acquisition channels. Use web_search for current trends and competitor analysis.",
+	"cfo":               "You are a CFO and financial strategist. You build financial models, analyze unit economics, plan fundraising strategies, manage budgets, and forecast runway. Be precise with numbers and realistic with projections.",
+}
+
 // characterImages maps character IDs to their avatar image paths.
 var characterImages = map[string]string{
 	"coach":             "/characters/char-coach.png",
@@ -108,42 +128,30 @@ func (h *Handler) handleCreateTeam(w http.ResponseWriter, r *http.Request) {
 
 	// Build specialist description lines for lead prompt
 	var specDescriptions []string
-	var specNames []string
 	if len(body.Specialists) > 0 {
 		for _, spec := range body.Specialists {
 			specDescriptions = append(specDescriptions, fmt.Sprintf("- %s (%s): %s", spec.Name, spec.Role, spec.Description))
-			specNames = append(specNames, spec.Name)
 		}
 	} else {
 		// Legacy path: specialist_names only
 		for i, name := range body.SpecialistNames {
 			specDescriptions = append(specDescriptions, fmt.Sprintf("- %s (Specialist %d)", name, i+1))
-			specNames = append(specNames, name)
 		}
 	}
 
-	// Pick two names for the lead prompt examples
-	firstName := "a specialist"
-	secondName := "another specialist"
-	if len(specNames) > 0 {
-		firstName = specNames[0]
-	}
-	if len(specNames) > 1 {
-		secondName = specNames[1]
-	}
-
-	leadInstructions := fmt.Sprintf(`You are %s, the %s of your AI team.
+	leadInstructions := fmt.Sprintf(`You are %s, the %s of an AI team.
 
 YOUR TEAM:
 %s
 
-BEHAVIOR:
-- When the user asks for help, acknowledge which team member would handle it
-- Say things like "Let me have %s look into this..." or "I'll get %s on that"
-- Then answer the question yourself — you have all their capabilities
-- Always make the user feel like they have a full team working for them
-- Reference your team members by name naturally in conversation`,
-		body.LeadName, leadRole, strings.Join(specDescriptions, "\n"), firstName, secondName)
+COORDINATION RULES:
+- When the user asks a complex question, use dispatch_specialist to delegate to the right team member
+- You can dispatch to multiple specialists for multi-faceted questions
+- Always mention which specialist you're delegating to by name
+- Synthesize specialist results into clear, actionable responses
+- If a question is simple, answer it yourself without dispatching
+- Make the user feel like they have a full team working for them`,
+		body.LeadName, leadRole, strings.Join(specDescriptions, "\n"))
 
 	// Create lead agent with avatar_url
 	var leadAgent agentRow
@@ -204,6 +212,9 @@ BEHAVIOR:
 			}
 
 			specPrompt := fmt.Sprintf("You are %s, a %s specialist. %s", spec.Name, spec.Role, spec.Description)
+			if detailed, ok := detailedPrompts[spec.CharacterID]; ok {
+				specPrompt = fmt.Sprintf("You are %s. %s", spec.Name, detailed)
+			}
 
 			var specAgent agentRow
 			err = tx.QueryRow(ctx,

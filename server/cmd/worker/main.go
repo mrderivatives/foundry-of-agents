@@ -20,12 +20,15 @@ import (
 	"github.com/mrderivatives/foundry-of-agents/server/pkg/channels"
 	"github.com/mrderivatives/foundry-of-agents/server/pkg/db"
 	"github.com/mrderivatives/foundry-of-agents/server/pkg/queue"
+	"github.com/mrderivatives/foundry-of-agents/server/pkg/tools"
 )
 
 type workerDeps struct {
-	pool     *pgxpool.Pool
-	router   *bifrost.Router
-	telegram *channels.TelegramDriver
+	pool           *pgxpool.Pool
+	router         *bifrost.Router
+	telegram       *channels.TelegramDriver
+	queueClient    *queue.Client
+	perplexityKey  string
 }
 
 func main() {
@@ -57,7 +60,9 @@ func main() {
 		tg = channels.NewTelegramDriver(token)
 	}
 
-	deps := &workerDeps{pool: pool, router: router, telegram: tg}
+	perplexityKey := os.Getenv("PERPLEXITY_API_KEY")
+
+	deps := &workerDeps{pool: pool, router: router, telegram: tg, perplexityKey: perplexityKey}
 
 	// Redis
 	redisURL := os.Getenv("REDIS_URL")
@@ -69,6 +74,14 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Str("redis_url", redisURL).Msg("redis parse failed")
 	}
+
+	// Queue client for enqueueing tasks from handlers
+	qClient, err := queue.NewClient(redisURL)
+	if err != nil {
+		log.Fatal().Err(err).Msg("queue client init failed")
+	}
+	defer qClient.Close()
+	deps.queueClient = qClient
 
 	// asynq server (task processor)
 	srv := asynq.NewServer(redisOpt, asynq.Config{
@@ -205,25 +218,101 @@ func (d *workerDeps) handleCronFire(ctx context.Context, t *asynq.Task) error {
 		model = m
 	}
 
+	// Build tools list
+	var availableTools []bifrost.ToolDef
+	if d.perplexityKey != "" {
+		availableTools = append(availableTools, bifrost.ToolDef{
+			Name:        "web_search",
+			Description: "Search the web for current information. Use for prices, news, market data, or anything requiring up-to-date info.",
+			Parameters: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"query": map[string]interface{}{"type": "string", "description": "Search query"},
+				},
+				"required": []string{"query"},
+			},
+		})
+	}
+
 	// Call Bifrost
+	messages := []bifrost.Message{
+		{Role: "system", Content: systemPrompt.String()},
+		{Role: "user", Content: prompt},
+	}
 	resp, err := d.router.Route(ctx, bifrost.CompletionRequest{
-		Model: model,
-		Messages: []bifrost.Message{
-			{Role: "system", Content: systemPrompt.String()},
-			{Role: "user", Content: prompt},
-		},
+		Model:     model,
+		Messages:  messages,
+		Tools:     availableTools,
 		MaxTokens: 1024,
 	})
 	if err != nil {
 		log.Error().Err(err).Str("cron_id", payload.CronJobID).Msg("bifrost call failed")
-		// Update last_run
 		d.pool.Exec(ctx, `UPDATE cron_job SET last_run_at = NOW(), last_run_status = 'failed',
 			consecutive_failures = consecutive_failures + 1 WHERE id = $1`, payload.CronJobID)
 		return err
 	}
 
+	// Handle tool calls (one round)
+	if len(resp.ToolCalls) > 0 {
+		log.Info().Int("tool_calls", len(resp.ToolCalls)).Str("cron_id", payload.CronJobID).Msg("cron tool use detected")
+
+		assistantParts := []bifrost.ContentPart{}
+		if resp.Content != "" {
+			assistantParts = append(assistantParts, bifrost.ContentPart{Type: "text", Text: resp.Content})
+		}
+		for _, tc := range resp.ToolCalls {
+			assistantParts = append(assistantParts, bifrost.ContentPart{Type: "tool_use", ID: tc.ID, Name: tc.Name, Input: tc.Input})
+		}
+		messages = append(messages, bifrost.Message{Role: "assistant", ContentParts: assistantParts})
+
+		toolResultParts := []bifrost.ContentPart{}
+		for _, tc := range resp.ToolCalls {
+			var result string
+			switch tc.Name {
+			case "web_search":
+				var input struct {
+					Query string `json:"query"`
+				}
+				json.Unmarshal(tc.Input, &input)
+				if input.Query != "" {
+					log.Info().Str("query", input.Query).Msg("cron executing web search")
+					result, err = tools.WebSearch(ctx, d.perplexityKey, input.Query)
+					if err != nil {
+						log.Error().Err(err).Msg("cron web search failed")
+						result = "Search failed: " + err.Error()
+					}
+				} else {
+					result = "No query provided"
+				}
+			default:
+				result = "Unknown tool: " + tc.Name
+			}
+			toolResultParts = append(toolResultParts, bifrost.ContentPart{Type: "tool_result", ToolUseID: tc.ID, Content: result})
+		}
+		messages = append(messages, bifrost.Message{Role: "user", ContentParts: toolResultParts})
+
+		resp, err = d.router.Route(ctx, bifrost.CompletionRequest{
+			Model: model, Messages: messages, MaxTokens: 1024,
+		})
+		if err != nil {
+			log.Error().Err(err).Str("cron_id", payload.CronJobID).Msg("bifrost second call failed")
+			d.pool.Exec(ctx, `UPDATE cron_job SET last_run_at = NOW(), last_run_status = 'failed',
+				consecutive_failures = consecutive_failures + 1 WHERE id = $1`, payload.CronJobID)
+			return err
+		}
+	}
+
 	result := resp.Content
 	log.Info().Str("cron_id", payload.CronJobID).Int("len", len(result)).Msg("cron response generated")
+
+	// Store as episodic memory
+	_, memErr := d.pool.Exec(ctx,
+		`INSERT INTO memory_entry (agent_id, workspace_id, content, memory_type, source_type, source_id)
+		 VALUES ($1, $2, $3, 'episodic', 'cron', $4)`,
+		agentID, payload.WorkspaceID, result, payload.CronJobID)
+	if memErr != nil {
+		log.Error().Err(memErr).Msg("failed to store cron episodic memory")
+	}
 
 	// Deliver via output channel
 	if outputChannel == "telegram" && d.telegram != nil && outputTarget != "" {
@@ -232,6 +321,19 @@ func (d *workerDeps) handleCronFire(ctx context.Context, t *asynq.Task) error {
 			log.Error().Err(err).Msg("telegram delivery failed")
 		} else {
 			log.Info().Str("target", outputTarget).Msg("cron result delivered via telegram")
+		}
+	}
+
+	// Enqueue notification task
+	if d.queueClient != nil {
+		notifPayload, _ := json.Marshal(queue.NotificationSendPayload{
+			WorkspaceID: payload.WorkspaceID,
+			Channel:     outputChannel,
+			Content:     result,
+			AgentName:   agentName,
+		})
+		if _, err := d.queueClient.Enqueue(queue.TypeNotificationSend, notifPayload); err != nil {
+			log.Error().Err(err).Msg("failed to enqueue notification")
 		}
 	}
 

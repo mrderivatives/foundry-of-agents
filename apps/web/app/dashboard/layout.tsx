@@ -102,7 +102,8 @@ export default function DashboardLayout({
             href="/dashboard"
             className="text-base font-medium text-[#fafafa]"
           >
-            Foundry of Agents
+            <img src="/logo.png" alt="Forge" className="w-7 h-7" />
+            <span className="text-sm font-semibold tracking-tight text-zinc-100">Forge <span className="text-zinc-500 font-normal">of Agents</span></span>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -251,9 +252,10 @@ export default function DashboardLayout({
           >
             <Menu className="w-5 h-5" />
           </button>
-          <span className="text-sm font-medium text-[#fafafa]">
-            Foundry of Agents
-          </span>
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="Forge" className="w-6 h-6" />
+            <span className="text-sm font-semibold tracking-tight text-zinc-100">Forge <span className="text-zinc-500 font-normal">of Agents</span></span>
+          </div>
         </div>
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>

@@ -21,9 +21,12 @@ function CategoryNode({ data }: any) {
 }
 
 function AgentNode({ data }: { data: any }) {
+  const router = useRouter();
   const statusColor = data.status === 'working' ? 'bg-blue-400 animate-pulse' : data.status === 'idle' ? 'bg-emerald-400' : 'bg-zinc-600';
   return (
-    <div style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', minWidth: 180, backdropFilter: 'blur(8px)' }}>
+    <div
+      onClick={() => data.agentId && router.push(`/dashboard/agents/${data.agentId}`)}
+      style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', minWidth: 180, backdropFilter: 'blur(8px)', cursor: data.agentId ? 'pointer' : 'default' }}>
       <Handle type='target' position={Position.Top} style={{ background: '#7c3aed', border: 'none', width: 8, height: 8 }} />
       <div className='flex items-center gap-3'>
         {data.avatarUrl ? (
@@ -179,14 +182,14 @@ export default function CanvasPage() {
         // --- CENTER: Lead Agent ---
         const leadY = 180;
         n.push({ id: agent.id, type: 'agent', position: { x: 420, y: leadY },
-          data: { name: agent.name, role: 'Lead', avatarUrl: getAvatarUrl(agent), accentColor: '#7c3aed', status: agent.status || 'idle' } });
+          data: { name: agent.name, role: 'Lead', avatarUrl: getAvatarUrl(agent), accentColor: '#7c3aed', status: agent.status || 'idle', agentId: agent.id } });
 
         // Specialists below lead
         const specGap = 180;
         const specStartX = 420 - ((team.length - 1) * specGap) / 2;
         team.forEach((sub: any, i: number) => {
           n.push({ id: sub.id, type: 'agent', position: { x: specStartX + i * specGap, y: leadY + 130 },
-            data: { name: sub.name, role: sub.description || 'Specialist', avatarUrl: getAvatarUrl(sub), accentColor: '#a78bfa', status: sub.status || 'idle' } });
+            data: { name: sub.name, role: sub.description || 'Specialist', avatarUrl: getAvatarUrl(sub), accentColor: '#a78bfa', status: sub.status || 'idle', agentId: sub.id } });
           e.push({ id: `e-lead-${sub.id}`, source: agent.id, target: sub.id, animated: true,
             style: { stroke: 'rgba(124,58,237,0.35)', strokeWidth: 2 } });
         });

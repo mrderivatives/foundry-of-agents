@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
-import { ArrowUp, RotateCcw, RefreshCw, Search, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowUp, RotateCcw, RefreshCw, Search, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { api } from "@/shared/api/client";
 import type { ChatMessage } from "@/shared/types";
 import { AgentAvatar } from "@/shared/components/agent-avatar";
@@ -125,6 +125,8 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
   const [toolStatus, setToolStatus] = useState<{tool: string; query: string; done: boolean} | null>(null);
   const [walletEvent, setWalletEvent] = useState<WalletEventData | null>(null);
   const walletEventRef = useRef<WalletEventData | null>(null);
+  const [dispatches, setDispatches] = useState<Map<string, { specialist: string; task: string; status: string; query?: string }>>(new Map());
+  const dispatchesRef = useRef<Map<string, { specialist: string; task: string; status: string; query?: string }>>(new Map());
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -268,6 +270,29 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
                 } : null;
                 walletEventRef.current = we;
                 setWalletEvent(we);
+              } else if (evt.type === "dispatch_start") {
+                setDispatches(prev => {
+                  const next = new Map(prev);
+                  next.set(evt.specialist, { specialist: evt.specialist, task: evt.task, status: 'running' });
+                  dispatchesRef.current = next;
+                  return next;
+                });
+              } else if (evt.type === "dispatch_tool") {
+                setDispatches(prev => {
+                  const next = new Map(prev);
+                  const existing = next.get(evt.specialist);
+                  if (existing) next.set(evt.specialist, { ...existing, query: evt.query, status: 'searching' });
+                  dispatchesRef.current = next;
+                  return next;
+                });
+              } else if (evt.type === "dispatch_end") {
+                setDispatches(prev => {
+                  const next = new Map(prev);
+                  const existing = next.get(evt.specialist);
+                  if (existing) next.set(evt.specialist, { ...existing, status: 'completed' });
+                  dispatchesRef.current = next;
+                  return next;
+                });
               } else if (evt.type === "specialist_active") {
                 // Flash specialist status in roster strip
                 window.dispatchEvent(new CustomEvent('specialist-active', { detail: { agentId: evt.agent_id, name: evt.name } }));
@@ -281,6 +306,8 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
                 setWalletEvent(null);
                 setToolStatus(null);
                 walletEventRef.current = null;
+                setDispatches(new Map());
+                dispatchesRef.current = new Map();
                 setMessages((prev) => [
                   ...prev,
                   {
@@ -449,6 +476,28 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
             <div className="max-w-[85%] sm:max-w-[75%]">
               <div className="rounded-2xl rounded-bl-md px-4 py-3 text-sm bg-card border border-border">
                 {walletEvent && <WalletCard event={walletEvent} />}
+                {dispatches.size > 0 && (
+                  <div className="space-y-2 mb-2">
+                    {Array.from(dispatches.values()).map(d => (
+                      <div key={d.specialist} className="px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-zinc-300 font-medium">{d.specialist}</span>
+                          <span className="text-zinc-600">&mdash;</span>
+                          <span className="text-zinc-500 truncate">{d.task}</span>
+                        </div>
+                        <div className="mt-1 flex items-center gap-1.5 text-[11px]">
+                          {d.status === 'completed' ? (
+                            <><CheckCircle2 size={11} className="text-emerald-400" /><span className="text-emerald-400">Done</span></>
+                          ) : d.status === 'searching' ? (
+                            <><Search size={11} className="text-violet-400 animate-pulse" /><span className="text-zinc-500">Searching: {d.query}</span></>
+                          ) : (
+                            <><Loader2 size={11} className="text-violet-400 animate-spin" /><span className="text-zinc-500">Working...</span></>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {toolStatus && (
                   <div className={`flex items-center gap-2 text-xs mb-2 px-2 py-1.5 rounded-lg ${toolStatus.done ? 'bg-green-500/5 text-green-400' : 'bg-primary/5 text-muted-foreground'}`}>
                     {toolStatus.done ? <span>✓</span> : <Search className="w-3 h-3" />}

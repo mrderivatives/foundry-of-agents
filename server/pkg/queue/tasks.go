@@ -28,7 +28,10 @@ type HeartbeatFirePayload struct {
 type NotificationSendPayload struct {
 	NotificationID string `json:"notification_id"`
 	WorkspaceID    string `json:"workspace_id"`
+	UserID         string `json:"user_id"`
 	Channel        string `json:"channel"`
+	Content        string `json:"content"`
+	AgentName      string `json:"agent_name"`
 }
 
 type DocumentProcessPayload struct {

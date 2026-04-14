@@ -252,8 +252,50 @@ func (d *workerDeps) handleHeartbeatFire(_ context.Context, t *asynq.Task) error
 	return nil
 }
 
-func (d *workerDeps) handleNotificationSend(_ context.Context, t *asynq.Task) error {
-	log.Info().Str("type", t.Type()).Msg("processing notification")
+func (d *workerDeps) handleNotificationSend(ctx context.Context, t *asynq.Task) error {
+	var payload struct {
+		WorkspaceID string `json:"workspace_id"`
+		UserID      string `json:"user_id"`
+		Channel     string `json:"channel"`
+		Content     string `json:"content"`
+		AgentName   string `json:"agent_name"`
+	}
+	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
+		return err
+	}
+
+	log.Info().Str("channel", payload.Channel).Msg("sending notification")
+
+	switch payload.Channel {
+	case "telegram":
+		if d.telegram == nil {
+			log.Warn().Msg("telegram not configured")
+			return nil
+		}
+		// Load chat_id from notification_preference
+		var configRaw json.RawMessage
+		err := d.pool.QueryRow(ctx,
+			`SELECT channel_config FROM notification_preference
+			 WHERE workspace_id = $1 AND user_id = $2 AND channel = 'telegram'`,
+			payload.WorkspaceID, payload.UserID).Scan(&configRaw)
+		if err != nil {
+			log.Warn().Err(err).Msg("no telegram preference, skipping")
+			return nil
+		}
+		var config struct {
+			ChatID string `json:"chat_id"`
+		}
+		json.Unmarshal(configRaw, &config)
+		if config.ChatID == "" {
+			return nil
+		}
+
+		msg := payload.Content
+		if payload.AgentName != "" {
+			msg = fmt.Sprintf("*%s*\n\n%s", payload.AgentName, msg)
+		}
+		return d.telegram.Send(ctx, config.ChatID, msg)
+	}
 	return nil
 }
 

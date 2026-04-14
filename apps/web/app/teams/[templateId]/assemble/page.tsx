@@ -316,9 +316,9 @@ export default function AssemblePage({
       };
       localStorage.setItem("foundry_team", JSON.stringify(teamData));
 
-      // Redirect to lead agent's detail page
+      // Redirect to canvas view
       if (result.lead_agent_id) {
-        router.push(`/dashboard/agents/${result.lead_agent_id}`);
+        router.push(`/dashboard/canvas?agent=${result.lead_agent_id}`);
       } else {
         router.push("/dashboard");
       }

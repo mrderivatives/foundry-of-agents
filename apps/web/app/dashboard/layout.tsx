@@ -100,9 +100,9 @@ export default function DashboardLayout({
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <Link
             href="/dashboard"
-            className="text-base font-medium text-[#fafafa]"
+            className="flex items-center gap-2.5"
           >
-            <img src="/logo.png" alt="Forge" className="w-7 h-7" />
+            <img src="/logo.png" alt="Forge" className="w-6 h-6" />
             <span className="text-sm font-semibold tracking-tight text-zinc-100">Forge <span className="text-zinc-500 font-normal">of Agents</span></span>
           </Link>
           <button

@@ -21,25 +21,41 @@ function CategoryNode({ data }: any) {
   );
 }
 
+function getShortRole(desc: string): string {
+  if (!desc) return 'Specialist';
+  const dash = desc.indexOf(' \u2014 ');
+  const raw = dash > 0 ? desc.substring(0, dash) : desc;
+  return raw.replace(/ specialist$/i, '').substring(0, 24).trim();
+}
+
 function AgentNode({ data }: { data: any }) {
   const statusColor = data.status === 'working' ? 'bg-blue-400 animate-pulse' : data.status === 'idle' ? 'bg-emerald-400' : 'bg-zinc-600';
+  const shortRole = data.shortRole || getShortRole(data.role);
   return (
-    <div
-      style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', minWidth: 180, backdropFilter: 'blur(8px)', cursor: data.agentId ? 'pointer' : 'default' }}>
+    <div className='group relative'
+      style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', minWidth: 140, maxWidth: 180, backdropFilter: 'blur(8px)', cursor: data.agentId ? 'pointer' : 'default' }}>
       <Handle type='target' position={Position.Top} style={{ background: '#7c3aed', border: 'none', width: 8, height: 8 }} />
       <div className='flex items-center gap-3'>
         {data.avatarUrl ? (
-          <img src={data.avatarUrl} alt='' className='w-10 h-10 rounded-full object-cover' style={{ boxShadow: `0 0 12px ${data.accentColor || '#7c3aed'}40`, border: '2px solid rgba(255,255,255,0.1)' }} />
+          <img src={data.avatarUrl} alt='' className='w-10 h-10 rounded-full object-cover flex-shrink-0' style={{ boxShadow: `0 0 12px ${data.accentColor || '#7c3aed'}40`, border: '2px solid rgba(255,255,255,0.1)' }} />
         ) : (
-          <div className='w-10 h-10 rounded-full bg-violet-500/20 border border-violet-500/30' />
+          <div className='w-10 h-10 rounded-full bg-violet-500/20 border border-violet-500/30 flex-shrink-0' />
         )}
         <div className='flex-1 min-w-0'>
           <div className='text-sm font-medium text-zinc-100 truncate'>{data.name}</div>
-          <div className='text-[11px] text-zinc-500 truncate'>{data.role}</div>
+          <div className='text-[11px] text-zinc-500 truncate'>{shortRole}</div>
         </div>
-        <div className={`w-2.5 h-2.5 rounded-full ${statusColor}`} />
+        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${statusColor}`} />
       </div>
       <Handle type='source' position={Position.Bottom} style={{ background: '#7c3aed', border: 'none', width: 8, height: 8 }} />
+      {/* Hover tooltip */}
+      {data.role && data.role !== shortRole && (
+        <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 px-3 py-2 rounded-lg text-xs text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50'
+             style={{ background: '#27272a', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+          <div className='font-medium text-zinc-100 mb-0.5'>{data.name}</div>
+          <div>{data.role}</div>
+        </div>
+      )}
     </div>
   );
 }

@@ -21,6 +21,14 @@ import (
 	"github.com/mrderivatives/foundry-of-agents/server/pkg/wallet"
 )
 
+type teamMember struct {
+	ID           uuid.UUID
+	Name         string
+	Description  *string
+	Instructions *string
+	Model        *string
+}
+
 type sessionRow struct {
 	ID          uuid.UUID  `json:"id"`
 	WorkspaceID uuid.UUID  `json:"workspace_id"`
@@ -299,6 +307,20 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 
 	assistantMsgID := uuid.New()
 
+	// Load team members (sub-agents) to check if this agent is a team lead
+	var teamMembers []teamMember
+	tmRows, _ := h.DB.Query(ctx,
+		"SELECT id, name, description, instructions, model FROM agent WHERE parent_agent_id = $1 AND workspace_id = $2 AND archived_at IS NULL",
+		agentID, wsID)
+	if tmRows != nil {
+		defer tmRows.Close()
+		for tmRows.Next() {
+			var m teamMember
+			tmRows.Scan(&m.ID, &m.Name, &m.Description, &m.Instructions, &m.Model)
+			teamMembers = append(teamMembers, m)
+		}
+	}
+
 	// Define available tools
 	var availableTools []bifrost.ToolDef
 	if h.PerplexityAPIKey != "" {
@@ -337,6 +359,44 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 				"required": []string{"action", "input_token", "output_token", "amount"},
 			},
 		})
+	}
+
+	// Add dispatch_specialist tool if this agent leads a team
+	if len(teamMembers) > 0 {
+		specNames := []string{}
+		for _, m := range teamMembers {
+			specNames = append(specNames, m.Name)
+		}
+		availableTools = append(availableTools, bifrost.ToolDef{
+			Name:        "dispatch_specialist",
+			Description: "Delegate a task to one of your team specialists. They will research/analyze and return findings.",
+			Parameters: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"specialist": map[string]interface{}{
+						"type": "string", "enum": specNames,
+						"description": "Name of the specialist to dispatch",
+					},
+					"task": map[string]interface{}{
+						"type":        "string",
+						"description": "Specific task for the specialist",
+					},
+				},
+				"required": []string{"specialist", "task"},
+			},
+		})
+
+		// Add team awareness to system prompt
+		teamSection := "\n\n## Your Team\nYou lead a team of specialists. Use dispatch_specialist to delegate:\n"
+		for _, m := range teamMembers {
+			desc := "Specialist"
+			if m.Description != nil {
+				desc = *m.Description
+			}
+			teamSection += fmt.Sprintf("- **%s**: %s\n", m.Name, desc)
+		}
+		teamSection += "\nBreak complex questions into specialist tasks. Synthesize their results."
+		systemPrompt += teamSection
 	}
 
 	// Try tool use flow: non-streaming first call with tools, then stream final response
@@ -416,6 +476,8 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 					}
 				case "wallet_propose":
 					result = h.handleWalletProposeTool(ctx, tc, agentID, wsID, sessionID, assistantMsgID, useSSE, sseFlusher, w)
+				case "dispatch_specialist":
+					result = h.handleDispatchSpecialist(ctx, tc, teamMembers, agentID, wsID, sessionID, useSSE, sseFlusher, w)
 				default:
 					result = "Unknown tool: " + tc.Name
 				}
@@ -665,6 +727,167 @@ func (h *Handler) emitSpecialistActive(ctx context.Context, agentID uuid.UUID, r
 			}
 		}
 	}
+}
+
+// handleDispatchSpecialist delegates a task to a specialist sub-agent and returns their response.
+func (h *Handler) handleDispatchSpecialist(
+	ctx context.Context, tc bifrost.ToolCall,
+	members []teamMember, agentID, wsID, sessionID uuid.UUID,
+	useSSE bool, sseFlusher http.Flusher, w http.ResponseWriter,
+) string {
+	var input struct {
+		Specialist string `json:"specialist"`
+		Task       string `json:"task"`
+	}
+	json.Unmarshal(tc.Input, &input)
+
+	// Find specialist
+	var spec *teamMember
+	for i := range members {
+		if members[i].Name == input.Specialist {
+			spec = &members[i]
+			break
+		}
+	}
+	if spec == nil {
+		return "Unknown specialist: " + input.Specialist
+	}
+
+	// SSE: dispatch_start
+	if useSSE && sseFlusher != nil {
+		escapedTask := strings.ReplaceAll(input.Task, "\"", "\\\"")
+		escapedTask = strings.ReplaceAll(escapedTask, "\n", " ")
+		fmt.Fprintf(w, "data: {\"type\":\"dispatch_start\",\"specialist\":\"%s\",\"specialist_id\":\"%s\",\"task\":\"%s\"}\n\n",
+			input.Specialist, spec.ID.String(), escapedTask)
+		sseFlusher.Flush()
+	}
+
+	// Record task
+	var taskID uuid.UUID
+	h.DB.QueryRow(ctx,
+		`INSERT INTO dispatch_task (workspace_id, chat_session_id, from_agent_id, to_agent_id, description, status, started_at)
+		 VALUES ($1, $2, $3, $4, $5, 'running', now()) RETURNING id`,
+		wsID, sessionID, agentID, spec.ID, input.Task).Scan(&taskID)
+
+	// Build specialist prompt
+	specSystem := fmt.Sprintf("You are %s, a specialist agent.", spec.Name)
+	if spec.Instructions != nil && *spec.Instructions != "" {
+		specSystem = fmt.Sprintf("You are %s. %s", spec.Name, *spec.Instructions)
+	}
+
+	// Load specialist skills
+	sRows, _ := h.DB.Query(ctx,
+		`SELECT s.name, s.content FROM skill s JOIN agent_skill a ON a.skill_id = s.id
+		 WHERE a.agent_id = $1 AND a.enabled = true`, spec.ID)
+	if sRows != nil {
+		defer sRows.Close()
+		var sb strings.Builder
+		for sRows.Next() {
+			var sn, sc string
+			if sRows.Scan(&sn, &sc) == nil {
+				sb.WriteString(fmt.Sprintf("### %s\n%s\n\n", sn, sc))
+			}
+		}
+		if sb.Len() > 0 {
+			specSystem += "\n\n## Skills\n" + sb.String()
+		}
+	}
+
+	specSystem += "\n\nComplete the task thoroughly. Be specific and data-driven."
+
+	// Specialist tools (web search)
+	specTools := []bifrost.ToolDef{}
+	if h.PerplexityAPIKey != "" {
+		specTools = append(specTools, bifrost.ToolDef{
+			Name:        "web_search",
+			Description: "Search the web for current information.",
+			Parameters: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"query": map[string]interface{}{"type": "string", "description": "Search query"},
+				},
+				"required": []string{"query"},
+			},
+		})
+	}
+
+	specModel := "claude-sonnet-4-6"
+	if spec.Model != nil && *spec.Model != "" {
+		specModel = resolveModel(*spec.Model)
+	}
+
+	specMessages := []bifrost.Message{
+		{Role: "system", Content: specSystem},
+		{Role: "user", Content: input.Task},
+	}
+
+	// First call
+	specResp, err := h.Router.Route(ctx, bifrost.CompletionRequest{
+		Model: specModel, Messages: specMessages, Tools: specTools, MaxTokens: 4096,
+	})
+
+	var result string
+	if err != nil {
+		result = "Specialist error: " + err.Error()
+		h.DB.Exec(ctx, `UPDATE dispatch_task SET status='failed', result=$1, completed_at=now() WHERE id=$2`, result, taskID)
+	} else if len(specResp.ToolCalls) > 0 {
+		// Handle specialist tool calls (one level only)
+		assistParts := []bifrost.ContentPart{}
+		if specResp.Content != "" {
+			assistParts = append(assistParts, bifrost.ContentPart{Type: "text", Text: specResp.Content})
+		}
+		for _, stc := range specResp.ToolCalls {
+			assistParts = append(assistParts, bifrost.ContentPart{Type: "tool_use", ID: stc.ID, Name: stc.Name, Input: stc.Input})
+		}
+		specMessages = append(specMessages, bifrost.Message{Role: "assistant", ContentParts: assistParts})
+
+		toolResults := []bifrost.ContentPart{}
+		for _, stc := range specResp.ToolCalls {
+			var tr string
+			if stc.Name == "web_search" {
+				var si struct {
+					Query string `json:"query"`
+				}
+				json.Unmarshal(stc.Input, &si)
+				if si.Query != "" {
+					if useSSE && sseFlusher != nil {
+						fmt.Fprintf(w, "data: {\"type\":\"dispatch_tool\",\"specialist\":\"%s\",\"tool\":\"web_search\",\"query\":\"%s\"}\n\n",
+							input.Specialist, strings.ReplaceAll(si.Query, "\"", "\\\""))
+						sseFlusher.Flush()
+					}
+					tr, _ = tools.WebSearch(ctx, h.PerplexityAPIKey, si.Query)
+				}
+			}
+			if tr == "" {
+				tr = "No result"
+			}
+			toolResults = append(toolResults, bifrost.ContentPart{Type: "tool_result", ToolUseID: stc.ID, Content: tr})
+		}
+		specMessages = append(specMessages, bifrost.Message{Role: "user", ContentParts: toolResults})
+
+		specResp2, err2 := h.Router.Route(ctx, bifrost.CompletionRequest{
+			Model: specModel, Messages: specMessages, MaxTokens: 4096,
+		})
+		if err2 == nil {
+			result = specResp2.Content
+		} else {
+			result = specResp.Content
+		}
+		h.DB.Exec(ctx, `UPDATE dispatch_task SET status='completed', result=$1, completed_at=now() WHERE id=$2`, result, taskID)
+	} else {
+		result = specResp.Content
+		h.DB.Exec(ctx, `UPDATE dispatch_task SET status='completed', result=$1, input_tokens=$2, output_tokens=$3, completed_at=now() WHERE id=$4`,
+			result, specResp.Usage.InputTokens, specResp.Usage.OutputTokens, taskID)
+	}
+
+	// SSE: dispatch_end
+	if useSSE && sseFlusher != nil {
+		fmt.Fprintf(w, "data: {\"type\":\"dispatch_end\",\"specialist\":\"%s\",\"specialist_id\":\"%s\",\"status\":\"completed\"}\n\n",
+			input.Specialist, spec.ID.String())
+		sseFlusher.Flush()
+	}
+
+	return result
 }
 
 // handleWalletProposeTool processes the wallet_propose tool call from the LLM.

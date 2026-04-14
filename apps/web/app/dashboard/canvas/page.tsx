@@ -180,8 +180,11 @@ export default function CanvasPage() {
   // Onboarding wizard
   const [onboardingStep, setOnboardingStep] = useState<number | null>(null);
 
+  // Only show onboarding once, on initial load
+  const onboardingChecked = useRef(false);
   useEffect(() => {
-    if (!localStorage.getItem('canvas-onboarding-seen') && nodes.length > 0) {
+    if (!onboardingChecked.current && !localStorage.getItem('canvas-onboarding-seen') && nodes.length > 0) {
+      onboardingChecked.current = true;
       setOnboardingStep(1);
     }
   }, [nodes]);
@@ -909,7 +912,10 @@ export default function CanvasPage() {
                 Skip tour
               </button>
               <button
-                onClick={() => {
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   if (onboardingStep >= 5) {
                     setOnboardingStep(null);
                     localStorage.setItem('canvas-onboarding-seen', 'true');

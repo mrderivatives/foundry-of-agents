@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { TEAMS } from "@/shared/data/teams";
 import { CharacterAvatar } from "@/shared/components/characters";
@@ -11,10 +11,6 @@ import { GlassCard } from "@/shared/components/glass-card";
 import { TeamIcon } from "@/shared/components/team-icon";
 
 const ease = [0.16, 1, 0.3, 1] as const;
-
-const PRIMARY_IDS = ['crypto', 'markets-finance', 'predictions-sports'];
-const primaryTeams = TEAMS.filter(t => PRIMARY_IDS.includes(t.id));
-const secondaryTeams = TEAMS.filter(t => !PRIMARY_IDS.includes(t.id));
 
 function TeamCard({
   team,
@@ -33,34 +29,73 @@ function TeamCard({
       onClick={() => router.push(`/teams/${team.id}/assemble`)}
       className="group cursor-pointer"
     >
-      <GlassCard
-        className="p-5 transition-all duration-200 group-hover:translate-y-[-2px] group-hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
-        style={{ border: `1px solid ${team.accentColor}20` }}
-      >
-        <div className="flex items-center gap-4">
-          {/* Lead avatar */}
-          <div className="shrink-0">
+      <GlassCard className="p-8 transition-all duration-200 group-hover:translate-y-[-2px] group-hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]" style={{ borderLeft: `2px solid ${team.accentColor}30` }}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+          {/* Left: Team info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-2">
+              <TeamIcon teamId={team.id} size="md" />
+              <h3 className="text-lg font-light text-[#fafafa] tracking-[-0.02em]">{team.name}</h3>
+            </div>
+            <p className="text-sm text-[#a1a1aa] mb-3">
+              {team.vibe}
+            </p>
+            <p className="text-sm text-[#71717a] leading-relaxed">
+              {team.description}
+            </p>
+
+            {/* Roles */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              <span
+                className="text-xs font-medium px-2.5 py-1 rounded-full"
+                style={{
+                  color: team.accentColor,
+                  background: `${team.accentColor}15`,
+                  border: `1px solid ${team.accentColor}25`,
+                }}
+              >
+                Lead: {team.lead.role}
+              </span>
+              {team.specialists.map((s) => (
+                <span
+                  key={s.id}
+                  className="text-xs px-2.5 py-1 rounded-full text-[#a1a1aa] border border-white/[0.06] bg-white/[0.02]"
+                >
+                  {s.role}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Center: Character avatars */}
+          <div className="flex items-center gap-3">
             <CharacterAvatar
               characterId={team.lead.characterId}
               size={48}
               accentColor={team.accentColor}
             />
+            {team.specialists.map((s) => (
+              <CharacterAvatar
+                key={s.id}
+                characterId={s.characterId}
+                size={48}
+                accentColor={team.accentColor}
+              />
+            ))}
+            {team.id === "custom" &&
+              [1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="w-[48px] h-[48px] rounded-full border-2 border-dashed border-white/[0.1] flex items-center justify-center text-[#71717a] text-sm"
+                >
+                  ?
+                </div>
+              ))}
           </div>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <TeamIcon teamId={team.id} size="sm" />
-              <h3 className="text-base font-medium text-[#fafafa] tracking-[-0.02em]">{team.name}</h3>
-            </div>
-            <p className="text-sm text-[#a1a1aa] truncate">
-              {team.description}
-            </p>
-          </div>
-
-          {/* CTA */}
-          <div className="shrink-0">
-            <div className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-[#a1a1aa] border border-white/10 transition-all duration-200 group-hover:border-white/20 group-hover:text-white active:scale-[0.98]">
+          {/* Right: CTA */}
+          <div className="sm:ml-4 shrink-0">
+            <div className="flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium text-[#a1a1aa] border border-white/10 transition-all duration-200 group-hover:border-white/20 group-hover:text-white active:scale-[0.98]">
               {team.id === "custom" ? "BUILD" : "SELECT"}
               <ArrowRight className="w-4 h-4" />
             </div>
@@ -72,8 +107,6 @@ function TeamCard({
 }
 
 export default function TeamsPage() {
-  const [showMore, setShowMore] = useState(false);
-
   useEffect(() => {
     document.title = "Foundry — Choose Your Squad";
   }, []);
@@ -114,48 +147,36 @@ export default function TeamsPage() {
         </motion.div>
       </div>
 
-      {/* Primary team cards — 3 columns on desktop */}
-      <div className="max-w-3xl mx-auto px-6 pb-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {primaryTeams.map((team, i) => (
-            <TeamCard key={team.id} team={team} index={i} />
+      {/* Primary teams */}
+      <div className="max-w-3xl mx-auto px-6 space-y-6">
+        {TEAMS.slice(0, 3).map((team, i) => (
+          <TeamCard key={team.id} team={team} index={i} />
+        ))}
+      </div>
+
+      {/* Toggle for secondary teams */}
+      <MoreTeamsToggle />
+    </div>
+  );
+}
+
+function MoreTeamsToggle() {
+  const [showMore, setShowMore] = useState(false);
+  return (
+    <div className="max-w-3xl mx-auto px-6 pb-24">
+      <button
+        onClick={() => setShowMore(!showMore)}
+        className="flex items-center gap-2 mx-auto mt-6 mb-6 text-sm text-zinc-600 hover:text-zinc-400 transition-colors"
+      >
+        {showMore ? '▲ Show less' : '▼ More team types'}
+      </button>
+      {showMore && (
+        <div className="space-y-6">
+          {TEAMS.slice(3).map((team, i) => (
+            <TeamCard key={team.id} team={team} index={i + 3} />
           ))}
         </div>
-      </div>
-
-      {/* More team types toggle */}
-      <div className="max-w-3xl mx-auto px-6 pb-4">
-        <button
-          onClick={() => setShowMore(!showMore)}
-          className="flex items-center gap-2 text-sm text-[#71717a] hover:text-[#a1a1aa] transition-colors duration-200 mx-auto"
-        >
-          {showMore ? "Less team types" : "More team types"}
-          {showMore ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-      </div>
-
-      {/* Secondary team cards */}
-      <AnimatePresence>
-        {showMore && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease }}
-            className="overflow-hidden"
-          >
-            <div className="max-w-3xl mx-auto px-6 pb-24">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {secondaryTeams.map((team, i) => (
-                  <TeamCard key={team.id} team={team} index={i} />
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {!showMore && <div className="pb-24" />}
+      )}
     </div>
   );
 }

@@ -26,11 +26,105 @@ export interface TeamTemplate {
 
 export const TEAMS: TeamTemplate[] = [
   {
-    id: "sports",
-    name: "Sports Team",
+    id: "crypto",
+    name: "Crypto",
+    emoji: "₿",
+    accentColor: "#f59e0b",
+    vibe: "AI-powered crypto research, analysis & trading.",
+    description:
+      "Your complete crypto intelligence unit — research, on-chain analysis, and trade execution.",
+    lead: {
+      role: "Director",
+      name: "Director",
+      characterId: "director",
+      tagline: "The market never closes. Neither do we.",
+    },
+    specialists: [
+      {
+        id: "crypto-analyst",
+        role: "Crypto Analyst",
+        name: "Atlas",
+        characterId: "analyst",
+        tagline: "I find what others miss.",
+        description:
+          "Crypto analyst — project research, news, fundamentals, sentiment",
+        teamId: "crypto",
+      },
+      {
+        id: "crypto-quant",
+        role: "On-Chain Quant",
+        name: "Sigma",
+        characterId: "quant",
+        tagline: "The chain tells the truth.",
+        description:
+          "On-chain quant — technical analysis, price patterns, DeFi metrics",
+        teamId: "crypto",
+      },
+      {
+        id: "crypto-trader",
+        role: "Crypto Trader",
+        name: "Flash",
+        characterId: "trader",
+        tagline: "Execute with precision.",
+        description:
+          "Crypto trader — trade execution, risk management, DCA strategies",
+        teamId: "crypto",
+      },
+    ],
+  },
+  {
+    id: "markets-finance",
+    name: "Markets & Finance",
+    emoji: "📈",
+    accentColor: "#10b981",
+    vibe: "Institutional-grade market intelligence & portfolio management.",
+    description:
+      "Stocks, macro, crypto, commodities — your personal trading floor.",
+    lead: {
+      role: "Managing Director",
+      name: "Director",
+      characterId: "director",
+      tagline: "The market doesn't sleep. Neither do we.",
+    },
+    specialists: [
+      {
+        id: "analyst",
+        role: "Analyst",
+        name: "Atlas",
+        characterId: "analyst",
+        tagline: "I find what others miss.",
+        description:
+          "Analyst — deep fundamental research, news analysis, macro data, market sentiment",
+        teamId: "markets-finance",
+      },
+      {
+        id: "quant",
+        role: "Quant",
+        name: "Sigma",
+        characterId: "quant",
+        tagline: "The numbers don't lie.",
+        description:
+          "Quant — technical analysis, price patterns, statistical signals, data science",
+        teamId: "markets-finance",
+      },
+      {
+        id: "trader",
+        role: "Trader",
+        name: "Flash",
+        characterId: "trader",
+        tagline: "Execution is everything.",
+        description:
+          "Trader — entry/exit points, position sizing, risk/reward, execution strategy",
+        teamId: "markets-finance",
+      },
+    ],
+  },
+  {
+    id: "predictions-sports",
+    name: "Predictions & Sports",
     emoji: "🏆",
     accentColor: "#f59e0b",
-    vibe: "Win your league. Beat the bookie. Know every trade.",
+    vibe: "Sports analytics, fantasy management & prediction markets.",
     description:
       "Fantasy, betting, and breaking news — your complete sports intelligence unit.",
     lead: {
@@ -48,7 +142,7 @@ export const TEAMS: TeamTemplate[] = [
         tagline: "Your league isn't ready for what I found.",
         description:
           "Fantasy Manager — player stats, matchups, injury reports, roster optimization",
-        teamId: "sports",
+        teamId: "predictions-sports",
       },
       {
         id: "gambling-guru",
@@ -56,8 +150,9 @@ export const TEAMS: TeamTemplate[] = [
         name: "Ace",
         characterId: "gambling-guru",
         tagline: "The line just moved. We're in.",
-        description: "Gambling Guru — odds analysis, value betting, line movements, bankroll management",
-        teamId: "sports",
+        description:
+          "Gambling Guru — odds analysis, value betting, line movements, bankroll management",
+        teamId: "predictions-sports",
       },
       {
         id: "sports-journalist",
@@ -65,53 +160,9 @@ export const TEAMS: TeamTemplate[] = [
         name: "Scoop",
         characterId: "journalist",
         tagline: "I know before ESPN does.",
-        description: "Sports Journalist — breaking news, analysis pieces, developing stories",
-        teamId: "sports",
-      },
-    ],
-  },
-  {
-    id: "market-research",
-    name: "Market Research",
-    emoji: "📈",
-    accentColor: "#10b981",
-    vibe: "Goldman Sachs vibes. Your personal trading floor.",
-    description:
-      "Institutional-grade research, analysis, and execution for your portfolio.",
-    lead: {
-      role: "Managing Director",
-      name: "Director",
-      characterId: "director",
-      tagline: "The market doesn't sleep. Neither do we.",
-    },
-    specialists: [
-      {
-        id: "analyst",
-        role: "Analyst",
-        name: "Atlas",
-        characterId: "analyst",
-        tagline: "I find what others miss.",
-        description: "Analyst — deep fundamental research, news analysis, on-chain data, market sentiment",
-        teamId: "market-research",
-      },
-      {
-        id: "quant",
-        role: "Quant",
-        name: "Sigma",
-        characterId: "quant",
-        tagline: "The numbers don't lie.",
         description:
-          "Quant — technical analysis, price patterns, statistical signals, data science",
-        teamId: "market-research",
-      },
-      {
-        id: "trader",
-        role: "Trader",
-        name: "Flash",
-        characterId: "trader",
-        tagline: "Execution is everything.",
-        description: "Trader — entry/exit points, position sizing, risk/reward, execution strategy",
-        teamId: "market-research",
+          "Sports Journalist — breaking news, analysis pieces, developing stories",
+        teamId: "predictions-sports",
       },
     ],
   },
@@ -146,7 +197,8 @@ export const TEAMS: TeamTemplate[] = [
         name: "Sharp",
         characterId: "analyst",
         tagline: "The data tells the story.",
-        description: "Analyst — market research, salary data, skill assessment, career mapping",
+        description:
+          "Analyst — market research, salary data, skill assessment, career mapping",
         teamId: "career-pro",
       },
       {

@@ -1,9 +1,12 @@
-import { Trophy, TrendingUp, Briefcase, Rocket, Zap } from "lucide-react";
+import { Trophy, TrendingUp, Briefcase, Rocket, Zap, Bitcoin } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 const TEAM_ICONS: Record<string, { icon: LucideIcon; color: string }> = {
-  'sports': { icon: Trophy, color: '#f59e0b' },
-  'market-research': { icon: TrendingUp, color: '#10b981' },
+  'crypto': { icon: Bitcoin, color: '#f59e0b' },
+  'markets-finance': { icon: TrendingUp, color: '#10b981' },
+  'market-research': { icon: TrendingUp, color: '#10b981' }, // legacy
+  'predictions-sports': { icon: Trophy, color: '#f59e0b' },
+  'sports': { icon: Trophy, color: '#f59e0b' }, // legacy
   'career-pro': { icon: Briefcase, color: '#3b82f6' },
   'career-bro': { icon: Briefcase, color: '#3b82f6' }, // legacy
   'product-business': { icon: Rocket, color: '#8b5cf6' },

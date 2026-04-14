@@ -1,11 +1,11 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ReactFlow, Panel, Controls, Background, Handle, Position, type Node, type Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import './canvas.css';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { api } from '@/shared/api/client';
-import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList, Shield, Plus, ChevronDown, ChevronUp, Scroll, Cpu, FolderKanban, BookOpen, Mail, X } from 'lucide-react';
+import { api, BASE_URL } from '@/shared/api/client';
+import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList, Shield, Plus, ChevronDown, ChevronUp, Scroll, Cpu, FolderKanban, BookOpen, Mail, X, Loader2, Check, Trash2 } from 'lucide-react';
 import type { Agent } from '@/shared/types';
 
 // --- Custom Node Components ---
@@ -133,6 +133,10 @@ function getAvatarUrl(agent: any): string {
   return '/characters/char-commander.png';
 }
 
+// --- Shared styles ---
+const inputStyle = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' };
+const inputClass = 'w-full rounded-lg px-3 py-2 text-sm text-zinc-200';
+
 // --- Main Page ---
 export default function CanvasPage() {
   const searchParams = useSearchParams();
@@ -145,6 +149,19 @@ export default function CanvasPage() {
   const [agentName, setAgentName] = useState('');
   const [leftExpanded, setLeftExpanded] = useState(false);
   const [openModal, setOpenModal] = useState<string | null>(null);
+
+  // Modal state
+  const [modalData, setModalData] = useState<any>(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cron form state
+  const [newCronName, setNewCronName] = useState('');
+  const [newCronExpr, setNewCronExpr] = useState('');
+  const [newCronPrompt, setNewCronPrompt] = useState('');
 
   // Auto-select first agent if none specified
   useEffect(() => {
@@ -159,269 +176,539 @@ export default function CanvasPage() {
     }
   }, [agentId, router]);
 
-  useEffect(() => {
+  const loadCanvasData = useCallback(async () => {
     if (!agentId) return;
+    try {
+      const agent = await api.get<any>(`/api/agents/${agentId}`);
+      setAgentName(agent.name || '');
+      let team: any[] = [];
+      try { team = await api.get<any[]>(`/api/agents/${agentId}/team`); } catch {}
 
-    async function load() {
-      try {
-        const agent = await api.get<any>(`/api/agents/${agentId}`);
-        setAgentName(agent.name || '');
-        let team: any[] = [];
-        try { team = await api.get<any[]>(`/api/agents/${agentId}/team`); } catch {}
+      const n: Node[] = [];
+      const e: Edge[] = [];
 
-        const n: Node[] = [];
-        const e: Edge[] = [];
+      // --- Category Headers ---
+      n.push({ id: 'cat-tools', type: 'category', position: { x: 60, y: 15 }, data: { label: 'Tools & Settings' }, draggable: false, selectable: false });
+      n.push({ id: 'cat-tasks', type: 'category', position: { x: 740, y: 15 }, data: { label: 'Tasks & Objectives' }, draggable: false, selectable: false });
+      n.push({ id: 'cat-coms', type: 'category', position: { x: 380, y: 440 }, data: { label: 'Coms & Resources' }, draggable: false, selectable: false });
 
-        // --- Category Headers ---
-        n.push({ id: 'cat-tools', type: 'category', position: { x: 60, y: 15 }, data: { label: 'Tools & Settings' }, draggable: false, selectable: false });
-        n.push({ id: 'cat-tasks', type: 'category', position: { x: 740, y: 15 }, data: { label: 'Tasks & Objectives' }, draggable: false, selectable: false });
-        n.push({ id: 'cat-coms', type: 'category', position: { x: 380, y: 440 }, data: { label: 'Coms & Resources' }, draggable: false, selectable: false });
+      // --- LEFT: Tools & Settings (collapsible) ---
+      const alwaysVisibleTools = [
+        { id: 'tool-soul', name: 'Soul / Mission', toolId: 'soul', y: 55 },
+        { id: 'tool-documents', name: 'Documents', toolId: 'documents', y: 115 },
+        { id: 'tool-wallet', name: 'Wallet', toolId: 'wallet_propose', y: 175 },
+      ];
 
-        // --- LEFT: Tools & Settings (collapsible) ---
-        // Always show these 3
-        const alwaysVisibleTools = [
-          { id: 'tool-soul', name: 'Soul / Mission', toolId: 'soul', y: 55 },
-          { id: 'tool-documents', name: 'Documents', toolId: 'documents', y: 115 },
-          { id: 'tool-wallet', name: 'Wallet', toolId: 'wallet_propose', y: 175 },
+      alwaysVisibleTools.forEach(t => {
+        n.push({ id: t.id, type: 'tool', position: { x: 60, y: t.y }, data: { name: t.name, toolId: t.toolId } });
+        e.push({ id: `e-${t.id}-lead`, source: t.id, target: agent.id, type: 'default',
+          style: { stroke: 'rgba(124,58,237,0.15)', strokeWidth: 1, strokeDasharray: '4' } });
+      });
+
+      // Toggle node
+      n.push({ id: 'tool-toggle', type: 'tool', position: { x: 60, y: 235 }, data: { name: leftExpanded ? 'Show less' : 'More tools...', toolId: 'toggle', isToggle: true } });
+
+      // Extra tools when expanded
+      if (leftExpanded) {
+        const expandedTools = [
+          { id: 'tool-web-search', name: 'Web Search', toolId: 'web_search', y: 295 },
+          { id: 'tool-llm', name: 'LLM Selection', toolId: 'llm', y: 355 },
+          { id: 'tool-memory', name: 'Memory', toolId: 'memory_read', y: 415 },
         ];
-
-        alwaysVisibleTools.forEach(t => {
+        expandedTools.forEach(t => {
           n.push({ id: t.id, type: 'tool', position: { x: 60, y: t.y }, data: { name: t.name, toolId: t.toolId } });
           e.push({ id: `e-${t.id}-lead`, source: t.id, target: agent.id, type: 'default',
             style: { stroke: 'rgba(124,58,237,0.15)', strokeWidth: 1, strokeDasharray: '4' } });
         });
-
-        // Toggle node
-        n.push({ id: 'tool-toggle', type: 'tool', position: { x: 60, y: 235 }, data: { name: leftExpanded ? 'Show less' : 'More tools...', toolId: 'toggle', isToggle: true } });
-
-        // Extra tools when expanded
-        if (leftExpanded) {
-          const expandedTools = [
-            { id: 'tool-web-search', name: 'Web Search', toolId: 'web_search', y: 295 },
-            { id: 'tool-llm', name: 'LLM Selection', toolId: 'llm', y: 355 },
-            { id: 'tool-memory', name: 'Memory', toolId: 'memory_read', y: 415 },
-          ];
-          expandedTools.forEach(t => {
-            n.push({ id: t.id, type: 'tool', position: { x: 60, y: t.y }, data: { name: t.name, toolId: t.toolId } });
-            e.push({ id: `e-${t.id}-lead`, source: t.id, target: agent.id, type: 'default',
-              style: { stroke: 'rgba(124,58,237,0.15)', strokeWidth: 1, strokeDasharray: '4' } });
-          });
-        }
-
-        // --- CENTER: Lead Agent ---
-        const leadY = 180;
-        n.push({ id: agent.id, type: 'agent', position: { x: 420, y: leadY },
-          data: { name: agent.name, role: 'Lead', avatarUrl: getAvatarUrl(agent), accentColor: '#7c3aed', status: agent.status || 'idle', agentId: agent.id } });
-
-        // Specialists below lead
-        const specGap = 180;
-        const specStartX = 420 - ((team.length - 1) * specGap) / 2;
-        team.forEach((sub: any, i: number) => {
-          n.push({ id: sub.id, type: 'agent', position: { x: specStartX + i * specGap, y: leadY + 130 },
-            data: { name: sub.name, role: sub.description || 'Specialist', avatarUrl: getAvatarUrl(sub), accentColor: '#a78bfa', status: sub.status || 'idle', agentId: sub.id } });
-          e.push({ id: `e-lead-${sub.id}`, source: agent.id, target: sub.id, animated: true,
-            style: { stroke: 'rgba(124,58,237,0.35)', strokeWidth: 2 } });
-        });
-
-        // --- RIGHT: Tasks & Objectives ---
-        const rightTasks = [
-          { id: 'task-scheduled', name: 'Scheduled Tasks', toolId: 'cron' },
-          { id: 'task-projects', name: 'Projects', toolId: 'projects' },
-          { id: 'task-research', name: 'Research', toolId: 'research' },
-        ];
-        rightTasks.forEach((t, i) => {
-          n.push({ id: t.id, type: 'tool', position: { x: 740, y: 50 + i * 62 }, data: { name: t.name, toolId: t.toolId } });
-          e.push({ id: `e-lead-${t.id}`, source: agent.id, target: t.id,
-            style: { stroke: 'rgba(245,158,11,0.15)', strokeWidth: 1, strokeDasharray: '4' } });
-        });
-
-        // --- BOTTOM: Coms & Resources ---
-        const comItems = [
-          { id: 'com-chat', name: 'Chat', channel: 'chat' },
-          { id: 'com-messaging', name: 'Messaging', channel: 'telegram' },
-          { id: 'com-email', name: 'Email', channel: 'email' },
-          { id: 'com-apis', name: 'APIs', channel: 'api' },
-        ];
-        const comStartX = 420 - ((comItems.length - 1) * 140) / 2;
-        comItems.forEach((c, i) => {
-          n.push({ id: c.id, type: 'output', position: { x: comStartX + i * 140, y: 475 }, data: { name: c.name, channel: c.channel } });
-          e.push({ id: `e-lead-${c.id}`, source: agent.id, target: c.id,
-            style: { stroke: 'rgba(124,58,237,0.2)', strokeWidth: 1.5 } });
-        });
-
-        setNodes(n);
-        setEdges(e);
-      } catch (err) {
-        console.error('Canvas load error', err);
-      } finally {
-        setLoading(false);
       }
+
+      // --- CENTER: Lead Agent ---
+      const leadY = 180;
+      n.push({ id: agent.id, type: 'agent', position: { x: 420, y: leadY },
+        data: { name: agent.name, role: 'Lead', avatarUrl: getAvatarUrl(agent), accentColor: '#7c3aed', status: agent.status || 'idle', agentId: agent.id } });
+
+      // Specialists below lead
+      const specGap = 180;
+      const specStartX = 420 - ((team.length - 1) * specGap) / 2;
+      team.forEach((sub: any, i: number) => {
+        n.push({ id: sub.id, type: 'agent', position: { x: specStartX + i * specGap, y: leadY + 130 },
+          data: { name: sub.name, role: sub.description || 'Specialist', avatarUrl: getAvatarUrl(sub), accentColor: '#a78bfa', status: sub.status || 'idle', agentId: sub.id } });
+        e.push({ id: `e-lead-${sub.id}`, source: agent.id, target: sub.id, animated: true,
+          style: { stroke: 'rgba(124,58,237,0.35)', strokeWidth: 2 } });
+      });
+
+      // --- RIGHT: Tasks & Objectives ---
+      const rightTasks = [
+        { id: 'task-scheduled', name: 'Scheduled Tasks', toolId: 'cron' },
+        { id: 'task-projects', name: 'Projects', toolId: 'projects' },
+        { id: 'task-research', name: 'Research', toolId: 'research' },
+      ];
+      rightTasks.forEach((t, i) => {
+        n.push({ id: t.id, type: 'tool', position: { x: 740, y: 50 + i * 62 }, data: { name: t.name, toolId: t.toolId } });
+        e.push({ id: `e-lead-${t.id}`, source: agent.id, target: t.id,
+          style: { stroke: 'rgba(245,158,11,0.15)', strokeWidth: 1, strokeDasharray: '4' } });
+      });
+
+      // --- BOTTOM: Coms & Resources ---
+      const comItems = [
+        { id: 'com-chat', name: 'Chat', channel: 'chat' },
+        { id: 'com-messaging', name: 'Messaging', channel: 'telegram' },
+        { id: 'com-email', name: 'Email', channel: 'email' },
+        { id: 'com-apis', name: 'APIs', channel: 'api' },
+      ];
+      const comStartX = 420 - ((comItems.length - 1) * 140) / 2;
+      comItems.forEach((c, i) => {
+        n.push({ id: c.id, type: 'output', position: { x: comStartX + i * 140, y: 475 }, data: { name: c.name, channel: c.channel } });
+        e.push({ id: `e-lead-${c.id}`, source: agent.id, target: c.id,
+          style: { stroke: 'rgba(124,58,237,0.2)', strokeWidth: 1.5 } });
+      });
+
+      setNodes(n);
+      setEdges(e);
+    } catch (err) {
+      console.error('Canvas load error', err);
+    } finally {
+      setLoading(false);
     }
-    load();
   }, [agentId, leftExpanded]);
 
+  useEffect(() => {
+    loadCanvasData();
+  }, [loadCanvasData]);
+
+  // --- Fetch modal data when a modal opens ---
+  useEffect(() => {
+    if (!openModal) {
+      setModalData(null);
+      setModalError(null);
+      setSaveSuccess(false);
+      return;
+    }
+
+    setModalLoading(true);
+    setModalError(null);
+    setModalData(null);
+    setSaveSuccess(false);
+
+    (async () => {
+      try {
+        switch (openModal) {
+          case 'tool-soul': {
+            const agent = await api.get<any>(`/api/agents/${agentId}`);
+            setModalData({ name: agent.name || '', instructions: agent.instructions || '', model: agent.model || 'claude-sonnet-4-6' });
+            break;
+          }
+          case 'tool-documents': {
+            const docs = await api.get<any[]>('/api/documents').catch(() => []);
+            setModalData({ documents: docs || [] });
+            break;
+          }
+          case 'tool-wallet': {
+            const [walletInfo, balance] = await Promise.all([
+              api.get<any>(`/api/agents/${agentId}/wallet`).catch(() => null),
+              api.get<any>(`/api/agents/${agentId}/wallet/balance`).catch(() => null),
+            ]);
+            setModalData({
+              wallet: walletInfo?.wallet || null,
+              policy: walletInfo?.policy || { daily_limit_usd: 50, per_tx_limit_usd: 25 },
+              balance: balance,
+            });
+            break;
+          }
+          case 'tool-llm': {
+            const agent = await api.get<any>(`/api/agents/${agentId}`);
+            setModalData({ model: agent.model || 'claude-sonnet-4-6' });
+            break;
+          }
+          case 'tool-memory': {
+            const mems = await api.get<any[]>(`/api/agents/${agentId}/memory`).catch(() => []);
+            setModalData({ memories: mems || [] });
+            break;
+          }
+          case 'task-scheduled': {
+            const jobs = await api.get<any[]>(`/api/agents/${agentId}/cron-jobs`).catch(() => []);
+            setModalData({ cronJobs: jobs || [] });
+            break;
+          }
+          case 'com-messaging': {
+            const prefs = await api.get<any[]>('/api/notifications/preferences').catch(() => []);
+            const telegramPref = Array.isArray(prefs) ? prefs.find((p: any) => p.channel === 'telegram') : null;
+            setModalData({ chatId: telegramPref?.config?.chat_id || '' });
+            break;
+          }
+          default:
+            setModalData({});
+        }
+      } catch (err: any) {
+        setModalError(err.message || 'Failed to load data');
+      } finally {
+        setModalLoading(false);
+      }
+    })();
+  }, [openModal, agentId]);
+
+  // --- Save handlers ---
+  const handleSave = async (saveFn: () => Promise<void>) => {
+    setSaving(true);
+    setModalError(null);
+    try {
+      await saveFn();
+      setSaveSuccess(true);
+      setTimeout(() => {
+        setOpenModal(null);
+        loadCanvasData();
+      }, 600);
+    } catch (err: any) {
+      setModalError(err.message || 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveSoul = () => handleSave(async () => {
+    await api.patch(`/api/agents/${agentId}`, { name: modalData.name, instructions: modalData.instructions });
+  });
+
+  const saveWalletPolicy = () => handleSave(async () => {
+    await api.patch(`/api/agents/${agentId}/wallet/policy`, {
+      daily_limit_usd: modalData.policy?.daily_limit_usd,
+      per_tx_limit_usd: modalData.policy?.per_tx_limit_usd,
+    });
+  });
+
+  const saveLLM = () => handleSave(async () => {
+    await api.patch(`/api/agents/${agentId}`, { model: modalData.model });
+  });
+
+  const uploadDoc = async (file: File) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    await fetch(`${BASE_URL}/api/documents/upload`, { method: 'POST', headers, body: fd });
+    const docs = await api.get<any[]>('/api/documents').catch(() => []);
+    setModalData({ documents: docs || [] });
+  };
+
+  const deleteDoc = async (docId: string) => {
+    await api.delete(`/api/documents/${docId}`);
+    setModalData((prev: any) => ({ ...prev, documents: prev.documents.filter((d: any) => d.id !== docId) }));
+  };
+
+  const createCron = async () => {
+    if (!newCronName || !newCronExpr || !newCronPrompt) return;
+    await api.post(`/api/agents/${agentId}/cron-jobs`, {
+      name: newCronName, cron_expression: newCronExpr, prompt: newCronPrompt,
+      timezone: 'UTC', enabled: true,
+    });
+    const jobs = await api.get<any[]>(`/api/agents/${agentId}/cron-jobs`).catch(() => []);
+    setModalData({ cronJobs: jobs || [] });
+    setNewCronName('');
+    setNewCronExpr('');
+    setNewCronPrompt('');
+  };
+
+  const deleteCron = async (cronId: string) => {
+    await api.delete(`/api/cron-jobs/${cronId}`);
+    const jobs = await api.get<any[]>(`/api/agents/${agentId}/cron-jobs`).catch(() => []);
+    setModalData({ cronJobs: jobs || [] });
+  };
+
+  const saveMessaging = () => handleSave(async () => {
+    await api.post('/api/notifications/preferences', { channel: 'telegram', config: { chat_id: modalData.chatId } });
+  });
+
+  const testTelegram = async () => {
+    try {
+      await api.post('/api/notifications/test', { channel: 'telegram', message: '🔔 Test from Forge!' });
+    } catch (err: any) {
+      setModalError(err.message || 'Test message failed');
+    }
+  };
+
+  // --- Modal content renderer ---
   function renderModalContent(modalId: string) {
-    const modalConfigs: Record<string, { title: string; icon: any; content: React.ReactNode }> = {
-      'tool-soul': {
-        title: 'Soul / Mission',
-        icon: <Scroll size={18} className="text-violet-400" />,
-        content: (
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">Agent Name</label>
-              <input className="w-full rounded-lg px-3 py-2 text-sm text-zinc-200"
-                     style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-                     defaultValue={agentName} />
-            </div>
-            <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">Mission / Instructions</label>
-              <textarea className="w-full rounded-lg px-3 py-2 text-sm text-zinc-200 h-32 resize-none"
-                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-                        defaultValue="" />
-            </div>
-            <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">Personality</label>
-              <select className="w-full rounded-lg px-3 py-2 text-sm text-zinc-200"
-                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <option>Professional</option><option>Friendly</option><option>Technical</option><option>Creative</option>
-              </select>
-            </div>
-          </div>
-        ),
-      },
-      'tool-documents': {
-        title: 'Documents',
-        icon: <FileText size={18} className="text-violet-400" />,
-        content: (
-          <div className="space-y-4">
-            <p className="text-sm text-zinc-400">Documents that provide context to your agent.</p>
-            <div className="px-3 py-6 rounded-lg text-center text-sm text-zinc-500" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              No documents uploaded
-            </div>
-            <button className="w-full px-4 py-2 rounded-lg text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
-                    style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
-              + Upload Document
-            </button>
-          </div>
-        ),
-      },
-      'tool-wallet': {
-        title: 'Wallet Settings',
-        icon: <Shield size={18} className="text-violet-400" />,
-        content: (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between"><span className="text-xs text-zinc-500">Status</span><span className="text-xs text-emerald-400">Active</span></div>
-            <div><label className="text-xs text-zinc-500 mb-1.5 block">Daily Limit ($)</label><input type="number" defaultValue={50} className="w-full rounded-lg px-3 py-2 text-sm text-zinc-200" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} /></div>
-            <div><label className="text-xs text-zinc-500 mb-1.5 block">Per-TX Limit ($)</label><input type="number" defaultValue={25} className="w-full rounded-lg px-3 py-2 text-sm text-zinc-200" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} /></div>
-            <div><label className="text-xs text-zinc-500 mb-1.5 block">Allowed Tokens</label><div className="flex gap-2"><span className="px-2 py-1 rounded text-xs text-zinc-300" style={{ background: 'rgba(255,255,255,0.05)' }}>SOL</span><span className="px-2 py-1 rounded text-xs text-zinc-300" style={{ background: 'rgba(255,255,255,0.05)' }}>USDC</span></div></div>
-          </div>
-        ),
-      },
-      'tool-web-search': {
-        title: 'Web Search',
-        icon: <Search size={18} className="text-violet-400" />,
-        content: (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between"><span className="text-sm text-zinc-300">Enabled</span><div className="w-9 h-5 rounded-full bg-violet-600 relative"><div className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-white" /></div></div>
-            <div><label className="text-xs text-zinc-500 mb-1.5 block">Provider</label><select className="w-full rounded-lg px-3 py-2 text-sm text-zinc-200" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}><option>Perplexity Sonar</option><option>Google Search</option></select></div>
-          </div>
-        ),
-      },
-      'tool-llm': {
-        title: 'LLM Selection',
-        icon: <Cpu size={18} className="text-violet-400" />,
-        content: (
-          <div className="space-y-4">
-            <div><label className="text-xs text-zinc-500 mb-1.5 block">Model</label><select className="w-full rounded-lg px-3 py-2 text-sm text-zinc-200" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}><option>Claude Sonnet 4</option><option>Claude Opus 4</option><option>GPT-4o</option></select></div>
-            <div><label className="text-xs text-zinc-500 mb-1.5 block">Temperature</label><input type="range" min="0" max="1" step="0.1" defaultValue="0.7" className="w-full accent-violet-500" /></div>
-            <div><label className="text-xs text-zinc-500 mb-1.5 block">Max Tokens</label><input type="number" defaultValue={4096} className="w-full rounded-lg px-3 py-2 text-sm text-zinc-200" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} /></div>
-          </div>
-        ),
-      },
-      'tool-memory': {
-        title: 'Memory',
-        icon: <Brain size={18} className="text-violet-400" />,
-        content: (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between"><span className="text-sm text-zinc-300">Persistent Memory</span><div className="w-9 h-5 rounded-full bg-violet-600 relative"><div className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-white" /></div></div>
-            <p className="text-xs text-zinc-500">Agent remembers across conversations.</p>
-            <button className="text-xs text-red-400 hover:text-red-300 transition-colors">Clear All Memories</button>
-          </div>
-        ),
-      },
-      'task-scheduled': {
-        title: 'Scheduled Tasks',
-        icon: <Clock size={18} className="text-amber-400" />,
-        content: (
-          <div className="space-y-4">
-            <p className="text-sm text-zinc-400">Recurring tasks on a schedule.</p>
-            <div className="px-3 py-2 rounded-lg flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span className="text-sm text-zinc-300">Morning Brief</span><span className="text-xs text-zinc-500">7:30 AM ET</span>
-            </div>
-            <button className="w-full px-4 py-2 rounded-lg text-sm text-zinc-500 hover:text-zinc-300" style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>+ Add Schedule</button>
-          </div>
-        ),
-      },
-      'task-projects': {
-        title: 'Projects',
-        icon: <FolderKanban size={18} className="text-amber-400" />,
-        content: (<div className="space-y-3"><p className="text-sm text-zinc-400">Active projects and objectives.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-zinc-500" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>Coming soon</span></div>),
-      },
-      'task-research': {
-        title: 'Research',
-        icon: <BookOpen size={18} className="text-amber-400" />,
-        content: (<div className="space-y-3"><p className="text-sm text-zinc-400">Research tasks and findings.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-zinc-500" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>Coming soon</span></div>),
-      },
-      'com-chat': {
-        title: 'Chat',
-        icon: <MessageSquare size={18} className="text-violet-400" />,
-        content: (<div className="space-y-3"><p className="text-sm text-zinc-400">Direct chat with your agent.</p><div className="flex items-center justify-between"><span className="text-xs text-zinc-500">Status</span><span className="text-xs text-emerald-400">Connected</span></div></div>),
-      },
-      'com-messaging': {
-        title: 'Messaging (Telegram)',
-        icon: <Send size={18} className="text-violet-400" />,
-        content: (
-          <div className="space-y-4">
-            <div><label className="text-xs text-zinc-500 mb-1.5 block">Telegram Chat ID</label><input className="w-full rounded-lg px-3 py-2 text-sm text-zinc-200" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} placeholder="207851519" /></div>
-            <button className="px-4 py-2 rounded-lg text-sm text-violet-400 hover:text-violet-300" style={{ border: '1px solid rgba(124,58,237,0.3)' }}>Send Test Message</button>
-          </div>
-        ),
-      },
-      'com-email': {
-        title: 'Email',
-        icon: <Mail size={18} className="text-violet-400" />,
-        content: (<div className="space-y-3"><p className="text-sm text-zinc-400">Email notifications.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-zinc-500" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>Coming soon</span></div>),
-      },
-      'com-apis': {
-        title: 'APIs',
-        icon: <Globe size={18} className="text-violet-400" />,
-        content: (<div className="space-y-3"><p className="text-sm text-zinc-400">External API integrations.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-zinc-500" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>Coming soon</span></div>),
-      },
+    const modalMeta: Record<string, { title: string; icon: React.ReactNode; hasActions?: boolean }> = {
+      'tool-soul': { title: 'Soul / Mission', icon: <Scroll size={18} className="text-violet-400" />, hasActions: true },
+      'tool-documents': { title: 'Documents', icon: <FileText size={18} className="text-violet-400" /> },
+      'tool-wallet': { title: 'Wallet Settings', icon: <Shield size={18} className="text-violet-400" />, hasActions: true },
+      'tool-web-search': { title: 'Web Search', icon: <Search size={18} className="text-violet-400" /> },
+      'tool-llm': { title: 'LLM Selection', icon: <Cpu size={18} className="text-violet-400" />, hasActions: true },
+      'tool-memory': { title: 'Memory', icon: <Brain size={18} className="text-violet-400" /> },
+      'task-scheduled': { title: 'Scheduled Tasks', icon: <Clock size={18} className="text-amber-400" /> },
+      'task-projects': { title: 'Projects', icon: <FolderKanban size={18} className="text-amber-400" /> },
+      'task-research': { title: 'Research', icon: <BookOpen size={18} className="text-amber-400" /> },
+      'com-chat': { title: 'Chat', icon: <MessageSquare size={18} className="text-violet-400" /> },
+      'com-messaging': { title: 'Messaging (Telegram)', icon: <Send size={18} className="text-violet-400" />, hasActions: true },
+      'com-email': { title: 'Email', icon: <Mail size={18} className="text-violet-400" /> },
+      'com-apis': { title: 'APIs', icon: <Globe size={18} className="text-violet-400" /> },
     };
 
-    const config = modalConfigs[modalId];
-    if (!config) return null;
+    const meta = modalMeta[modalId];
+    if (!meta) return null;
+
+    const onSave = modalId === 'tool-soul' ? saveSoul
+      : modalId === 'tool-wallet' ? saveWalletPolicy
+      : modalId === 'tool-llm' ? saveLLM
+      : modalId === 'com-messaging' ? saveMessaging
+      : undefined;
 
     return (
       <>
+        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}>
-              {config.icon}
+              {meta.icon}
             </div>
-            <h2 className="text-lg font-medium text-zinc-100">{config.title}</h2>
+            <h2 className="text-lg font-medium text-zinc-100">{meta.title}</h2>
           </div>
           <button onClick={() => setOpenModal(null)} className="text-zinc-500 hover:text-zinc-300 transition-colors">
             <X size={18} />
           </button>
         </div>
-        {config.content}
-        <div className="flex justify-end gap-3 mt-6 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <button onClick={() => setOpenModal(null)} className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">Cancel</button>
-          <button onClick={() => setOpenModal(null)} className="px-4 py-2 text-sm bg-violet-600 hover:bg-violet-500 text-white rounded-lg transition-colors">Save Changes</button>
-        </div>
+
+        {/* Loading */}
+        {modalLoading && (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 size={20} className="text-violet-400 animate-spin" />
+          </div>
+        )}
+
+        {/* Error */}
+        {modalError && (
+          <div className="mb-4 px-3 py-2 rounded-lg text-sm text-red-400" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+            {modalError}
+          </div>
+        )}
+
+        {/* Content */}
+        {!modalLoading && renderModalBody(modalId)}
+
+        {/* Footer with Save */}
+        {!modalLoading && onSave && (
+          <div className="flex items-center justify-end gap-3 mt-6 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            {saveSuccess && <span className="text-xs text-emerald-400 flex items-center gap-1"><Check size={14} /> Saved!</span>}
+            <button onClick={() => setOpenModal(null)} className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">Cancel</button>
+            <button onClick={onSave} disabled={saving} className="px-4 py-2 text-sm bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-lg transition-colors flex items-center gap-2">
+              {saving && <Loader2 size={14} className="animate-spin" />}
+              Save Changes
+            </button>
+          </div>
+        )}
+
+        {/* Footer without Save */}
+        {!modalLoading && !onSave && (
+          <div className="flex justify-end mt-6 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <button onClick={() => setOpenModal(null)} className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">Close</button>
+          </div>
+        )}
       </>
     );
+  }
+
+  function renderModalBody(modalId: string) {
+    switch (modalId) {
+      case 'tool-soul':
+        return modalData ? (
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs text-zinc-500 mb-1.5 block">Agent Name</label>
+              <input className={inputClass} style={inputStyle}
+                     value={modalData.name}
+                     onChange={e => setModalData((p: any) => ({ ...p, name: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-500 mb-1.5 block">Mission / Instructions</label>
+              <textarea className={`${inputClass} h-32 resize-none`} style={inputStyle}
+                        value={modalData.instructions}
+                        onChange={e => setModalData((p: any) => ({ ...p, instructions: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-500 mb-1.5 block">Personality</label>
+              <select className={inputClass} style={inputStyle}>
+                <option>Professional</option><option>Friendly</option><option>Technical</option><option>Creative</option>
+              </select>
+            </div>
+          </div>
+        ) : null;
+
+      case 'tool-documents':
+        return modalData ? (
+          <div className="space-y-4">
+            <p className="text-sm text-zinc-400">Documents that provide context to your agent.</p>
+            {modalData.documents.length === 0 ? (
+              <div className="px-3 py-6 rounded-lg text-center text-sm text-zinc-500" style={{ ...inputStyle }}>
+                No documents uploaded
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {modalData.documents.map((doc: any) => (
+                  <div key={doc.id} className="px-3 py-2 rounded-lg flex items-center justify-between" style={inputStyle}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileText size={14} className="text-zinc-500 shrink-0" />
+                      <span className="text-sm text-zinc-300 truncate">{doc.name || doc.filename}</span>
+                    </div>
+                    <button onClick={() => deleteDoc(doc.id)} className="text-zinc-600 hover:text-red-400 transition-colors shrink-0 ml-2">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <input ref={fileInputRef} type="file" className="hidden" onChange={e => { if (e.target.files?.[0]) uploadDoc(e.target.files[0]); }} />
+            <button onClick={() => fileInputRef.current?.click()} className="w-full px-4 py-2 rounded-lg text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+                    style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
+              + Upload Document
+            </button>
+          </div>
+        ) : null;
+
+      case 'tool-wallet':
+        return modalData ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-zinc-500">Status</span>
+              <span className={`text-xs ${modalData.wallet ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                {modalData.wallet ? 'Active' : 'No wallet'}
+              </span>
+            </div>
+            {modalData.balance && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-500">Balance</span>
+                <span className="text-xs text-zinc-300">{modalData.balance.balance_sol ?? '—'} SOL</span>
+              </div>
+            )}
+            <div>
+              <label className="text-xs text-zinc-500 mb-1.5 block">Daily Limit ($)</label>
+              <input type="number" className={inputClass} style={inputStyle}
+                     value={modalData.policy?.daily_limit_usd ?? 50}
+                     onChange={e => setModalData((p: any) => ({ ...p, policy: { ...p.policy, daily_limit_usd: Number(e.target.value) } }))} />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-500 mb-1.5 block">Per-TX Limit ($)</label>
+              <input type="number" className={inputClass} style={inputStyle}
+                     value={modalData.policy?.per_tx_limit_usd ?? 25}
+                     onChange={e => setModalData((p: any) => ({ ...p, policy: { ...p.policy, per_tx_limit_usd: Number(e.target.value) } }))} />
+            </div>
+          </div>
+        ) : null;
+
+      case 'tool-web-search':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between"><span className="text-sm text-zinc-300">Enabled</span><div className="w-9 h-5 rounded-full bg-violet-600 relative"><div className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-white" /></div></div>
+            <div><label className="text-xs text-zinc-500 mb-1.5 block">Provider</label><select className={inputClass} style={inputStyle}><option>Perplexity Sonar</option><option>Google Search</option></select></div>
+          </div>
+        );
+
+      case 'tool-llm':
+        return modalData ? (
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs text-zinc-500 mb-1.5 block">Model</label>
+              <select className={inputClass} style={inputStyle}
+                      value={modalData.model}
+                      onChange={e => setModalData((p: any) => ({ ...p, model: e.target.value }))}>
+                <option value="claude-sonnet-4-6">Claude Sonnet 4</option>
+                <option value="claude-opus-4-6">Claude Opus 4</option>
+                <option value="gpt-4o">GPT-4o</option>
+              </select>
+            </div>
+            <div><label className="text-xs text-zinc-500 mb-1.5 block">Temperature</label><input type="range" min="0" max="1" step="0.1" defaultValue="0.7" className="w-full accent-violet-500" /></div>
+            <div><label className="text-xs text-zinc-500 mb-1.5 block">Max Tokens</label><input type="number" defaultValue={4096} className={inputClass} style={inputStyle} /></div>
+          </div>
+        ) : null;
+
+      case 'tool-memory':
+        return modalData ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-zinc-300">Persistent Memory</span>
+              <span className="text-xs text-zinc-500">{modalData.memories.length} entries</span>
+            </div>
+            {modalData.memories.length === 0 ? (
+              <p className="text-xs text-zinc-500">No memories stored yet.</p>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {modalData.memories.map((m: any, i: number) => (
+                  <div key={m.id || i} className="px-3 py-2 rounded-lg" style={inputStyle}>
+                    <div className="flex items-center gap-2 mb-1">
+                      {m.type && <span className="px-1.5 py-0.5 rounded text-[10px] text-violet-300" style={{ background: 'rgba(124,58,237,0.15)' }}>{m.type}</span>}
+                      <span className="text-[10px] text-zinc-600">{m.created_at ? new Date(m.created_at).toLocaleDateString() : ''}</span>
+                    </div>
+                    <p className="text-xs text-zinc-400 line-clamp-2">{m.content || m.text || JSON.stringify(m)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null;
+
+      case 'task-scheduled':
+        return modalData ? (
+          <div className="space-y-4">
+            <p className="text-sm text-zinc-400">Recurring tasks on a schedule.</p>
+            {modalData.cronJobs.length === 0 ? (
+              <div className="px-3 py-4 rounded-lg text-center text-sm text-zinc-500" style={inputStyle}>No scheduled tasks</div>
+            ) : (
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {modalData.cronJobs.map((job: any) => (
+                  <div key={job.id} className="px-3 py-2 rounded-lg flex items-center justify-between" style={inputStyle}>
+                    <div>
+                      <span className="text-sm text-zinc-300">{job.name}</span>
+                      <span className="text-xs text-zinc-500 ml-2">{job.cron_expression}</span>
+                    </div>
+                    <button onClick={() => deleteCron(job.id)} className="text-zinc-600 hover:text-red-400 transition-colors">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="space-y-2 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <input className={inputClass} style={inputStyle} placeholder="Task name" value={newCronName} onChange={e => setNewCronName(e.target.value)} />
+              <input className={inputClass} style={inputStyle} placeholder="Cron expression (e.g. 0 7 * * *)" value={newCronExpr} onChange={e => setNewCronExpr(e.target.value)} />
+              <textarea className={`${inputClass} h-16 resize-none`} style={inputStyle} placeholder="Prompt" value={newCronPrompt} onChange={e => setNewCronPrompt(e.target.value)} />
+              <button onClick={createCron} disabled={!newCronName || !newCronExpr || !newCronPrompt}
+                      className="w-full px-4 py-2 rounded-lg text-sm text-zinc-500 hover:text-zinc-300 disabled:opacity-30 transition-colors"
+                      style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
+                + Add Schedule
+              </button>
+            </div>
+          </div>
+        ) : null;
+
+      case 'com-messaging':
+        return modalData ? (
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs text-zinc-500 mb-1.5 block">Telegram Chat ID</label>
+              <input className={inputClass} style={inputStyle} placeholder="207851519"
+                     value={modalData.chatId}
+                     onChange={e => setModalData((p: any) => ({ ...p, chatId: e.target.value }))} />
+            </div>
+            <button onClick={testTelegram} className="px-4 py-2 rounded-lg text-sm text-violet-400 hover:text-violet-300" style={{ border: '1px solid rgba(124,58,237,0.3)' }}>
+              Send Test Message
+            </button>
+          </div>
+        ) : null;
+
+      // --- Static / Coming Soon modals ---
+      case 'com-chat':
+        return (<div className="space-y-3"><p className="text-sm text-zinc-400">Direct chat with your agent.</p><div className="flex items-center justify-between"><span className="text-xs text-zinc-500">Status</span><span className="text-xs text-emerald-400">Connected</span></div></div>);
+      case 'task-projects':
+        return (<div className="space-y-3"><p className="text-sm text-zinc-400">Active projects and objectives.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-zinc-500" style={{ ...inputStyle }}>Coming soon</span></div>);
+      case 'task-research':
+        return (<div className="space-y-3"><p className="text-sm text-zinc-400">Research tasks and findings.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-zinc-500" style={{ ...inputStyle }}>Coming soon</span></div>);
+      case 'com-email':
+        return (<div className="space-y-3"><p className="text-sm text-zinc-400">Email notifications.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-zinc-500" style={{ ...inputStyle }}>Coming soon</span></div>);
+      case 'com-apis':
+        return (<div className="space-y-3"><p className="text-sm text-zinc-400">External API integrations.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-zinc-500" style={{ ...inputStyle }}>Coming soon</span></div>);
+      default:
+        return null;
+    }
   }
 
   if (!agentId) {

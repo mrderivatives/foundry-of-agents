@@ -6,7 +6,7 @@ import './canvas.css';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { api, BASE_URL } from '@/shared/api/client';
-import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList, Shield, Plus, ChevronDown, ChevronUp, Scroll, Cpu, FolderKanban, BookOpen, Mail, X, Loader2, Check, Trash2, Users } from 'lucide-react';
+import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList, Shield, Plus, ChevronDown, ChevronUp, Scroll, Cpu, FolderKanban, BookOpen, Mail, X, Loader2, Check, Trash2, Users, Copy, ExternalLink } from 'lucide-react';
 import type { Agent } from '@/shared/types';
 
 // --- Custom Node Components ---
@@ -594,15 +594,52 @@ export default function CanvasPage() {
             <div className="flex items-center justify-between">
               <span className="text-xs text-zinc-500">Status</span>
               <span className={`text-xs ${modalData.wallet ? 'text-emerald-400' : 'text-zinc-500'}`}>
-                {modalData.wallet ? 'Active' : 'No wallet'}
+                {modalData.wallet ? modalData.wallet.status || 'Active' : 'No wallet'}
               </span>
             </div>
-            {modalData.balance && (
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-500">Balance</span>
-                <span className="text-xs text-zinc-300">{modalData.balance.balance_sol ?? '—'} SOL</span>
+
+            {/* Deposit Address */}
+            {modalData.wallet?.public_key && (
+              <div className="space-y-1">
+                <label className="text-xs text-zinc-500">Deposit Address</label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 px-3 py-2 rounded-lg text-xs text-zinc-300 font-mono truncate" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    {modalData.wallet.public_key}
+                  </code>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(modalData.wallet.public_key)}
+                    className="px-2 py-2 rounded-lg hover:bg-white/[0.06] transition-colors" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <Copy size={14} className="text-zinc-400" />
+                  </button>
+                  <a href={`https://solscan.io/account/${modalData.wallet.public_key}`} target="_blank" rel="noopener noreferrer"
+                    className="px-2 py-2 rounded-lg hover:bg-white/[0.06] transition-colors text-zinc-400 hover:text-zinc-200" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <ExternalLink size={14} />
+                  </a>
+                </div>
               </div>
             )}
+
+            {/* Balances */}
+            <div className="space-y-1">
+              <label className="text-xs text-zinc-500">Balances</label>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="text-[10px] text-zinc-500">SOL</div>
+                  <div className="text-sm font-medium text-zinc-200">{modalData.balance?.sol?.amount ?? '0.0000'}</div>
+                  <div className="text-[10px] text-zinc-600">${modalData.balance?.sol?.usd_value ?? '0.00'}</div>
+                </div>
+                <div className="px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="text-[10px] text-zinc-500">USDC</div>
+                  <div className="text-sm font-medium text-zinc-200">{modalData.balance?.usdc?.amount ?? '0.00'}</div>
+                  <div className="text-[10px] text-zinc-600">${modalData.balance?.usdc?.usd_value ?? '0.00'}</div>
+                </div>
+              </div>
+              {modalData.balance?.total_usd && (
+                <div className="text-right text-[10px] text-zinc-600">≈ ${modalData.balance.total_usd} total</div>
+              )}
+            </div>
+
+            {/* Spending Limits */}
             <div>
               <label className="text-xs text-zinc-500 mb-1.5 block">Daily Limit ($)</label>
               <input type="number" className={inputClass} style={inputStyle}
@@ -614,6 +651,15 @@ export default function CanvasPage() {
               <input type="number" className={inputClass} style={inputStyle}
                      value={modalData.policy?.per_tx_limit_usd ?? 25}
                      onChange={e => setModalData((p: any) => ({ ...p, policy: { ...p.policy, per_tx_limit_usd: Number(e.target.value) } }))} />
+            </div>
+
+            {/* Allowed Tokens */}
+            <div>
+              <label className="text-xs text-zinc-500 mb-1.5 block">Allowed Tokens</label>
+              <div className="flex gap-2">
+                <span className="px-2 py-1 rounded text-xs text-zinc-300" style={{ background: 'rgba(255,255,255,0.05)' }}>SOL</span>
+                <span className="px-2 py-1 rounded text-xs text-zinc-300" style={{ background: 'rgba(255,255,255,0.05)' }}>USDC</span>
+              </div>
             </div>
           </div>
         ) : null;

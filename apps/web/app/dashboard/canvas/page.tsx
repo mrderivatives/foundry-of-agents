@@ -177,6 +177,15 @@ export default function CanvasPage() {
 
   const [badges, setBadges] = useState<Record<string, number>>({});
 
+  // Onboarding wizard
+  const [onboardingStep, setOnboardingStep] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!localStorage.getItem('canvas-onboarding-seen') && nodes.length > 0) {
+      setOnboardingStep(1);
+    }
+  }, [nodes]);
+
   // Auto-select first agent if none specified
   useEffect(() => {
     if (!agentId) {
@@ -872,6 +881,57 @@ export default function CanvasPage() {
           </div>
         </Panel>
       </ReactFlow>
+
+      {/* Onboarding Wizard */}
+      {onboardingStep !== null && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-md mx-4">
+          <div className="rounded-2xl p-6 shadow-2xl" style={{ background: '#18181b', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="text-[10px] text-violet-400 font-medium uppercase tracking-wider mb-1">Step {onboardingStep} of 5</div>
+            <h3 className="text-base font-medium text-zinc-100 mb-2">
+              {onboardingStep === 1 && 'Meet Your Team'}
+              {onboardingStep === 2 && 'Chat with Your Lead'}
+              {onboardingStep === 3 && 'Your Tools'}
+              {onboardingStep === 4 && 'Tasks & Alerts'}
+              {onboardingStep === 5 && "You're Ready!"}
+            </h3>
+            <p className="text-sm text-zinc-400 mb-5">
+              {onboardingStep === 1 && 'Your Director coordinates 3 specialists — each with their own expertise. They research, analyze, and execute as a team.'}
+              {onboardingStep === 2 && 'Click on your Director node to start a conversation. Ask anything — they\'ll delegate to the right specialist automatically.'}
+              {onboardingStep === 3 && 'Configure tools like web search, wallet access, and document upload. Click any tool node on the canvas to set it up.'}
+              {onboardingStep === 4 && 'Schedule recurring tasks with cron jobs, and connect Telegram for real-time alerts and mobile access.'}
+              {onboardingStep === 5 && 'Your team is assembled and ready to work. Click your Director to start your first conversation.'}
+            </p>
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => { setOnboardingStep(null); localStorage.setItem('canvas-onboarding-seen', 'true'); }}
+                className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+              >
+                Skip tour
+              </button>
+              <button
+                onClick={() => {
+                  if (onboardingStep >= 5) {
+                    setOnboardingStep(null);
+                    localStorage.setItem('canvas-onboarding-seen', 'true');
+                    if (agentId) router.push(`/dashboard/agents/${agentId}`);
+                  } else {
+                    setOnboardingStep(onboardingStep + 1);
+                  }
+                }}
+                className="px-4 py-2 rounded-lg text-sm text-white transition-colors hover:opacity-90"
+                style={{ background: '#7c3aed' }}
+              >
+                {onboardingStep >= 5 ? 'Start Chatting →' : 'Next'}
+              </button>
+            </div>
+            <div className="flex justify-center gap-1.5 mt-4">
+              {[1, 2, 3, 4, 5].map(s => (
+                <div key={s} className={`w-1.5 h-1.5 rounded-full ${s === onboardingStep ? 'bg-violet-500' : 'bg-zinc-700'}`} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Settings Modal */}
       {openModal && (

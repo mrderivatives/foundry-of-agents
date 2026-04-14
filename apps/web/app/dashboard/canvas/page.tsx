@@ -5,16 +5,25 @@ import '@xyflow/react/dist/style.css';
 import './canvas.css';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/shared/api/client';
-import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList, Shield, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList, Shield, Plus, ChevronDown, ChevronUp, Scroll, Cpu, FolderKanban, BookOpen, Mail } from 'lucide-react';
 import type { Agent } from '@/shared/types';
-// dagre removed — using custom compact layout
 
 // --- Custom Node Components ---
+
+function CategoryNode({ data }: any) {
+  return (
+    <div style={{ padding: '0 0 4px 0' }}>
+      <span style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#52525b' }}>
+        {data.label}
+      </span>
+    </div>
+  );
+}
 
 function AgentNode({ data }: { data: any }) {
   const statusColor = data.status === 'working' ? 'bg-blue-400 animate-pulse' : data.status === 'idle' ? 'bg-emerald-400' : 'bg-zinc-600';
   return (
-    <div className='px-4 py-3 rounded-xl backdrop-blur min-w-[180px]' style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+    <div style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', minWidth: 180, backdropFilter: 'blur(8px)' }}>
       <Handle type='target' position={Position.Top} style={{ background: '#7c3aed', border: 'none', width: 8, height: 8 }} />
       <div className='flex items-center gap-3'>
         {data.avatarUrl ? (
@@ -34,16 +43,26 @@ function AgentNode({ data }: { data: any }) {
 }
 
 const TOOL_ICONS: Record<string, any> = {
-  'web_search': Search, 'web-search': Search, 'price-check': BarChart3, 'price_check': BarChart3,
-  'wallet_propose': Wallet, 'document-analyzer': FileText, 'document_search': FileText,
-  'memory_read': Brain, 'memory_write': Brain, 'portfolio-tracker': BarChart3, 'morning-brief': Zap,
+  'web_search': Search, 'web-search': Search,
+  'wallet_propose': Shield, 'wallet': Shield,
+  'memory_read': Brain, 'memory': Brain,
+  'soul': Scroll,
+  'documents': FileText,
+  'llm': Cpu,
+  'cron': Clock,
+  'projects': FolderKanban,
+  'research': BookOpen,
+  'price-check': BarChart3, 'price_check': BarChart3,
+  'portfolio-tracker': BarChart3,
+  'document-analyzer': FileText, 'document_search': FileText,
+  'morning-brief': Zap,
   default: Globe,
 };
 
 function ToolNode({ data }: { data: any }) {
   const Icon = TOOL_ICONS[data.toolId] || TOOL_ICONS.default;
   return (
-    <div className='px-3 py-2 rounded-lg min-w-[130px]' style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+    <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', minWidth: 130 }}>
       <Handle type='target' position={Position.Top} style={{ background: '#a78bfa', border: 'none', width: 6, height: 6 }} />
       <div className='flex items-center gap-2'>
         <div className='w-7 h-7 rounded flex items-center justify-center' style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}>
@@ -57,7 +76,7 @@ function ToolNode({ data }: { data: any }) {
 
 function TriggerNode({ data }: { data: any }) {
   return (
-    <div className='px-3 py-2.5 rounded-lg min-w-[150px]' style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.15)' }}>
+    <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.15)', minWidth: 140 }}>
       <div className='flex items-center gap-2'>
         <Clock size={14} className='text-amber-400' />
         <div>
@@ -70,56 +89,29 @@ function TriggerNode({ data }: { data: any }) {
   );
 }
 
+const OUTPUT_ICONS: Record<string, any> = {
+  'chat': MessageSquare,
+  'telegram': Send,
+  'email': Mail,
+  'api': Globe,
+};
+
 function OutputNode({ data }: { data: any }) {
-  const Icon = data.channel === 'telegram' ? Send : MessageSquare;
+  const Icon = OUTPUT_ICONS[data.channel] || MessageSquare;
   return (
-    <div className='px-3 py-2 rounded-lg min-w-[130px]' style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+    <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', minWidth: 120 }}>
       <Handle type='target' position={Position.Top} style={{ background: '#a78bfa', border: 'none', width: 6, height: 6 }} />
-      <div className='flex items-center gap-2'>
-        <div className='w-7 h-7 rounded flex items-center justify-center' style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}>
-          <Icon size={14} className='text-violet-400' />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon size={14} color='#a78bfa' />
         </div>
-        <div className='text-xs text-zinc-400'>{data.name}</div>
+        <span style={{ fontSize: 12, color: '#a1a1aa' }}>{data.name}</span>
       </div>
     </div>
   );
 }
 
-const nodeTypes = { agent: AgentNode, tool: ToolNode, trigger: TriggerNode, output: OutputNode };
-
-// --- Custom compact layout ---
-function compactLayout(nodes: Node[]): Node[] {
-  const lead = nodes.find(n => n.type === 'agent' && n.data.role === 'Lead');
-  const specs = nodes.filter(n => n.type === 'agent' && n.data.role !== 'Lead');
-  const tools = nodes.filter(n => n.type === 'tool');
-  const triggers = nodes.filter(n => n.type === 'trigger');
-  const outputs = nodes.filter(n => n.type === 'output');
-
-  const cx = 400; // center x
-
-  // Lead: center
-  if (lead) lead.position = { x: cx - 90, y: 100 };
-
-  // Tools: left column
-  tools.forEach((n, i) => { n.position = { x: 60, y: 30 + i * 65 }; });
-
-  // Triggers: above lead, left
-  triggers.forEach((n, i) => { n.position = { x: cx - 200 + i * 200, y: 0 }; });
-
-  // Specialists: row below lead, centered
-  const specW = 200;
-  const totalSpecW = specs.length * specW;
-  const specStartX = cx - 90 - (totalSpecW - specW) / 2;
-  specs.forEach((n, i) => { n.position = { x: specStartX + i * specW, y: 260 }; });
-
-  // Outputs: below specialists, centered
-  const outW = 160;
-  const totalOutW = outputs.length * outW;
-  const outStartX = cx - 90 - (totalOutW - outW) / 2;
-  outputs.forEach((n, i) => { n.position = { x: outStartX + i * outW, y: 400 }; });
-
-  return nodes;
-}
+const nodeTypes = { agent: AgentNode, tool: ToolNode, trigger: TriggerNode, output: OutputNode, category: CategoryNode };
 
 // --- Character image mapping ---
 function getAvatarUrl(agent: any): string {
@@ -160,59 +152,72 @@ export default function CanvasPage() {
         setAgentName(agent.name || '');
         let team: any[] = [];
         try { team = await api.get<any[]>(`/api/agents/${agentId}/team`); } catch {}
-        let skills: any[] = [];
-        try { skills = await api.get<any[]>(`/api/agents/${agentId}/skills`); } catch {}
-        let cronJobs: any[] = [];
-        try { cronJobs = await api.get<any[]>(`/api/agents/${agentId}/cron-jobs`); } catch {}
 
         const n: Node[] = [];
         const e: Edge[] = [];
 
-        // Lead agent
-        n.push({ id: agent.id, type: 'agent', data: { name: agent.name, role: 'Lead', avatarUrl: getAvatarUrl(agent), accentColor: '#7c3aed', status: agent.status || 'idle' }, position: { x: 0, y: 0 } });
+        // --- Category Headers ---
+        n.push({ id: 'cat-tools', type: 'category', position: { x: 60, y: 15 }, data: { label: 'Tools & Settings' }, draggable: false, selectable: false });
+        n.push({ id: 'cat-tasks', type: 'category', position: { x: 740, y: 15 }, data: { label: 'Tasks & Objectives' }, draggable: false, selectable: false });
+        n.push({ id: 'cat-coms', type: 'category', position: { x: 380, y: 440 }, data: { label: 'Coms & Resources' }, draggable: false, selectable: false });
 
-        // Specialists
-        team.forEach((sub: any) => {
-          n.push({ id: sub.id, type: 'agent', data: { name: sub.name, role: sub.description || 'Specialist', avatarUrl: getAvatarUrl(sub), accentColor: '#a78bfa', status: sub.status || 'idle' }, position: { x: 0, y: 0 } });
-          e.push({ id: `e-${agent.id}-${sub.id}`, source: agent.id, target: sub.id, animated: true, style: { stroke: 'rgba(124,58,237,0.3)', strokeWidth: 2 } });
-        });
-
-        // Skills as tool nodes
-        const toolTargets = team.length > 0 ? team.map((s: any) => s.id) : [agent.id];
-        skills.forEach((skill: any, i: number) => {
-          const toolId = `tool-${skill.skill_id || skill.id}`;
-          const parentId = toolTargets[i % toolTargets.length];
-          n.push({ id: toolId, type: 'tool', data: { name: skill.name, toolId: skill.name?.replace(/\s+/g, '-').toLowerCase() }, position: { x: 0, y: 0 } });
-          e.push({ id: `e-${parentId}-${toolId}`, source: parentId, target: toolId, style: { stroke: 'rgba(167,139,250,0.2)', strokeWidth: 1.5, strokeDasharray: '4' } });
-        });
-
-        // Built-in tools
-        const builtins = [
-          { id: 'builtin-web-search', name: 'Web Search', toolId: 'web_search' },
-          { id: 'builtin-wallet', name: 'Wallet', toolId: 'wallet_propose' },
-          { id: 'builtin-memory', name: 'Memory', toolId: 'memory_read' },
+        // --- LEFT: Tools & Settings ---
+        const leftTools = [
+          { id: 'tool-soul', name: 'Soul / Mission', toolId: 'soul' },
+          { id: 'tool-documents', name: 'Documents', toolId: 'documents' },
+          { id: 'tool-llm', name: 'LLM Selection', toolId: 'llm' },
+          { id: 'tool-web-search', name: 'Web Search', toolId: 'web_search' },
+          { id: 'tool-wallet', name: 'Wallet', toolId: 'wallet_propose' },
+          { id: 'tool-memory', name: 'Memory', toolId: 'memory_read' },
         ];
-        builtins.forEach(t => {
-          n.push({ id: t.id, type: 'tool', data: { name: t.name, toolId: t.toolId }, position: { x: 0, y: 0 } });
-          e.push({ id: `e-${agent.id}-${t.id}`, source: agent.id, target: t.id, style: { stroke: 'rgba(167,139,250,0.15)', strokeWidth: 1.5, strokeDasharray: '4' } });
+        leftTools.forEach((t, i) => {
+          n.push({ id: t.id, type: 'tool', position: { x: 60, y: 50 + i * 62 }, data: { name: t.name, toolId: t.toolId } });
+          e.push({ id: `e-${t.id}-lead`, source: t.id, target: agent.id, type: 'default',
+            style: { stroke: 'rgba(124,58,237,0.15)', strokeWidth: 1, strokeDasharray: '4' } });
         });
 
-        // Cron jobs as triggers
-        cronJobs.forEach((cj: any) => {
-          const tid = `trigger-${cj.id}`;
-          n.push({ id: tid, type: 'trigger', data: { name: cj.name, schedule: cj.cron_expression }, position: { x: 0, y: 0 } });
-          e.push({ id: `e-${tid}-${agent.id}`, source: tid, target: agent.id, style: { stroke: 'rgba(245,158,11,0.3)', strokeWidth: 1.5 } });
+        // --- CENTER: Lead Agent ---
+        const leadY = 180;
+        n.push({ id: agent.id, type: 'agent', position: { x: 420, y: leadY },
+          data: { name: agent.name, role: 'Lead', avatarUrl: getAvatarUrl(agent), accentColor: '#7c3aed', status: agent.status || 'idle' } });
+
+        // Specialists below lead
+        const specGap = 180;
+        const specStartX = 420 - ((team.length - 1) * specGap) / 2;
+        team.forEach((sub: any, i: number) => {
+          n.push({ id: sub.id, type: 'agent', position: { x: specStartX + i * specGap, y: leadY + 130 },
+            data: { name: sub.name, role: sub.description || 'Specialist', avatarUrl: getAvatarUrl(sub), accentColor: '#a78bfa', status: sub.status || 'idle' } });
+          e.push({ id: `e-lead-${sub.id}`, source: agent.id, target: sub.id, animated: true,
+            style: { stroke: 'rgba(124,58,237,0.35)', strokeWidth: 2 } });
         });
 
-        // Output nodes
-        n.push({ id: 'output-chat', type: 'output', data: { name: 'Chat', channel: 'chat' }, position: { x: 0, y: 0 } });
-        e.push({ id: 'e-lead-chat', source: agent.id, target: 'output-chat', style: { stroke: 'rgba(167,139,250,0.2)', strokeWidth: 1.5 } });
-        n.push({ id: 'output-telegram', type: 'output', data: { name: 'Telegram', channel: 'telegram' }, position: { x: 0, y: 0 } });
-        e.push({ id: 'e-lead-telegram', source: agent.id, target: 'output-telegram', style: { stroke: 'rgba(167,139,250,0.2)', strokeWidth: 1.5 } });
+        // --- RIGHT: Tasks & Objectives ---
+        const rightTasks = [
+          { id: 'task-scheduled', name: 'Scheduled Tasks', toolId: 'cron' },
+          { id: 'task-projects', name: 'Projects', toolId: 'projects' },
+          { id: 'task-research', name: 'Research', toolId: 'research' },
+        ];
+        rightTasks.forEach((t, i) => {
+          n.push({ id: t.id, type: 'tool', position: { x: 740, y: 50 + i * 62 }, data: { name: t.name, toolId: t.toolId } });
+          e.push({ id: `e-lead-${t.id}`, source: agent.id, target: t.id,
+            style: { stroke: 'rgba(245,158,11,0.15)', strokeWidth: 1, strokeDasharray: '4' } });
+        });
 
-        // Auto-layout
-        const laid = compactLayout(n);
-        setNodes(laid);
+        // --- BOTTOM: Coms & Resources ---
+        const comItems = [
+          { id: 'com-chat', name: 'Chat', channel: 'chat' },
+          { id: 'com-messaging', name: 'Messaging', channel: 'telegram' },
+          { id: 'com-email', name: 'Email', channel: 'email' },
+          { id: 'com-apis', name: 'APIs', channel: 'api' },
+        ];
+        const comStartX = 420 - ((comItems.length - 1) * 140) / 2;
+        comItems.forEach((c, i) => {
+          n.push({ id: c.id, type: 'output', position: { x: comStartX + i * 140, y: 475 }, data: { name: c.name, channel: c.channel } });
+          e.push({ id: `e-lead-${c.id}`, source: agent.id, target: c.id,
+            style: { stroke: 'rgba(124,58,237,0.2)', strokeWidth: 1.5 } });
+        });
+
+        setNodes(n);
         setEdges(e);
       } catch (err) {
         console.error('Canvas load error', err);

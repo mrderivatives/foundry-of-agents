@@ -1,4 +1,9 @@
-.react-flow__node {
+.react-flow__node,
+.react-flow__node-agent,
+.react-flow__node-tool,
+.react-flow__node-trigger,
+.react-flow__node-output,
+.react-flow__node-category {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;

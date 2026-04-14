@@ -76,7 +76,7 @@ function ToolNode({ data }: { data: any }) {
   }
 
   return (
-    <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', minWidth: 130, cursor: 'pointer' }}>
+    <div style={{ position: 'relative', padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', minWidth: 130, cursor: 'pointer' }}>
       <Handle type='target' position={Position.Top} style={{ background: '#a78bfa', border: 'none', width: 6, height: 6 }} />
       <div className='flex items-center gap-2'>
         <div className='w-7 h-7 rounded flex items-center justify-center' style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}>
@@ -84,6 +84,17 @@ function ToolNode({ data }: { data: any }) {
         </div>
         <div className='text-xs text-zinc-400'>{data.name}</div>
       </div>
+      {data.badge > 0 && (
+        <span style={{
+          position: 'absolute', top: -6, right: -6,
+          width: 18, height: 18, borderRadius: '50%',
+          background: '#7c3aed', color: '#fff',
+          fontSize: 10, fontWeight: 600,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {data.badge}
+        </span>
+      )}
     </div>
   );
 }
@@ -163,6 +174,8 @@ export default function CanvasPage() {
   const [newCronExpr, setNewCronExpr] = useState('');
   const [newCronPrompt, setNewCronPrompt] = useState('');
 
+  const [badges, setBadges] = useState<Record<string, number>>({});
+
   // Auto-select first agent if none specified
   useEffect(() => {
     if (!agentId) {
@@ -184,6 +197,15 @@ export default function CanvasPage() {
       let team: any[] = [];
       try { team = await api.get<any[]>(`/api/agents/${agentId}/team`); } catch {}
 
+      // Fetch badge counts
+      Promise.all([
+        api.get<any[]>('/api/documents').then(d => d?.length || 0).catch(() => 0),
+        api.get<any[]>(`/api/agents/${agentId}/memory`).then(m => m?.length || 0).catch(() => 0),
+        api.get<any[]>(`/api/agents/${agentId}/cron-jobs`).then(c => c?.length || 0).catch(() => 0),
+      ]).then(([docs, mems, crons]) => {
+        setBadges({ docs, mems, crons });
+      });
+
       const n: Node[] = [];
       const e: Edge[] = [];
 
@@ -195,12 +217,12 @@ export default function CanvasPage() {
       // --- LEFT: Tools & Settings (collapsible) ---
       const alwaysVisibleTools = [
         { id: 'tool-soul', name: 'Soul / Mission', toolId: 'soul', y: 55 },
-        { id: 'tool-documents', name: 'Documents', toolId: 'documents', y: 115 },
+        { id: 'tool-documents', name: 'Documents', toolId: 'documents', y: 115, badge: badges.docs },
         { id: 'tool-wallet', name: 'Wallet', toolId: 'wallet_propose', y: 175 },
       ];
 
       alwaysVisibleTools.forEach(t => {
-        n.push({ id: t.id, type: 'tool', position: { x: 60, y: t.y }, data: { name: t.name, toolId: t.toolId } });
+        n.push({ id: t.id, type: 'tool', position: { x: 60, y: t.y }, data: { name: t.name, toolId: t.toolId, badge: (t as any).badge } });
         e.push({ id: `e-${t.id}-lead`, source: t.id, target: agent.id, type: 'default',
           style: { stroke: 'rgba(124,58,237,0.15)', strokeWidth: 1, strokeDasharray: '4' } });
       });
@@ -213,10 +235,10 @@ export default function CanvasPage() {
         const expandedTools = [
           { id: 'tool-web-search', name: 'Web Search', toolId: 'web_search', y: 295 },
           { id: 'tool-llm', name: 'LLM Selection', toolId: 'llm', y: 355 },
-          { id: 'tool-memory', name: 'Memory', toolId: 'memory_read', y: 415 },
+          { id: 'tool-memory', name: 'Memory', toolId: 'memory_read', y: 415, badge: badges.mems },
         ];
         expandedTools.forEach(t => {
-          n.push({ id: t.id, type: 'tool', position: { x: 60, y: t.y }, data: { name: t.name, toolId: t.toolId } });
+          n.push({ id: t.id, type: 'tool', position: { x: 60, y: t.y }, data: { name: t.name, toolId: t.toolId, badge: (t as any).badge } });
           e.push({ id: `e-${t.id}-lead`, source: t.id, target: agent.id, type: 'default',
             style: { stroke: 'rgba(124,58,237,0.15)', strokeWidth: 1, strokeDasharray: '4' } });
         });
@@ -239,12 +261,12 @@ export default function CanvasPage() {
 
       // --- RIGHT: Tasks & Objectives ---
       const rightTasks = [
-        { id: 'task-scheduled', name: 'Scheduled Tasks', toolId: 'cron' },
+        { id: 'task-scheduled', name: 'Scheduled Tasks', toolId: 'cron', badge: badges.crons },
         { id: 'task-projects', name: 'Projects', toolId: 'projects' },
         { id: 'task-research', name: 'Research', toolId: 'research' },
       ];
       rightTasks.forEach((t, i) => {
-        n.push({ id: t.id, type: 'tool', position: { x: 740, y: 50 + i * 62 }, data: { name: t.name, toolId: t.toolId } });
+        n.push({ id: t.id, type: 'tool', position: { x: 740, y: 50 + i * 62 }, data: { name: t.name, toolId: t.toolId, badge: (t as any).badge } });
         e.push({ id: `e-lead-${t.id}`, source: agent.id, target: t.id,
           style: { stroke: 'rgba(245,158,11,0.15)', strokeWidth: 1, strokeDasharray: '4' } });
       });
@@ -270,7 +292,7 @@ export default function CanvasPage() {
     } finally {
       setLoading(false);
     }
-  }, [agentId, leftExpanded]);
+  }, [agentId, leftExpanded, badges]);
 
   useEffect(() => {
     loadCanvasData();

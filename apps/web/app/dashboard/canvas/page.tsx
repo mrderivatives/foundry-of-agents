@@ -1,11 +1,11 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { ReactFlow, MiniMap, Controls, Background, Handle, Position, type Node, type Edge } from '@xyflow/react';
+import { ReactFlow, Panel, Controls, Background, Handle, Position, type Node, type Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import './canvas.css';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/shared/api/client';
-import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList } from 'lucide-react';
+import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList, Shield, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Agent } from '@/shared/types';
 // dagre removed — using custom compact layout
 
@@ -135,6 +135,7 @@ export default function CanvasPage() {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paletteOpen, setPaletteOpen] = useState(true);
   const [agentName, setAgentName] = useState('');
 
   // Auto-select first agent if none specified
@@ -265,12 +266,34 @@ export default function CanvasPage() {
         proOptions={{ hideAttribution: true }}
       >
         <Background color='rgba(255,255,255,0.02)' gap={24} />
-        <MiniMap
-          nodeColor={(n) => n.type === 'agent' ? '#7c3aed' : n.type === 'trigger' ? '#f59e0b' : n.type === 'output' ? '#10b981' : '#71717a'}
-          maskColor='rgba(0,0,0,0.85)'
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8 }}
-        />
         <Controls style={{ background: 'transparent' }} />
+        <Panel position='bottom-center'>
+          <div className='w-full max-w-2xl' style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px 12px 0 0' }}>
+            <div className='flex items-center justify-between px-4 py-2.5'>
+              <span className='text-[11px] text-zinc-500 font-medium uppercase tracking-wider'>Tools & Skills</span>
+              <button onClick={() => setPaletteOpen(!paletteOpen)} className='text-zinc-500 hover:text-zinc-300 transition-colors'>
+                {paletteOpen ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+              </button>
+            </div>
+            {paletteOpen && (
+              <div className='flex gap-2 px-4 pb-3 overflow-x-auto'>
+                {[
+                  { icon: Search, label: 'Web Search', color: 'text-violet-400' },
+                  { icon: Shield, label: 'Wallet', color: 'text-violet-400' },
+                  { icon: Brain, label: 'Memory', color: 'text-violet-400' },
+                  { icon: Clock, label: 'Cron Schedule', color: 'text-amber-400' },
+                  { icon: Send, label: 'Telegram', color: 'text-violet-400' },
+                  { icon: Zap, label: 'MCP Server', color: 'text-amber-400' },
+                  { icon: Plus, label: 'Add Skill', color: 'text-zinc-500' },
+                ].map(t => (
+                  <div key={t.label} className='flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-zinc-400 whitespace-nowrap cursor-default hover:bg-white/[0.03] transition-colors' style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <t.icon size={12} className={t.color} /> {t.label}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Panel>
       </ReactFlow>
     </div>
   );

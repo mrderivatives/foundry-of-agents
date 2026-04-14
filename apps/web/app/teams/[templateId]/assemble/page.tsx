@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Pencil, Check, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, Pencil, Check, Zap, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { TEAMS, ALL_SPECIALISTS, type Specialist } from "@/shared/data/teams";
 import { CharacterAvatar } from "@/shared/components/characters";
@@ -12,6 +12,12 @@ import { GlassCard } from "@/shared/components/glass-card";
 import { TeamIcon } from "@/shared/components/team-icon";
 
 const ease = [0.16, 1, 0.3, 1] as const;
+
+const AVAILABLE_AVATARS = [
+  'analyst', 'quant', 'trader', 'oracle', 'gambling-guru', 'journalist',
+  'planner', 'networker', 'cto', 'growth-hacker', 'cfo', 'commander',
+  'coach', 'director', 'chief',
+];
 
 function EditableName({
   value,
@@ -71,6 +77,7 @@ function AgentCard({
   name,
   role,
   tagline,
+  description,
   accentColor,
   size,
   onNameChange,
@@ -81,6 +88,7 @@ function AgentCard({
   name: string;
   role: string;
   tagline: string;
+  description?: string;
   accentColor: string;
   size: number;
   onNameChange: (v: string) => void;
@@ -97,43 +105,55 @@ function AgentCard({
         ease,
       }}
     >
-      <div
-        className={`relative p-5 text-center rounded-xl border bg-white/[0.03] backdrop-blur-xl ${isLead ? 'w-[180px] border-white/[0.06]' : 'w-[160px] border-white/[0.06]'}`}
-      >
-        {isLead && (
+      <div className="group relative">
+        <div
+          className={`relative p-5 text-center rounded-xl border bg-white/[0.03] backdrop-blur-xl ${isLead ? 'w-[180px] border-white/[0.06]' : 'w-[160px] border-white/[0.06]'}`}
+        >
+          {isLead && (
+            <div
+              className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] font-medium px-2.5 py-0.5 rounded-full"
+              style={{ background: accentColor, color: "#09090b" }}
+            >
+              LEAD
+            </div>
+          )}
+          <div className="flex justify-center mb-3 mt-1">
+            <CharacterAvatar
+              characterId={characterId}
+              size={size}
+              accentColor={accentColor}
+            />
+          </div>
+          <EditableName value={name} onChange={onNameChange} />
+          <p className="text-xs text-[#71717a] mt-1">{role}</p>
+          <p className="text-[10px] text-[#71717a] italic mt-1.5 leading-tight opacity-60">
+            &ldquo;{tagline}&rdquo;
+          </p>
+        </div>
+
+        {/* Tooltip */}
+        {description && (
           <div
-            className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] font-medium px-2.5 py-0.5 rounded-full"
-            style={{ background: accentColor, color: "#09090b" }}
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 px-3 py-2 rounded-lg text-xs text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+            style={{ background: '#27272a', border: '1px solid rgba(255,255,255,0.08)' }}
           >
-            LEAD
+            {description}
           </div>
         )}
-        <div className="flex justify-center mb-3 mt-1">
-          <CharacterAvatar
-            characterId={characterId}
-            size={size}
-            accentColor={accentColor}
-          />
-        </div>
-        <EditableName value={name} onChange={onNameChange} />
-        <p className="text-xs text-[#71717a] mt-1">{role}</p>
-        <p className="text-[10px] text-[#71717a] italic mt-1.5 leading-tight opacity-60">
-          &ldquo;{tagline}&rdquo;
-        </p>
       </div>
     </motion.div>
   );
 }
 
 function OrgChartLines({ specCount }: { specCount: number }) {
-  const positions = specCount === 3 ? [-1, 0, 1] : [0];
+  const positions = specCount >= 3 ? [-1, 0, 1] : specCount === 4 ? [-1.5, -0.5, 0.5, 1.5] : [0];
   const spacing = 170;
 
   return (
     <svg
       className="absolute left-1/2 -translate-x-1/2"
-      style={{ top: 0, width: spacing * 3, height: 48 }}
-      viewBox={`${-spacing * 1.5} 0 ${spacing * 3} 48`}
+      style={{ top: 0, width: spacing * 4, height: 48 }}
+      viewBox={`${-spacing * 2} 0 ${spacing * 4} 48`}
     >
       {positions.map((pos, i) => (
         <motion.line
@@ -150,6 +170,102 @@ function OrgChartLines({ specCount }: { specCount: number }) {
         />
       ))}
     </svg>
+  );
+}
+
+function AddSpecialistModal({
+  accentColor,
+  onAdd,
+  onClose,
+}: {
+  accentColor: string;
+  onAdd: (spec: Specialist) => void;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [selectedAvatar, setSelectedAvatar] = useState("commander");
+
+  const handleAdd = () => {
+    if (!name.trim()) return;
+    onAdd({
+      id: `custom-${Date.now()}`,
+      role: "Specialist",
+      name: name.trim(),
+      characterId: selectedAvatar,
+      tagline: "Ready to assist.",
+      description: description.trim() || `Custom specialist — ${name.trim()}`,
+      teamId: "custom",
+    });
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="w-full max-w-sm mx-4 rounded-2xl p-6 shadow-2xl"
+        style={{ background: '#18181b', border: '1px solid rgba(255,255,255,0.08)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-medium text-zinc-100">Add Specialist</h3>
+          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs text-zinc-500 mb-1">Name</label>
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Scout"
+              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:border-violet-500/50 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-zinc-500 mb-1">Description</label>
+            <input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g. Monitors whale wallets and alerts on moves"
+              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:border-violet-500/50 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-zinc-500 mb-2">Avatar</label>
+            <div className="flex flex-wrap gap-2">
+              {AVAILABLE_AVATARS.map((avatarId) => (
+                <button
+                  key={avatarId}
+                  onClick={() => setSelectedAvatar(avatarId)}
+                  className="rounded-full transition-all duration-150"
+                  style={{
+                    outline: selectedAvatar === avatarId ? `2px solid ${accentColor}` : '2px solid transparent',
+                    outlineOffset: 2,
+                  }}
+                >
+                  <CharacterAvatar characterId={avatarId} size={36} accentColor={accentColor} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={handleAdd}
+            disabled={!name.trim()}
+            className="w-full mt-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors disabled:opacity-40"
+            style={{ background: '#7c3aed' }}
+          >
+            Add to Team
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -181,7 +297,6 @@ function SpecialistPicker({
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {ALL_SPECIALISTS.map((spec) => {
           const isSelected = selected.includes(spec.id);
-          const team = TEAMS.find((t) => t.id === spec.teamId);
 
           return (
             <button
@@ -242,6 +357,8 @@ export default function AssemblePage({
   const [customSelected, setCustomSelected] = useState<string[]>([]);
   const [activating, setActivating] = useState(false);
   const [showOrgChart, setShowOrgChart] = useState(templateId !== "custom");
+  const [addedSpecialist, setAddedSpecialist] = useState<Specialist | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     document.title = "Foundry — Assemble Your Team";
@@ -250,11 +367,15 @@ export default function AssemblePage({
   const isCustom = templateId === "custom";
   const accentColor = team?.accentColor ?? "#ec4899";
 
-  const specialists = isCustom
+  const baseSpecialists = isCustom
     ? customSelected.map(
         (id) => ALL_SPECIALISTS.find((s) => s.id === id)!
       ).filter(Boolean)
     : (team?.specialists ?? []);
+
+  const specialists = addedSpecialist
+    ? [...baseSpecialists, addedSpecialist]
+    : baseSpecialists;
 
   const getSpecName = (spec: Specialist) =>
     specialistNames[spec.id] ?? spec.name;
@@ -292,7 +413,6 @@ export default function AssemblePage({
         accent_color: accentColor,
       });
 
-      // Also save to localStorage for the dashboard command center
       const teamData = {
         templateId,
         teamName: team?.name ?? "Custom Team",
@@ -316,14 +436,12 @@ export default function AssemblePage({
       };
       localStorage.setItem("foundry_team", JSON.stringify(teamData));
 
-      // Redirect to canvas view
       if (result.lead_agent_id) {
         router.push(`/dashboard/canvas?agent=${result.lead_agent_id}`);
       } else {
         router.push("/dashboard");
       }
     } catch {
-      // Fallback: save to localStorage and go to dashboard
       const teamData = {
         templateId,
         teamName: team?.name ?? "Custom Team",
@@ -475,6 +593,7 @@ export default function AssemblePage({
                     name={getSpecName(spec)}
                     role={spec.role}
                     tagline={spec.tagline}
+                    description={spec.description}
                     accentColor={accentColor}
                     size={64}
                     onNameChange={(v) =>
@@ -486,6 +605,26 @@ export default function AssemblePage({
                     delay={0.8 + i * 0.15}
                   />
                 ))}
+
+                {/* Add 4th specialist slot */}
+                {!addedSpecialist && !isCustom && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 16, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.6, delay: 1.25, ease }}
+                  >
+                    <button
+                      onClick={() => setShowAddModal(true)}
+                      className="w-[160px] p-5 text-center rounded-xl border-2 border-dashed border-white/[0.1] bg-transparent hover:border-white/[0.2] hover:bg-white/[0.02] transition-all duration-200 active:scale-[0.98] flex flex-col items-center justify-center gap-2"
+                      style={{ minHeight: 160 }}
+                    >
+                      <div className="w-16 h-16 rounded-full border-2 border-dashed border-white/[0.1] flex items-center justify-center">
+                        <Plus className="w-6 h-6 text-[#71717a]" />
+                      </div>
+                      <span className="text-xs text-[#71717a]">Add Specialist</span>
+                    </button>
+                  </motion.div>
+                )}
               </div>
 
               {/* Activate button */}
@@ -508,6 +647,15 @@ export default function AssemblePage({
           )}
         </AnimatePresence>
       </div>
+
+      {/* Add Specialist Modal */}
+      {showAddModal && (
+        <AddSpecialistModal
+          accentColor={accentColor}
+          onAdd={(spec) => setAddedSpecialist(spec)}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
     </div>
   );
 }

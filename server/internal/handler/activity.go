@@ -104,6 +104,50 @@ func (h *Handler) handleGetActivity(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Recent dispatch tasks
+	dtRows, dtErr := h.DB.Query(ctx, `
+		SELECT dt.id, dt.description, dt.status, dt.created_at,
+		       fa.name as from_name, fa.avatar_url as from_avatar,
+		       ta.name as to_name, ta.avatar_url as to_avatar
+		FROM dispatch_task dt
+		JOIN agent fa ON dt.from_agent_id = fa.id
+		JOIN agent ta ON dt.to_agent_id = ta.id
+		WHERE (dt.from_agent_id = $1 OR dt.to_agent_id = $1
+		       OR dt.from_agent_id IN (SELECT id FROM agent WHERE parent_agent_id = $1))
+		AND dt.workspace_id = $2
+		ORDER BY dt.created_at DESC LIMIT 10
+	`, agentID, wsID)
+	if dtErr == nil {
+		defer dtRows.Close()
+		for dtRows.Next() {
+			var id, desc, status, fromName, toName string
+			var fromAvatar, toAvatar *string
+			var createdAt time.Time
+			if err := dtRows.Scan(&id, &desc, &status, &createdAt, &fromName, &fromAvatar, &toName, &toAvatar); err != nil {
+				continue
+			}
+			statusIcon := "⏳"
+			if status == "completed" {
+				statusIcon = "✓"
+			} else if status == "failed" {
+				statusIcon = "✗"
+			}
+			content := fmt.Sprintf("%s %s → %s: %s", statusIcon, fromName, toName, desc)
+			if len(content) > 150 {
+				content = content[:150] + "..."
+			}
+			events = append(events, ActivityEvent{
+				ID:        id,
+				Type:      "dispatch",
+				AgentID:   agentID.String(),
+				AgentName: fromName,
+				AvatarURL: stringVal(fromAvatar),
+				Content:   content,
+				CreatedAt: createdAt,
+			})
+		}
+	}
+
 	// Sort by time, newest first
 	sort.Slice(events, func(i, j int) bool {
 		return events[i].CreatedAt.After(events[j].CreatedAt)

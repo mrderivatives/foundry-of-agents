@@ -331,7 +331,7 @@ export default function AgentDetailPage() {
   return (
     <div className="flex h-full flex-col">
       {/* Agent Header */}
-      <div className="border-b border-border px-4 sm:px-6 py-4 shrink-0">
+      <div className="border-b border-white/[0.06] bg-[#09090b] px-4 sm:px-6 py-4 shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <AgentAvatar emoji={agent.avatar_url} size={40} />

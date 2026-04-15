@@ -123,7 +123,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen" style={{ background: "#09090b" }}>
       {/* Hero */}
-      <section className="relative min-h-screen flex items-center justify-center px-6 pt-16 pb-32">
+      <section className="relative min-h-screen flex items-start justify-center px-6 pt-24 pb-32">
         {/* Hero background — extends beyond hero into team showcase */}
         <div className="absolute inset-0 h-[150vh] overflow-hidden">
           <Image src="/hero-bg-network-complex.png" alt="" fill className="object-cover opacity-[0.12] scale-110" priority />

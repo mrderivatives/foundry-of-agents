@@ -44,10 +44,10 @@ export function ForgeFlame({ width = 560, height = 560, interactive = true, clas
     // --- ForgeFlame simulation ---
     const cols = 80;
     const rows = 56;
-    const hotCol = '#fff8dc';
-    const midCol = '#f4d03f';
-    const dimCol = '#d4a017';
-    const farCol = '#5a3c00';
+    const hotCol = '#e0d4ff';
+    const midCol = '#a78bfa';
+    const dimCol = '#7c3aed';
+    const farCol = '#3b1a7a';
     const seedY0 = 0.45;
 
     let heat = new Float32Array(cols * rows);
@@ -265,7 +265,7 @@ export function ForgeFlame({ width = 560, height = 560, interactive = true, clas
     <canvas
       ref={canvasRef}
       className={`cursor-crosshair ${className}`}
-      style={{ width, height }}
+      style={{ width, height, opacity: 0.6 }}
     />
   );
 }

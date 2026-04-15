@@ -104,7 +104,7 @@ export default function DashboardLayout({
             className="flex items-center gap-2.5"
           >
             <img src="/logo.png" alt="Forge" className="w-6 h-6" />
-            <span className="text-sm font-semibold tracking-tight text-zinc-100">Forge <span className="text-zinc-500 font-normal">of Agents</span></span>
+            <span className="text-sm font-semibold tracking-tight text-zinc-100">Agent <span className="text-zinc-500 font-normal">Forge</span></span>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -256,7 +256,7 @@ export default function DashboardLayout({
           </button>
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Forge" className="w-6 h-6" />
-            <span className="text-sm font-semibold tracking-tight text-zinc-100">Forge <span className="text-zinc-500 font-normal">of Agents</span></span>
+            <span className="text-sm font-semibold tracking-tight text-zinc-100">Agent <span className="text-zinc-500 font-normal">Forge</span></span>
           </div>
         </div>
         <main className="flex-1 overflow-y-auto">{children}</main>

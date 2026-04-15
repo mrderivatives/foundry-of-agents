@@ -123,7 +123,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen" style={{ background: "#09090b" }}>
       {/* Hero */}
-      <section className="relative min-h-screen flex items-start justify-center px-6 pt-24 pb-32">
+      <section className="relative flex flex-col items-center justify-center px-6 py-20" style={{ minHeight: '100dvh' }}>
         {/* Hero background — extends beyond hero into team showcase */}
         <div className="absolute inset-0 h-[150vh] overflow-hidden">
           <Image src="/hero-bg-network-complex.png" alt="" fill className="object-cover opacity-[0.12] scale-110" priority />
@@ -147,7 +147,7 @@ export default function LandingPage() {
           </motion.div>
 
           <motion.h1
-            className="text-[clamp(32px,6vw,72px)] font-extralight tracking-[-0.03em] leading-[1.05]"
+            className="text-[clamp(28px,5vw,56px)] font-extralight tracking-[-0.03em] leading-[1.15]"
             style={{
               background: "linear-gradient(135deg, #fff 0%, #7c3aed 50%, rgba(255,255,255,0.4) 100%)",
               backgroundSize: "200% 200%",

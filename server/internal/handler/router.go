@@ -29,6 +29,14 @@ func MountRoutes(r chi.Router, h *Handler) {
 		r.Delete("/session", h.handleLogout)
 	})
 
+	// Public dataroom tracking routes (no auth required)
+	r.Route("/api/dataroom", func(r chi.Router) {
+		r.Post("/visit", h.handleDataroomVisit)
+		r.Post("/event", h.handleDataroomEvent)
+		r.Post("/gate", h.handleDataroomGate)
+		r.Get("/stats", h.handleDataroomStats)
+	})
+
 	// Protected routes — require JWT
 	r.Group(func(r chi.Router) {
 		r.Use(auth.Middleware(h.JWTSecret))

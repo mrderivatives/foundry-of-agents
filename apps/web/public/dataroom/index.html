@@ -1,0 +1,4069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Forge — Investor Dataroom · A Subsidiary of TenX Protocols (TSXv: TNX)</title>
+<meta name="description" content="Agent Forge investor dataroom. AI agents with crypto-native wallets. $3M seed round, TenX Protocols lead. Confidential.">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="author" content="Agent Forge / TenX Protocols Inc.">
+
+<!-- Open Graph + Twitter (for messenger unfurls — page is noindex but unfurls still happen) -->
+<meta property="og:title" content="Agent Forge — Investor Dataroom">
+<meta property="og:description" content="A subsidiary of TenX Protocols (TSXv: TNX). Deploy AI agents that work for you. $3M Seed Round.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/dataroom/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Agent Forge investor dataroom — A subsidiary of TenX Protocols, $3M seed round">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Agent Forge — Investor Dataroom">
+<meta name="twitter:description" content="Deploy AI Agents That Work For You. A subsidiary of TenX Protocols (TSXv: TNX). $3M Seed Round.">
+<meta name="twitter:image" content="/dataroom/og.png">
+
+<!-- Favicon (uses flame) -->
+<link rel="icon" type="image/png" href="assets/flame-64.png">
+<link rel="apple-touch-icon" href="assets/flame.png">
+
+<!-- Fonts: Creato Display (Webflow CDN, same as TenX) + IBM Plex Mono -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.prod.website-files.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   AGENT FORGE INVESTOR DATAROOM
+   Visual language inherited from TenX Protocols staking dashboard.
+   Primary accent: rich gold (#d4a017) with gradient treatment on the
+   big moments (wordmark, buttons, accent bars, flame). Secondary
+   palette — blue / green / purple — mirrors the deck's color coding.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@font-face{font-family:"Creato Display";src:url("https://cdn.prod.website-files.com/68dacf631957fbe45b72f025/68dacf651957fbe45b72f0bf_CreatoDisplay-Regular.otf") format("opentype");font-weight:400;font-display:swap}
+@font-face{font-family:"Creato Display";src:url("https://cdn.prod.website-files.com/68dacf631957fbe45b72f025/68dacf651957fbe45b72f0c0_CreatoDisplay-Medium.otf") format("opentype");font-weight:500;font-display:swap}
+@font-face{font-family:"Creato Display";src:url("https://cdn.prod.website-files.com/68dacf631957fbe45b72f025/68dacf651957fbe45b72f0c3_CreatoDisplay-Bold.otf") format("opentype");font-weight:700;font-display:swap}
+
+:root{
+  /* ── Base ────────────────── */
+  --bg:#000;
+  --s:#0a0a0a;
+  --s2:#111;
+  --s3:#161616;
+  --b:#1f2124;
+  --bl:rgba(255,255,255,0.06);
+  --bh:rgba(255,255,255,0.12);
+
+  /* ── Text ────────────────── */
+  --t:rgba(255,255,255,0.92);
+  --ts:rgba(214,216,231,0.80);
+  --tm:rgba(111,135,160,0.50);
+  --tx:rgba(111,135,160,0.30);
+
+  /* ── Agent Forge accent system — GOLD primary, deck colors for secondary ── */
+  --o:#d4a017;       /* Rich gold — PRIMARY (replaces the deck's orange) */
+  --od:#8b6914;      /* Deep gold (darker edge / ember) */
+  --ol:#f4d03f;      /* Bright gold (hover / hot state) */
+  --b-a:#3b82f6;     /* Blue (greed, transact, premium, token-rights, ai-dev) */
+  --g:#10b981;       /* Green (evolve, market, governance, warrants, gtm) */
+  --p:#a855f7;       /* Purple (creator rewards, agent commerce, token-infra) */
+  --r:#e05252;       /* Red (negative) */
+  --sv:#b0b8c8;      /* Silver */
+
+  /* ── Gold gradient (big moments — wordmark, buttons, accent bars, sparks) ──
+         bright gold → rich gold → deep gold. Reads more premium on black than
+         any orange variant. Cool contrast against blue/green/purple secondaries. */
+  --o-grad:linear-gradient(135deg,#f4d03f 0%,#d4a017 50%,#8b6914 100%);
+  --o-grad-v:linear-gradient(180deg,#f4d03f 0%,#d4a017 50%,#8b6914 100%);
+  --o-grad-soft:linear-gradient(135deg,rgba(244,208,63,0.9) 0%,rgba(212,160,23,0.7) 100%);
+
+  /* ── Glows ───────────────── */
+  --glow-o:rgba(212,160,23,0.22);
+  --glow-o-soft:rgba(212,160,23,0.10);
+  --glow-o-warm:rgba(244,208,63,0.28);
+  --glow-b:rgba(59,130,246,0.12);
+  --glow-g:rgba(16,185,129,0.12);
+  --glow-p:rgba(168,85,247,0.12);
+
+  /* ── Type ────────────────── */
+  --m:'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+  --f:'Creato Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ease:cubic-bezier(0.25,0.46,0.45,0.94);
+  --ease-out:cubic-bezier(0.16,1,0.3,1);
+  --radius:4px;
+  --radius-sm:2px;
+}
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--m);
+  font-size:13px;
+  line-height:1.55;
+  color:var(--t);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+
+/* Ambient background glows — single low-opacity wash, top-left blue + bottom-right orange */
+body::before{
+  content:'';
+  position:fixed;
+  top:-200px;
+  left:-300px;
+  width:1100px;
+  height:400px;
+  background:rgba(189,215,241,0.08);
+  filter:blur(160px);
+  pointer-events:none;
+  z-index:-2;
+}
+body::after{
+  content:'';
+  position:fixed;
+  bottom:-250px;
+  right:-200px;
+  width:900px;
+  height:500px;
+  background:rgba(212,160,23,0.07);
+  filter:blur(180px);
+  pointer-events:none;
+  z-index:-2;
+}
+
+/* Subtle noise grain overlay for terminal/CRT atmosphere */
+.noise{
+  position:fixed;
+  inset:0;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.04 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  pointer-events:none;
+  z-index:-1;
+  mix-blend-mode:overlay;
+  opacity:0.6;
+}
+
+/* ── Container ────────────── */
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+
+/* ═══ EMAIL GATE OVERLAY ═══ */
+.gate{
+  position:fixed;
+  inset:0;
+  background:var(--bg);
+  z-index:1000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  transition:opacity 0.5s var(--ease-out), visibility 0.5s var(--ease-out);
+}
+.gate.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.gate__bg{
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse at center, rgba(212,160,23,0.05) 0%, transparent 60%);
+  pointer-events:none;
+}
+.gate__card{
+  position:relative;
+  max-width:640px;
+  width:100%;
+  border:1px solid var(--b);
+  background:linear-gradient(180deg, var(--s) 0%, #050505 100%);
+  padding:28px 36px 32px;
+  z-index:1;
+}
+.gate__corner{position:absolute;width:14px;height:14px;border-color:var(--o)}
+.gate__corner--tl{top:-1px;left:-1px;border-top:1px solid var(--o);border-left:1px solid var(--o)}
+.gate__corner--tr{top:-1px;right:-1px;border-top:1px solid var(--o);border-right:1px solid var(--o)}
+.gate__corner--bl{bottom:-1px;left:-1px;border-bottom:1px solid var(--o);border-left:1px solid var(--o)}
+.gate__corner--br{bottom:-1px;right:-1px;border-bottom:1px solid var(--o);border-right:1px solid var(--o)}
+
+/* Interactive Forge Flame canvas — the signature moment */
+.gate__flame-wrap{
+  position:relative;
+  width:100%;
+  height:320px;
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:crosshair;
+}
+.gate__flame-canvas{
+  display:block;
+  max-width:100%;
+  height:320px;
+  width:400px;
+  image-rendering:pixelated;
+  filter:drop-shadow(0 0 28px var(--glow-o));
+  touch-action:none;
+}
+.gate__flame-hint{
+  position:absolute;
+  bottom:-4px;
+  left:50%;
+  transform:translateX(-50%);
+  font-family:var(--m);
+  font-size:9px;
+  color:var(--tm);
+  letter-spacing:1px;
+  text-transform:uppercase;
+  white-space:nowrap;
+  pointer-events:none;
+  opacity:0.7;
+  animation:hint-pulse 3s ease-in-out infinite;
+}
+.gate__flame-hint .arrow{color:var(--o)}
+@keyframes hint-pulse{0%,100%{opacity:0.4}50%{opacity:0.85}}
+.gate__title{
+  font-family:var(--f);
+  font-size:32px;
+  font-weight:700;
+  letter-spacing:0.04em;
+  color:#fff;
+  text-align:center;
+  margin-bottom:6px;
+}
+.gate__sub{
+  font-family:var(--m);
+  font-size:9px;
+  font-weight:500;
+  text-transform:uppercase;
+  letter-spacing:2.5px;
+  color:var(--o);
+  text-align:center;
+  margin-bottom:6px;
+}
+.gate__parent{
+  font-family:var(--m);
+  font-size:10px;
+  color:var(--tm);
+  text-align:center;
+  margin-bottom:24px;
+}
+.gate__parent span{color:var(--ts)}
+.gate__form{display:flex;flex-direction:column;gap:10px}
+.gate__input{
+  width:100%;
+  padding:13px 14px;
+  background:var(--bg);
+  border:1px solid var(--b);
+  color:#fff;
+  font-family:var(--m);
+  font-size:13px;
+  outline:none;
+  transition:border-color 0.2s var(--ease);
+}
+.gate__input:focus{border-color:var(--o);box-shadow:0 0 0 1px var(--o), inset 0 0 14px var(--glow-o-soft)}
+.gate__input::placeholder{color:var(--tm)}
+.gate__btn{
+  width:100%;
+  padding:13px;
+  background:var(--o-grad);
+  border:1px solid var(--od);
+  color:#1a0f00;
+  font-family:var(--f);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.2s var(--ease);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  position:relative;
+  box-shadow:0 0 0 0 var(--glow-o-soft), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.gate__btn:hover{background:var(--o-grad-v);border-color:var(--ol);box-shadow:0 0 32px var(--glow-o), inset 0 1px 0 rgba(255,255,255,0.35)}
+.gate__btn:active{transform:translateY(1px)}
+.gate__btn:disabled{opacity:0.5;cursor:not-allowed}
+.gate__btn:focus-visible{outline:2px solid var(--ol);outline-offset:3px}
+.gate__input:focus-visible{outline:none}
+.gate__err{
+  font-family:var(--m);
+  font-size:10px;
+  color:var(--r);
+  text-align:center;
+  min-height:14px;
+  margin-top:4px;
+}
+.gate__legal{
+  font-family:var(--m);
+  font-size:9px;
+  color:var(--tm);
+  text-align:center;
+  margin-top:18px;
+  line-height:1.6;
+  padding-top:18px;
+  border-top:1px solid var(--bl);
+}
+.gate__legal strong{color:var(--ts);font-weight:500}
+
+/* ═══ NAV ═══ */
+.nav{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(10,10,10,0.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--b);
+}
+.nav__in{
+  max-width:1240px;
+  margin:0 auto;
+  padding:0 24px;
+  height:48px;
+  display:flex;
+  align-items:center;
+  gap:0;
+}
+.nav__canvas{width:48px;height:32px;flex-shrink:0;margin-right:10px;image-rendering:pixelated}
+
+/* Section spinner — disabled in v2.1, kept as no-op */
+.sec-spinner{display:none}
+.nav__brand{
+  font-family:var(--f);
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  color:#fff;
+  white-space:nowrap;
+  text-transform:uppercase;
+}
+.nav__brand--mark{color:var(--o)}
+.nav__d{width:1px;height:14px;background:var(--b);margin:0 12px;flex-shrink:0}
+.nav__cycle{
+  font-family:var(--m);
+  font-size:10px;
+  color:var(--ts);
+  white-space:nowrap;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  min-width:80px;
+}
+.nav__cycle .ticker{color:var(--tm);font-size:9px}
+.nav__r{margin-left:auto;display:flex;align-items:center;gap:14px;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
+.nav__user{
+  font-family:var(--m);
+  font-size:9px;
+  color:var(--tm);
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.nav__user span{color:var(--ts)}
+.nav__time{font-family:var(--m);font-size:9px;color:var(--tm);font-variant-numeric:tabular-nums;min-width:60px;text-align:right}
+
+/* Scroll progress bar — absolute, top of nav */
+.nav__progress{
+  position:absolute;
+  top:0;left:0;
+  height:1px;
+  background:var(--o);
+  width:0%;
+  box-shadow:0 0 8px var(--o);
+  transition:width 0.05s linear;
+}
+
+/* ═══ TOC SIDEBAR — v2.2 ═══ */
+.toc{
+  position:fixed;
+  left:20px;
+  top:72px;
+  width:172px;
+  z-index:40;
+  font-family:var(--m);
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  padding:8px 0;
+  pointer-events:none;
+}
+.toc__head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:0 10px 10px;
+  margin-bottom:6px;
+  border-bottom:1px solid var(--bl);
+  pointer-events:auto;
+}
+.toc__head-tag{
+  font-size:9px;
+  font-weight:600;
+  color:var(--o);
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+}
+.toc__head-line{
+  flex:1;
+  height:1px;
+  background:linear-gradient(90deg, var(--o), transparent);
+  opacity:0.4;
+}
+.toc__item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:6px 10px 6px 12px;
+  color:var(--tm);
+  text-decoration:none;
+  border-left:1px solid var(--b);
+  position:relative;
+  white-space:nowrap;
+  transition:color 0.25s var(--ease), border-left-color 0.25s var(--ease), background 0.25s var(--ease), padding-left 0.25s var(--ease);
+  cursor:pointer;
+  pointer-events:auto;
+}
+.toc__item::before{
+  content:'';
+  position:absolute;
+  left:-1px;
+  top:50%;
+  width:0;
+  height:1px;
+  background:var(--o);
+  transform:translateY(-50%);
+  transition:width 0.3s var(--ease);
+  box-shadow:0 0 6px var(--glow-o);
+}
+.toc__item:hover{
+  color:var(--ts);
+  border-left-color:var(--bh);
+  padding-left:14px;
+}
+.toc__item:hover::before{width:8px}
+.toc__item.active{
+  color:var(--o);
+  border-left-color:var(--o);
+  background:linear-gradient(90deg, var(--glow-o-soft) 0%, transparent 70%);
+  padding-left:16px;
+}
+.toc__item.active::before{width:12px}
+.toc__num{
+  font-size:9px;
+  font-weight:600;
+  letter-spacing:0.8px;
+  flex-shrink:0;
+  min-width:16px;
+  color:var(--o);
+  opacity:0.6;
+  font-variant-numeric:tabular-nums;
+}
+.toc__item:hover .toc__num{opacity:1}
+.toc__item.active .toc__num{opacity:1}
+.toc__label{
+  font-family:var(--f);
+  font-size:10px;
+  font-weight:500;
+  letter-spacing:0.5px;
+  text-transform:none;
+  line-height:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+@media(max-width:1340px){.toc{display:none}}
+
+/* ═══ GRID SYSTEM ═══ */
+.g{display:grid;gap:1px;background:var(--b);border:1px solid var(--b)}
+.g>*{background:var(--s)}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g5{grid-template-columns:repeat(5,1fr)}
+.g6{grid-template-columns:repeat(6,1fr)}
+.g-2-1{grid-template-columns:2fr 1fr}
+.g-1-2{grid-template-columns:1fr 2fr}
+.mt1{margin-top:1px}.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt24{margin-top:24px}.mt32{margin-top:32px}.mt48{margin-top:48px}
+
+/* ═══ SECTION HEADER (ASCII box) ═══ */
+/* ═══ SECTION HEADER (v2.2 — minimal + subtle spinner) ═══ */
+.sec{
+  margin:72px 0 24px;
+  padding-top:24px;
+  border-top:1px solid var(--b);
+  display:grid;
+  grid-template-columns:minmax(104px, 128px) 1fr;
+  gap:28px;
+  align-items:baseline;
+  position:relative;
+}
+.sec::before{
+  content:'';
+  position:absolute;
+  top:-1px;
+  left:0;
+  width:44px;
+  height:2px;
+  background:var(--o-grad);
+  box-shadow:0 0 8px var(--glow-o);
+}
+/* Section accent color rotation by conceptual group */
+.sec--b::before{background:var(--b-a);box-shadow:0 0 6px var(--glow-b)}
+.sec--g::before{background:var(--g);box-shadow:0 0 6px var(--glow-g)}
+.sec--p::before{background:var(--p);box-shadow:0 0 6px var(--glow-p)}
+.sec--b .sec__num,.sec--b .sec__spin{color:var(--b-a)}
+.sec--g .sec__num,.sec--g .sec__spin{color:var(--g)}
+.sec--p .sec__num,.sec--p .sec__spin{color:var(--p)}
+.sec--b .sec__spin{text-shadow:0 0 6px var(--glow-b)}
+.sec--g .sec__spin{text-shadow:0 0 6px var(--glow-g)}
+.sec--p .sec__spin{text-shadow:0 0 6px var(--glow-p)}
+.sec__meta{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  font-family:var(--m);
+  padding-top:4px;
+  transition:color 0.25s var(--ease);
+}
+.sec__num-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.sec__spin{
+  font-family:var(--m);
+  font-size:11px;
+  color:var(--o);
+  letter-spacing:0;
+  line-height:1;
+  opacity:0.65;
+  text-shadow:0 0 6px var(--glow-o-soft);
+  user-select:none;
+  min-width:1ch;
+  display:inline-block;
+}
+.sec__num{
+  font-size:10px;
+  font-weight:500;
+  color:var(--o);
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  font-variant-numeric:tabular-nums;
+}
+.sec__num::before{content:'[ '}
+.sec__num::after{content:' ]'}
+.sec__label{
+  font-size:9px;
+  font-weight:500;
+  color:var(--tm);
+  letter-spacing:2px;
+  text-transform:uppercase;
+  margin-top:2px;
+}
+.sec__body{min-width:0}
+.sec__title{
+  font-family:var(--f);
+  font-size:28px;
+  font-weight:700;
+  color:#fff;
+  line-height:1.12;
+  letter-spacing:-0.005em;
+  margin:0;
+}
+.sec__lead{
+  font-family:var(--m);
+  font-size:12px;
+  font-weight:400;
+  color:var(--ts);
+  margin:10px 0 0;
+  max-width:720px;
+  line-height:1.6;
+}
+/* Legacy .sec-head kept as no-op to avoid breaking anything mid-migration */
+.sec-head{display:none}
+.sec-head__sub,.sec-head__lead{display:none}
+
+/* ═══ PANEL ═══ */
+.ph{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:9px 14px;
+  background:var(--s2);
+  border-bottom:1px solid var(--b);
+  gap:8px;
+}
+.pt{
+  font-family:var(--f);
+  font-size:9px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:1.4px;
+  color:var(--tm);
+}
+.pt--o{color:var(--o)}
+.pt--b{color:var(--b-a)}
+.pt--g{color:var(--g)}
+.pt--p{color:var(--p)}
+.pb{padding:18px}
+.pb--lg{padding:24px}
+.pb--tight{padding:12px}
+
+/* Top accent border for color-coded panels */
+.acc-o{border-top:2px solid var(--o)}
+.acc-b{border-top:2px solid var(--b-a)}
+.acc-g{border-top:2px solid var(--g)}
+.acc-p{border-top:2px solid var(--p)}
+
+/* ═══ KPI ═══ */
+.kpi{padding:18px 14px;text-align:center;transition:all 0.25s var(--ease);position:relative}
+.kpi:hover{background:var(--s3)}
+.kpi__l{
+  font-family:var(--f);
+  font-size:8px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  color:var(--tm);
+  margin-bottom:8px;
+}
+.kpi__v{
+  font-family:var(--m);
+  font-size:26px;
+  font-weight:300;
+  color:#fff;
+  line-height:1.1;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-0.01em;
+}
+.kpi__v--o{color:var(--o)}
+.kpi__v--b{color:var(--b-a)}
+.kpi__v--g{color:var(--g)}
+.kpi__v--p{color:var(--p)}
+.kpi__v--s{color:var(--sv)}
+.kpi__s{
+  font-family:var(--m);
+  font-size:9px;
+  color:var(--tm);
+  margin-top:4px;
+  font-weight:400;
+}
+
+/* ═══ HERO ═══ */
+.hero{padding:56px 0 32px;position:relative}
+.hero__meta{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin-bottom:24px;
+  font-family:var(--m);
+  font-size:10px;
+  font-weight:500;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+}
+.hero__num{color:var(--o)}
+.hero__num::before{content:'[ '}
+.hero__num::after{content:' ]'}
+.hero__label{color:var(--tm)}
+.hero__title{
+  font-family:var(--f);
+  font-size:clamp(48px, 9vw, 96px);
+  font-weight:700;
+  line-height:0.95;
+  letter-spacing:-0.02em;
+  color:#fff;
+  margin:0 0 12px;
+  display:inline-block;
+  background:var(--o-grad);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 28px var(--glow-o-soft));
+  opacity:0;
+  animation:hero-title-in 0.8s var(--ease-out) 0.2s forwards;
+}
+@keyframes hero-title-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fade-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.hero__sub{
+  font-family:var(--m);
+  font-size:14px;
+  color:var(--ts);
+  margin-bottom:36px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:1.5em;
+}
+.hero__cursor{
+  display:inline-block;
+  width:8px;
+  height:14px;
+  background:var(--o);
+  vertical-align:text-bottom;
+  animation:blink 1s steps(2) infinite;
+  box-shadow:0 0 6px var(--glow-o);
+}
+@keyframes blink{0%,50%{opacity:1}50.01%,100%{opacity:0}}
+
+/* ═══ THESIS ═══ */
+.thesis-body{padding:24px 22px;font-family:var(--m);font-size:13px;line-height:1.7;color:var(--ts)}
+.thesis-body p{margin-bottom:12px}
+.thesis-body p:last-child{margin-bottom:0}
+.thesis-body strong{color:#fff;font-weight:500}
+.thesis-body .o{color:var(--o)}
+.thesis-glance{padding:0}
+.thesis-glance__row{
+  display:grid;
+  grid-template-columns:140px 1fr;
+  padding:11px 18px;
+  border-bottom:1px solid var(--bl);
+  font-family:var(--m);
+  font-size:11px;
+  align-items:center;
+  gap:8px;
+}
+.thesis-glance__row:last-child{border-bottom:none}
+.thesis-glance__l{color:var(--tm);text-transform:uppercase;letter-spacing:1px;font-size:9px;font-weight:600}
+.thesis-glance__v{color:#fff;font-weight:400}
+.thesis-glance__v.o{color:var(--o)}
+.thesis-glance__v.g{color:var(--g)}
+
+/* ═══ PROBLEM PANEL ═══ */
+.prob{padding:24px 26px}
+.prob__hook{
+  font-family:var(--f);
+  font-size:18px;
+  font-style:italic;
+  color:var(--ts);
+  margin:14px 0 18px;
+  font-weight:400;
+  letter-spacing:-0.01em;
+}
+.prob__icon{
+  font-family:var(--m);
+  font-size:18px;
+  color:var(--o);
+  margin-bottom:4px;
+  letter-spacing:0;
+}
+.prob--blue .prob__icon{color:var(--b-a)}
+.prob__title{
+  font-family:var(--f);
+  font-size:22px;
+  font-weight:700;
+  color:var(--o);
+  letter-spacing:0.02em;
+  text-transform:uppercase;
+}
+.prob--blue .prob__title{color:var(--b-a)}
+.prob__list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.prob__list li{
+  font-family:var(--m);
+  font-size:12px;
+  color:var(--ts);
+  line-height:1.55;
+  padding-left:18px;
+  position:relative;
+}
+.prob__list li::before{
+  content:'▸';
+  position:absolute;
+  left:0;
+  top:0;
+  color:var(--o);
+}
+.prob--blue .prob__list li::before{color:var(--b-a)}
+.prob__list li strong{color:#fff;font-weight:500}
+.prob__list li .cite{color:var(--tm);font-size:10px}
+
+/* ═══ MARKET ═══ */
+/* ═══ MARKET NESTED BOXES (TAM → SAM → SOM) ═══ */
+.market{
+  padding:24px 22px 28px;
+  font-family:var(--m);
+}
+.market__layer{
+  position:relative;
+  border:1px solid;
+  padding:18px 20px;
+  margin-top:8px;
+}
+.market__layer--tam{
+  border-color:var(--b-a);
+  background:linear-gradient(180deg, rgba(59,130,246,0.03), transparent 65%);
+  margin-top:0;
+}
+.market__layer--sam{
+  border-color:var(--o);
+  background:linear-gradient(180deg, rgba(212,160,23,0.04), transparent 65%);
+  margin-top:22px;
+  margin-left:24px;
+}
+.market__layer--som{
+  border-color:var(--g);
+  background:linear-gradient(180deg, rgba(16,185,129,0.05), transparent 65%);
+  margin-top:22px;
+  margin-left:24px;
+}
+.market__head{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  margin-bottom:10px;
+  overflow:hidden;
+}
+.market__tag{
+  font-size:9px;
+  font-weight:600;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  flex-shrink:0;
+}
+.market__layer--tam .market__tag{color:var(--b-a)}
+.market__layer--sam .market__tag{color:var(--o)}
+.market__layer--som .market__tag{color:var(--g)}
+.market__dots{
+  color:var(--tx);
+  font-size:9px;
+  letter-spacing:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  flex:1;
+  user-select:none;
+}
+.market__row{
+  display:flex;
+  align-items:baseline;
+  gap:18px;
+}
+.market__val{
+  font-size:30px;
+  font-weight:300;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+  flex-shrink:0;
+  letter-spacing:-0.01em;
+}
+.market__layer--tam .market__val{color:#fff}
+.market__layer--sam .market__val{color:#fff}
+.market__layer--som .market__val{color:#fff}
+.market__body{flex:1;min-width:0}
+.market__desc{
+  font-size:12px;
+  font-weight:500;
+  color:var(--t);
+  margin-bottom:3px;
+}
+.market__caption{
+  font-size:10px;
+  color:var(--tm);
+  line-height:1.5;
+}
+.market__arrow{
+  position:absolute;
+  top:-17px;
+  left:14px;
+  font-size:9px;
+  font-weight:500;
+  color:var(--tm);
+  letter-spacing:0.8px;
+  text-transform:uppercase;
+  padding:2px 10px;
+  background:var(--s);
+  z-index:1;
+}
+.market__layer--sam .market__arrow{color:var(--o)}
+.market__layer--som .market__arrow{color:var(--g)}
+
+@media(max-width:640px){
+  .market{padding:18px 16px 22px}
+  .market__layer--sam,.market__layer--som{margin-left:12px}
+  .market__row{flex-direction:column;align-items:flex-start;gap:8px}
+  .market__val{font-size:24px}
+  .market__dots{display:none}
+}
+
+/* ═══ DOCS ═══ */
+.docs{padding:24px 26px}
+.docs__group{margin-bottom:24px}
+.docs__group:last-child{margin-bottom:0}
+.docs__group-title{
+  font-family:var(--f);
+  font-size:9px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:1.4px;
+  color:var(--o);
+  margin-bottom:12px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--bl);
+}
+.docs__group--req .docs__group-title{color:var(--tm)}
+.docs__list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.docs__list li{
+  font-family:var(--m);
+  font-size:12px;
+  color:var(--ts);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:6px 0;
+}
+.docs__dot{
+  font-family:var(--m);
+  font-size:14px;
+  color:var(--o);
+  width:14px;
+  display:inline-block;
+  text-align:center;
+  text-shadow:0 0 6px var(--glow-o);
+}
+.docs__group--req .docs__dot{color:var(--tm);text-shadow:none}
+.docs__list a{color:var(--ts);text-decoration:none;border-bottom:1px dashed transparent;transition:all 0.2s var(--ease)}
+.docs__list a:hover{color:var(--o);border-bottom-color:var(--o)}
+
+/* ═══ SOLUTION PILLAR ═══ */
+.pillar{padding:28px 24px;height:100%;display:flex;flex-direction:column}
+.pillar__icon{
+  font-family:var(--m);
+  font-size:24px;
+  color:var(--o);
+  margin-bottom:12px;
+  letter-spacing:0;
+}
+.pillar--b .pillar__icon{color:var(--b-a)}
+.pillar--g .pillar__icon{color:var(--g)}
+.pillar__label{
+  font-family:var(--f);
+  font-size:9px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  color:var(--o);
+  margin-bottom:6px;
+}
+.pillar--b .pillar__label{color:var(--b-a)}
+.pillar--g .pillar__label{color:var(--g)}
+.pillar__title{
+  font-family:var(--f);
+  font-size:18px;
+  font-weight:700;
+  color:#fff;
+  margin-bottom:14px;
+  letter-spacing:-0.01em;
+}
+.pillar__body{
+  font-family:var(--m);
+  font-size:12px;
+  color:var(--ts);
+  line-height:1.65;
+  flex:1;
+}
+
+/* ═══ FEATURE GRID ═══ */
+.feat{padding:22px 20px;height:100%;transition:all 0.25s var(--ease)}
+.feat:hover{background:var(--s3)}
+.feat__icon{
+  font-family:var(--m);
+  font-size:18px;
+  margin-bottom:10px;
+  letter-spacing:0;
+  display:inline-block;
+}
+.feat__icon--o{color:var(--o)}
+.feat__icon--b{color:var(--b-a)}
+.feat__icon--g{color:var(--g)}
+.feat__icon--p{color:var(--p)}
+.feat__title{
+  font-family:var(--f);
+  font-size:13px;
+  font-weight:700;
+  color:#fff;
+  margin-bottom:8px;
+  letter-spacing:0.01em;
+}
+.feat__title--o{color:var(--o)}
+.feat__title--b{color:var(--b-a)}
+.feat__title--g{color:var(--g)}
+.feat__title--p{color:var(--p)}
+.feat__body{
+  font-family:var(--m);
+  font-size:11px;
+  color:var(--ts);
+  line-height:1.6;
+}
+
+/* ═══ STEP CARD ═══ */
+.step{padding:28px 24px;position:relative;overflow:hidden}
+.step__num{
+  font-family:var(--m);
+  font-size:48px;
+  font-weight:300;
+  color:var(--o);
+  line-height:1;
+  margin-bottom:14px;
+  letter-spacing:-0.02em;
+  text-shadow:0 0 24px var(--glow-o-soft);
+}
+.step__title{
+  font-family:var(--f);
+  font-size:18px;
+  font-weight:700;
+  color:#fff;
+  margin-bottom:12px;
+}
+.step__body{
+  font-family:var(--m);
+  font-size:12px;
+  color:var(--ts);
+  line-height:1.65;
+}
+.step__arrow{
+  position:absolute;
+  top:50%;
+  right:-12px;
+  transform:translateY(-50%);
+  font-family:var(--m);
+  font-size:24px;
+  color:var(--o);
+  z-index:2;
+  background:var(--bg);
+  padding:4px 0;
+  text-shadow:0 0 8px var(--glow-o);
+}
+
+/* ═══ REVENUE TABLE ═══ */
+.rev{padding:0}
+.rev__row{
+  display:grid;
+  grid-template-columns:6px 1fr;
+  border-bottom:1px solid var(--bl);
+  align-items:stretch;
+}
+.rev__row:last-child{border-bottom:none}
+.rev__bar{background:var(--o)}
+.rev__row--b .rev__bar{background:var(--b-a)}
+.rev__row--g .rev__bar{background:var(--g)}
+.rev__row--p .rev__bar{background:var(--p)}
+.rev__cell{padding:18px 22px}
+.rev__title{
+  font-family:var(--f);
+  font-size:14px;
+  font-weight:700;
+  color:#fff;
+  margin-bottom:6px;
+}
+.rev__body{
+  font-family:var(--m);
+  font-size:11px;
+  color:var(--ts);
+  line-height:1.6;
+}
+
+/* ═══ WHY-NOW ═══ */
+.why{padding:24px 22px}
+.why__icon{font-family:var(--m);font-size:22px;color:var(--o);margin-bottom:8px}
+.why--b .why__icon{color:var(--b-a)}
+.why--g .why__icon{color:var(--g)}
+.why--p .why__icon{color:var(--p)}
+.why__title{
+  font-family:var(--f);
+  font-size:15px;
+  font-weight:700;
+  color:var(--o);
+  margin-bottom:10px;
+  letter-spacing:0.01em;
+}
+.why--b .why__title{color:var(--b-a)}
+.why--g .why__title{color:var(--g)}
+.why--p .why__title{color:var(--p)}
+.why__body{
+  font-family:var(--m);
+  font-size:12px;
+  color:var(--ts);
+  line-height:1.65;
+}
+.why__body strong{color:#fff;font-weight:500}
+
+/* ═══ ROADMAP TIMELINE ═══ */
+.road{padding:0}
+.road__track{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1px;
+  background:var(--b);
+}
+.road__phase{
+  background:var(--s);
+  padding:22px 20px;
+  position:relative;
+  border-top:2px solid var(--b);
+  transition:all 0.25s var(--ease);
+}
+.road__phase--current{border-top-color:var(--o)}
+.road__phase--current::before{
+  content:'';
+  position:absolute;
+  top:-2px;
+  left:0;
+  right:0;
+  height:2px;
+  background:var(--o);
+  box-shadow:0 0 12px var(--o);
+  animation:pulse 2s ease infinite;
+}
+.road__top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.road__q{
+  font-family:var(--m);
+  font-size:10px;
+  color:var(--tm);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  font-weight:500;
+}
+.road__phase--current .road__q{color:var(--o)}
+.road__status{
+  font-family:var(--m);
+  font-size:8px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  padding:2px 7px;
+  border:1px solid var(--bl);
+  color:var(--tm);
+}
+.road__status--current{border-color:var(--o);color:var(--o);background:var(--glow-o-soft)}
+.road__label{
+  font-family:var(--f);
+  font-size:18px;
+  font-weight:700;
+  color:#fff;
+  margin-bottom:14px;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+}
+.road__list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.road__list li{
+  font-family:var(--m);
+  font-size:11px;
+  color:var(--ts);
+  line-height:1.5;
+  padding-left:14px;
+  position:relative;
+}
+.road__list li::before{
+  content:'·';
+  position:absolute;
+  left:4px;
+  top:0;
+  color:var(--o);
+  font-weight:700;
+}
+
+/* ═══ TEAM ═══ */
+.team{padding:0}
+.team__group{padding:24px 22px}
+.team__group-head{
+  font-family:var(--f);
+  font-size:9px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:1.4px;
+  color:var(--o);
+  margin-bottom:16px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--bl);
+}
+.team__cards{display:grid;gap:1px;background:var(--b);border:1px solid var(--b)}
+.team__cards--3{grid-template-columns:repeat(3,1fr)}
+.team__cards--2{grid-template-columns:repeat(2,1fr)}
+.team__card{
+  background:var(--s);
+  padding:18px 18px 20px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:12px;
+  transition:all 0.25s var(--ease);
+}
+.team__card:hover{background:var(--s3)}
+.team__photo{
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  object-fit:cover;
+  border:1.5px solid var(--bl);
+  transition:all 0.25s var(--ease);
+  filter:grayscale(0.4) contrast(1.05);
+}
+.team__card:hover .team__photo{border-color:var(--o);box-shadow:0 0 12px var(--glow-o);filter:grayscale(0) contrast(1)}
+.team__name{
+  font-family:var(--f);
+  font-size:14px;
+  font-weight:700;
+  color:#fff;
+  letter-spacing:0.01em;
+}
+.team__role{
+  font-family:var(--m);
+  font-size:10px;
+  color:var(--o);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  font-weight:500;
+  margin-top:2px;
+}
+.team__bio{
+  font-family:var(--m);
+  font-size:11px;
+  color:var(--ts);
+  line-height:1.55;
+}
+.team__bio strong{color:#fff;font-weight:500}
+.parent-card{padding:24px 24px}
+.parent-card__title{
+  font-family:var(--f);
+  font-size:18px;
+  font-weight:700;
+  color:var(--o);
+  margin-bottom:4px;
+  letter-spacing:0.01em;
+}
+.parent-card__ticker{
+  font-family:var(--m);
+  font-size:10px;
+  color:var(--tm);
+  letter-spacing:1px;
+  margin-bottom:14px;
+  text-transform:uppercase;
+}
+.parent-card__list{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.parent-card__list li{
+  font-family:var(--m);
+  font-size:12px;
+  color:var(--ts);
+  padding-left:14px;
+  position:relative;
+  line-height:1.5;
+}
+.parent-card__list li::before{
+  content:'▸';
+  position:absolute;
+  left:0;
+  top:0;
+  color:var(--o);
+}
+.parent-card__list li strong{color:#fff;font-weight:500}
+.parent-card__motto{
+  font-family:var(--f);
+  font-size:11px;
+  font-style:italic;
+  color:var(--tm);
+  padding-top:14px;
+  border-top:1px solid var(--bl);
+}
+.parent-card__motto span{color:var(--o)}
+
+/* ═══ TOKEN PILLAR ═══ */
+.tok{padding:24px 18px;height:100%}
+.tok__icon{font-family:var(--m);font-size:22px;margin-bottom:10px}
+.tok--o .tok__icon{color:var(--o)}
+.tok--b .tok__icon{color:var(--b-a)}
+.tok--g .tok__icon{color:var(--g)}
+.tok--p .tok__icon{color:var(--p)}
+.tok__title{
+  font-family:var(--f);
+  font-size:14px;
+  font-weight:700;
+  margin-bottom:10px;
+  letter-spacing:0.01em;
+}
+.tok--o .tok__title{color:var(--o)}
+.tok--b .tok__title{color:var(--b-a)}
+.tok--g .tok__title{color:var(--g)}
+.tok--p .tok__title{color:var(--p)}
+.tok__body{font-family:var(--m);font-size:11px;color:var(--ts);line-height:1.6}
+
+/* ═══ USE OF FUNDS BARS ═══ */
+.fund{padding:24px 22px}
+.fund__row{
+  display:grid;
+  grid-template-columns:1fr 80px 1fr 50px;
+  align-items:center;
+  gap:16px;
+  margin-bottom:18px;
+}
+.fund__row:last-child{margin-bottom:0}
+.fund__label{
+  font-family:var(--m);
+  font-size:12px;
+  color:#fff;
+  font-weight:500;
+}
+.fund__sub{
+  font-family:var(--m);
+  font-size:9px;
+  color:var(--tm);
+  margin-top:3px;
+  line-height:1.4;
+}
+.fund__amt{
+  font-family:var(--m);
+  font-size:16px;
+  font-weight:500;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.fund__amt--o{color:var(--o)}
+.fund__amt--b{color:var(--b-a)}
+.fund__amt--g{color:var(--g)}
+.fund__amt--p{color:var(--p)}
+.fund__amt--s{color:var(--sv)}
+.fund__bar{
+  height:18px;
+  background:var(--s2);
+  position:relative;
+  overflow:hidden;
+  border:1px solid var(--bl);
+}
+.fund__bar-fill{
+  height:100%;
+  background:var(--o);
+  width:0%;
+  transition:width 1.2s var(--ease-out) 0.3s;
+  position:relative;
+  box-shadow:0 0 12px var(--glow-o-soft);
+}
+.fund__bar-fill--b{background:var(--b-a);box-shadow:0 0 12px var(--glow-b)}
+.fund__bar-fill--g{background:var(--g);box-shadow:0 0 12px var(--glow-g)}
+.fund__bar-fill--p{background:var(--p);box-shadow:0 0 12px var(--glow-p)}
+.fund__bar-fill--s{background:var(--sv)}
+.fund.is-visible .fund__bar-fill[data-w="40"]{width:40%}
+.fund.is-visible .fund__bar-fill[data-w="20"]{width:20%}
+.fund.is-visible .fund__bar-fill[data-w="18"]{width:18%}
+.fund.is-visible .fund__bar-fill[data-w="12"]{width:12%}
+.fund.is-visible .fund__bar-fill[data-w="10"]{width:10%}
+.fund__pct{
+  font-family:var(--m);
+  font-size:11px;
+  color:var(--tm);
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.fund__callout{
+  margin-top:24px;
+  padding:14px 18px;
+  border:1px solid var(--o);
+  background:var(--glow-o-soft);
+  font-family:var(--m);
+  font-size:12px;
+  color:var(--o);
+  text-align:center;
+  letter-spacing:0.02em;
+}
+
+/* ═══ DEAL STRUCTURE ═══ */
+.deal{padding:32px 24px}
+.deal__num{
+  font-family:var(--m);
+  font-size:36px;
+  font-weight:300;
+  line-height:1;
+  margin-bottom:14px;
+  letter-spacing:-0.02em;
+}
+.deal--o .deal__num{color:var(--o)}
+.deal--b .deal__num{color:var(--b-a)}
+.deal--g .deal__num{color:var(--g)}
+.deal__title{
+  font-family:var(--f);
+  font-size:20px;
+  font-weight:700;
+  margin-bottom:14px;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+}
+.deal--o .deal__title{color:var(--o)}
+.deal--b .deal__title{color:var(--b-a)}
+.deal--g .deal__title{color:var(--g)}
+.deal__body{font-family:var(--m);font-size:12px;color:var(--ts);line-height:1.65}
+.deal__terms{
+  margin-top:24px;
+  padding:14px 18px;
+  border:1px solid var(--o);
+  background:var(--glow-o-soft);
+  font-family:var(--m);
+  font-size:12px;
+  color:var(--o);
+  text-align:center;
+  letter-spacing:0.04em;
+}
+.deal__terms span{color:var(--ts);margin:0 6px}
+
+/* ═══ CAP STRUCTURE DIAGRAM ═══ */
+.cap-diagram{
+  padding:40px 24px 48px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0;
+  background:
+    radial-gradient(ellipse at center top, rgba(212,160,23,0.05), transparent 60%),
+    radial-gradient(ellipse at center bottom, rgba(16,185,129,0.04), transparent 60%);
+}
+.cap-node{
+  position:relative;
+  width:100%;
+  max-width:560px;
+  padding:22px 26px 20px;
+  border:1px solid var(--b);
+  background:linear-gradient(180deg, var(--s) 0%, #050505 100%);
+  text-align:center;
+}
+.cap-node--parent{border-color:var(--o);box-shadow:0 0 24px var(--glow-o-soft)}
+.cap-node--sub{border-color:var(--g)}
+.cap-node--invest{border-color:var(--o);max-width:640px;box-shadow:0 0 24px var(--glow-o-soft)}
+.cap-node__eyebrow{
+  font-family:var(--m);
+  font-size:9px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  color:var(--o);
+  margin-bottom:8px;
+}
+.cap-node--sub .cap-node__eyebrow{color:var(--g)}
+.cap-node__title{
+  font-family:var(--f);
+  font-size:22px;
+  font-weight:700;
+  color:#fff;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+.cap-node__ticker{
+  font-family:var(--m);
+  font-size:10px;
+  color:var(--ts);
+  letter-spacing:0.5px;
+  margin-bottom:14px;
+}
+.cap-node__facts{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:16px 28px;
+  padding-top:12px;
+  border-top:1px solid var(--bl);
+}
+.cap-node__facts > div{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  font-family:var(--m);
+  gap:3px;
+}
+.cap-fact__k{
+  font-size:8px;
+  font-weight:600;
+  color:var(--tm);
+  text-transform:uppercase;
+  letter-spacing:1.2px;
+}
+.cap-fact__v{
+  font-size:11px;
+  color:#fff;
+  font-weight:500;
+}
+
+/* Connector (SVG line between nodes) */
+.cap-connector{
+  width:160px;
+  height:72px;
+  overflow:visible;
+  margin-top:-1px;
+}
+.cap-connector .cap-line{
+  stroke-dasharray:100;
+  stroke-dashoffset:100;
+  transition:stroke-dashoffset 1.2s cubic-bezier(0.16,1,0.3,1);
+}
+.cap-diagram.is-drawn .cap-line{stroke-dashoffset:0}
+.cap-connector__label{
+  font-family:var(--m);
+  font-size:9px;
+  color:var(--tm);
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  margin-top:-60px;
+  margin-bottom:46px;
+  text-align:center;
+  padding:3px 8px;
+  background:var(--bg);
+  position:relative;
+  z-index:1;
+}
+
+/* Investor badges */
+.cap-badges{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:16px;
+  padding-top:14px;
+  border-top:1px solid var(--bl);
+}
+@media(min-width:640px){
+  .cap-badges{flex-direction:row;justify-content:center;gap:12px}
+}
+.cap-badge{
+  font-family:var(--m);
+  font-size:11px;
+  font-weight:500;
+  padding:8px 14px;
+  border:1px solid var(--bl);
+  letter-spacing:0.5px;
+  background:var(--s2);
+  transition:all 0.25s var(--ease);
+  animation:cap-badge-pulse 3s ease infinite;
+}
+.cap-badge:hover{transform:translateY(-1px);box-shadow:0 4px 20px -8px currentColor}
+.cap-badge--o{color:var(--o);border-color:var(--o);animation-delay:0s}
+.cap-badge--b{color:var(--b-a);border-color:var(--b-a);animation-delay:0.4s}
+.cap-badge--g{color:var(--g);border-color:var(--g);animation-delay:0.8s}
+@keyframes cap-badge-pulse{
+  0%,100%{box-shadow:0 0 0 0 transparent}
+  50%{box-shadow:0 0 16px -4px currentColor}
+}
+
+/* ═══ RISK ═══ */
+.risk{padding:24px 26px}
+.risk__label{
+  display:inline-block;
+  font-family:var(--m);
+  font-size:9px;
+  font-weight:700;
+  color:var(--o);
+  border:1px solid var(--o);
+  padding:4px 10px;
+  letter-spacing:1.5px;
+  margin-bottom:14px;
+  text-transform:uppercase;
+}
+.risk__body{
+  font-family:var(--m);
+  font-size:11px;
+  color:var(--tm);
+  line-height:1.7;
+  font-style:italic;
+}
+
+/* ═══ CTA FOOTER ═══ */
+.cta{
+  padding:64px 32px;
+  text-align:center;
+  border:1px solid var(--b);
+  background:linear-gradient(180deg, var(--s) 0%, #050505 100%);
+  position:relative;
+  margin-top:64px;
+}
+.cta::before{
+  content:'';
+  position:absolute;
+  top:-1px;
+  left:0;
+  right:0;
+  height:2px;
+  background:var(--o);
+  box-shadow:0 0 24px var(--o);
+}
+.cta__meta{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  margin-bottom:20px;
+  font-family:var(--m);
+  font-size:10px;
+  font-weight:500;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+}
+.cta__title{
+  font-family:var(--f);
+  font-size:42px;
+  font-weight:700;
+  color:#fff;
+  letter-spacing:0.04em;
+  margin-bottom:32px;
+  text-transform:uppercase;
+}
+.cta__kpis{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1px;
+  background:var(--b);
+  border:1px solid var(--b);
+  max-width:680px;
+  margin:0 auto 32px;
+}
+.cta__kpis>div{background:var(--s);padding:18px 12px}
+.cta__kpi-v{font-family:var(--m);font-size:24px;color:var(--o);font-weight:300;font-variant-numeric:tabular-nums}
+.cta__kpis>div:nth-child(2) .cta__kpi-v{color:var(--b-a)}
+.cta__kpis>div:nth-child(3) .cta__kpi-v{color:var(--g)}
+.cta__kpis>div:nth-child(4) .cta__kpi-v{color:var(--p)}
+.cta__kpi-l{font-family:var(--f);font-size:8px;color:var(--tm);text-transform:uppercase;letter-spacing:1.5px;margin-top:6px;font-weight:600}
+.cta__upside{
+  font-family:var(--m);
+  font-size:13px;
+  color:var(--ts);
+  margin-bottom:24px;
+}
+.cta__upside .o{color:var(--o)}
+.cta__upside .b{color:var(--b-a)}
+.cta__upside .g{color:var(--g)}
+.cta__contact{
+  font-family:var(--m);
+  font-size:13px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  align-items:center;
+}
+.cta__contact a{
+  background:var(--o-grad);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  color:transparent;
+  text-decoration:none;
+  border-bottom:1px dashed var(--o);
+  padding-bottom:1px;
+  transition:all 0.2s var(--ease);
+}
+.cta__contact a:hover{filter:drop-shadow(0 0 10px var(--glow-o));border-bottom-color:var(--ol)}
+.cta__contact a:focus-visible{outline:2px solid var(--ol);outline-offset:4px}
+.cta__contact .meta{color:var(--tm);font-size:10px}
+
+/* ═══ FOOTER STRIP ═══ */
+.foot{
+  padding:24px 0 80px;
+  text-align:center;
+  font-family:var(--m);
+  font-size:9px;
+  color:var(--tm);
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+/* ═══ WATERMARK ═══ */
+.watermark{
+  position:fixed;
+  bottom:12px;
+  right:14px;
+  font-family:var(--m);
+  font-size:8px;
+  color:var(--tm);
+  pointer-events:none;
+  z-index:30;
+  letter-spacing:0.5px;
+  background:rgba(0,0,0,0.5);
+  padding:4px 8px;
+  border:1px solid var(--bl);
+  user-select:none;
+  opacity:0.7;
+  max-width:380px;
+  text-align:right;
+}
+.watermark span{color:var(--tx)}
+.watermark .e{color:var(--ts)}
+
+/* ═══ SCROLL REVEAL — v2.1 disabled; sections now render static ═══ */
+.reveal{opacity:1;transform:none}
+.reveal.is-visible{opacity:1;transform:none}
+
+/* ═══ RESPONSIVE — v2.2 mobile pass ═══ */
+
+/* ── Tablet (1024px and below) ── */
+@media(max-width:1024px){
+  .g4{grid-template-columns:repeat(2,1fr)}
+  .g6{grid-template-columns:repeat(3,1fr)}
+  .g-2-1, .g-1-2{grid-template-columns:1fr}
+  .road__track{grid-template-columns:1fr 1fr}
+  .step__arrow{display:none}
+  .team__cards--3{grid-template-columns:1fr 1fr}
+}
+
+/* ── Tablet / large phone (820px and below) ── */
+@media(max-width:820px){
+  .wrap{padding:0 18px}
+  .nav__in{padding:0 18px;gap:6px}
+  .nav__brand{font-size:11px;letter-spacing:1px}
+  .nav__cycle, .nav__time{display:none}
+  .nav__user{font-size:8px}
+  .nav__d{display:none}
+  .nav__r{gap:8px}
+}
+
+/* ── Mobile (640px and below) ── */
+@media(max-width:640px){
+  .wrap{padding:0 14px}
+  .g3, .g2, .g4, .g5, .g6{grid-template-columns:1fr}
+  .road__track{grid-template-columns:1fr}
+
+  /* Nav compacts: two lines if needed */
+  .nav__in{height:52px}
+  .nav__canvas{width:38px;height:28px}
+  .nav__brand{font-size:11px}
+  .nav__user{display:none}
+
+  /* Section headers collapse to stacked */
+  .sec{
+    margin:48px 0 18px;
+    padding-top:18px;
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+  .sec__meta{flex-direction:row;align-items:center;gap:10px;padding-top:0}
+  .sec__label{margin-top:0}
+  .sec__title{font-size:22px}
+  .sec__lead{font-size:11px}
+
+  /* Hero compacts */
+  .hero{padding:32px 0 20px}
+  .hero__meta{font-size:9px;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+  .hero__title{font-size:clamp(40px, 13vw, 64px)}
+  .hero__sub{font-size:12px;margin-bottom:26px}
+
+  /* Email gate — flame takes priority, form below */
+  .gate{padding:16px}
+  .gate__card{padding:20px 20px 22px;max-width:100%}
+  .gate__flame-wrap{height:180px}
+  .gate__flame-canvas{width:100%;height:180px}
+  .gate__title{font-size:24px}
+  .gate__sub{font-size:8px;letter-spacing:1.8px}
+  .gate__parent{font-size:9px;margin-bottom:18px}
+  .gate__input{padding:11px 12px;font-size:12px}
+  .gate__btn{padding:11px;font-size:10px;letter-spacing:1px}
+  .gate__flame-hint{font-size:8px;bottom:-2px}
+
+  /* Market nested boxes collapse indents on mobile */
+  .market{padding:16px 14px 20px}
+  .market__layer{padding:14px 14px}
+  .market__layer--sam, .market__layer--som{margin-left:10px;margin-top:20px}
+  .market__row{flex-direction:column;align-items:flex-start;gap:6px}
+  .market__val{font-size:22px}
+  .market__desc{font-size:11px}
+  .market__caption{font-size:9px}
+  .market__arrow{font-size:8px;left:8px;padding:2px 8px}
+  .market__dots{display:none}
+  .market__tag{letter-spacing:1.4px}
+
+  /* Cap diagram */
+  .cap-diagram{padding:28px 12px 32px}
+  .cap-node{padding:16px 14px 14px}
+  .cap-node__title{font-size:17px}
+  .cap-node__ticker{font-size:9px}
+  .cap-node__facts{flex-direction:column;align-items:flex-start;gap:10px}
+  .cap-node__facts > div{align-items:flex-start}
+  .cap-fact__v{font-size:10px}
+  .cap-connector{width:100%;height:54px}
+  .cap-connector__label{font-size:8px;margin-top:-44px;margin-bottom:32px}
+  .cap-badges{flex-direction:column;gap:8px}
+  .cap-badge{font-size:10px;padding:7px 12px;text-align:center}
+
+  /* Pillars, features, steps, whys, toks — all collapse to single col */
+  .pillar, .feat, .step, .why, .tok{padding:18px 16px}
+  .pillar__title{font-size:16px}
+  .step__num{font-size:36px}
+  .step__title{font-size:15px}
+  .rev__cell{padding:14px 16px}
+  .rev__title{font-size:13px}
+
+  /* Use of funds bars compact */
+  .fund{padding:18px 14px}
+  .fund__row{
+    grid-template-columns:1fr auto;
+    grid-template-areas:'label amt' 'bar bar' 'pct pct';
+    gap:4px 10px;
+    margin-bottom:20px;
+  }
+  .fund__row > div:first-child{grid-area:label}
+  .fund__amt{grid-area:amt;font-size:14px}
+  .fund__bar{grid-area:bar;margin-top:6px}
+  .fund__pct{grid-area:pct;text-align:left;font-size:9px;margin-top:2px}
+  .fund__label{font-size:11px}
+  .fund__sub{font-size:8px}
+  .fund__callout{font-size:10px;padding:12px 14px}
+
+  /* Roadmap */
+  .road__phase{padding:18px 16px}
+  .road__label{font-size:15px}
+  .road__list li{font-size:10px}
+
+  /* Team */
+  .team__cards, .team__cards--3, .team__cards--2{grid-template-columns:1fr}
+  .team__group{padding:16px 14px}
+  .team__group-head{font-size:8px;letter-spacing:1.2px}
+  .team__card{padding:16px 14px 18px}
+  .team__photo{width:56px;height:56px}
+  .team__name{font-size:13px}
+  .team__role{font-size:9px}
+  .team__bio{font-size:10px}
+  .parent-card{padding:18px 16px}
+  .parent-card__title{font-size:16px}
+  .parent-card__list li{font-size:11px}
+
+  /* Thesis */
+  .thesis-body{padding:18px 16px;font-size:11px}
+  .thesis-glance__row{padding:10px 14px;grid-template-columns:110px 1fr}
+  .thesis-glance__l{font-size:8px}
+  .thesis-glance__v{font-size:10px}
+
+  /* Problem */
+  .prob{padding:18px 16px}
+  .prob__title{font-size:18px}
+  .prob__hook{font-size:15px;margin:10px 0 14px}
+  .prob__list li{font-size:11px}
+
+  /* Deal */
+  .deal{padding:22px 16px}
+  .deal__num{font-size:30px}
+  .deal__title{font-size:16px}
+  .deal__terms{font-size:10px;padding:12px 14px}
+
+  /* Risk */
+  .risk{padding:18px 16px}
+  .risk__body{font-size:10px}
+
+  /* CTA */
+  .cta{padding:42px 18px}
+  .cta__meta{flex-wrap:wrap;justify-content:center;gap:10px;font-size:9px}
+  .cta__title{font-size:28px;margin-bottom:22px}
+  .cta__kpis{grid-template-columns:1fr 1fr;max-width:360px}
+  .cta__kpi-v{font-size:18px}
+  .cta__kpi-l{font-size:7px}
+  .cta__upside{font-size:11px}
+  .cta__contact{font-size:11px}
+
+  /* Panel headers compact */
+  .ph{padding:7px 12px}
+  .pt{font-size:8px;letter-spacing:1.1px}
+
+  /* Watermark minimal on mobile */
+  .watermark{font-size:7px;max-width:70vw;padding:3px 6px;bottom:8px;right:8px}
+}
+
+/* ── Small phone (380px and below) ── */
+@media(max-width:380px){
+  .hero__title{font-size:40px}
+  .sec__title{font-size:19px}
+  .gate__title{font-size:22px}
+  .gate__flame-wrap{height:160px}
+  .gate__flame-canvas{height:160px}
+  .cta__title{font-size:24px}
+  .kpi__v{font-size:22px}
+  .nav__brand{font-size:10px}
+  .nav__canvas{width:32px;height:24px}
+}
+
+/* ═══ REDUCED MOTION ═══ */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important;animation-iteration-count:1!important}
+  .road__phase--current::before{animation:none!important}
+  .hero__cursor{animation:none;opacity:1}
+}
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     EMAIL GATE
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="gate" id="gate">
+  <div class="gate__bg"></div>
+  <div class="gate__card">
+    <span class="gate__corner gate__corner--tl"></span>
+    <span class="gate__corner gate__corner--tr"></span>
+    <span class="gate__corner gate__corner--bl"></span>
+    <span class="gate__corner gate__corner--br"></span>
+
+    <div class="gate__flame-wrap">
+      <canvas id="gateFlame" class="gate__flame-canvas" width="400" height="320" role="img" aria-label="Interactive forge flame. Move your cursor or tap to interact. Decorative."></canvas>
+      <span class="gate__flame-hint"><span class="arrow">◂</span> move your cursor · click to spark <span class="arrow">▸</span></span>
+    </div>
+
+    <div class="gate__sub">⟶ Investor Dataroom · Confidential</div>
+    <h1 class="gate__title">AGENT FORGE</h1>
+    <div class="gate__parent">A Subsidiary of <span>TenX Protocols Inc.</span> · <span>TSXv: TNX</span></div>
+
+    <form class="gate__form" id="gateForm" autocomplete="on">
+      <input
+        type="email"
+        class="gate__input"
+        id="gateInput"
+        placeholder="you@company.com"
+        autocomplete="email"
+        required
+        aria-label="Your email address">
+      <button type="submit" class="gate__btn" id="gateBtn">
+        <span>ACCESS DATAROOM</span>
+        <span>→</span>
+      </button>
+      <div class="gate__err" id="gateErr"></div>
+    </form>
+
+    <div class="gate__legal">
+      By accessing this dataroom you agree to treat its contents as <strong>confidential</strong>.<br>
+      All activity is logged and tied to your email for security and audit purposes.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     NAVIGATION
+     ═══════════════════════════════════════════════════════════════════ -->
+<nav class="nav" id="nav">
+  <div class="nav__progress" id="navProgress"></div>
+  <div class="nav__in">
+    <canvas id="particleCanvas" width="48" height="32" class="nav__canvas" aria-hidden="true"></canvas>
+    <span class="nav__brand"><span class="nav__brand--mark">▲</span> AGENT FORGE</span>
+    <div class="nav__d"></div>
+    <span class="nav__cycle" id="navCycle">SUBSIDIARY · TSXv: TNX</span>
+    <div class="nav__r">
+      <div class="nav__user" id="navUser">USER <span>—</span></div>
+      <div class="nav__d"></div>
+      <div class="nav__time" id="navTime">--:--:--</div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     STICKY TOC SIDEBAR (desktop only)
+     ═══════════════════════════════════════════════════════════════════ -->
+<aside class="toc" id="toc" aria-label="Section navigation">
+  <div class="toc__head">
+    <span class="toc__head-tag">[ INDEX ]</span>
+    <span class="toc__head-line"></span>
+  </div>
+  <a class="toc__item active" href="#hero" data-target="hero"><span class="toc__num">01</span><span class="toc__label">Hero</span></a>
+  <a class="toc__item" href="#thesis" data-target="thesis"><span class="toc__num">02</span><span class="toc__label">Overview</span></a>
+  <a class="toc__item" href="#problem" data-target="problem"><span class="toc__num">03</span><span class="toc__label">Problem</span></a>
+  <a class="toc__item" href="#market" data-target="market"><span class="toc__num">04</span><span class="toc__label">Market</span></a>
+  <a class="toc__item" href="#solution" data-target="solution"><span class="toc__num">05</span><span class="toc__label">Solution</span></a>
+  <a class="toc__item" href="#platform" data-target="platform"><span class="toc__num">06</span><span class="toc__label">Platform</span></a>
+  <a class="toc__item" href="#how" data-target="how"><span class="toc__num">07</span><span class="toc__label">How it Works</span></a>
+  <a class="toc__item" href="#business" data-target="business"><span class="toc__num">08</span><span class="toc__label">Business</span></a>
+  <a class="toc__item" href="#whynow" data-target="whynow"><span class="toc__num">09</span><span class="toc__label">Why Now</span></a>
+  <a class="toc__item" href="#roadmap" data-target="roadmap"><span class="toc__num">10</span><span class="toc__label">Roadmap</span></a>
+  <a class="toc__item" href="#team" data-target="team"><span class="toc__num">11</span><span class="toc__label">Team</span></a>
+  <a class="toc__item" href="#token" data-target="token"><span class="toc__num">12</span><span class="toc__label">Token</span></a>
+  <a class="toc__item" href="#funds" data-target="funds"><span class="toc__num">13</span><span class="toc__label">Use of Funds</span></a>
+  <a class="toc__item" href="#deal" data-target="deal"><span class="toc__num">14</span><span class="toc__label">Deal Terms</span></a>
+  <a class="toc__item" href="#cap" data-target="cap"><span class="toc__num">15</span><span class="toc__label">Cap Structure</span></a>
+  <a class="toc__item" href="#risk" data-target="risk"><span class="toc__num">16</span><span class="toc__label">Risk</span></a>
+  <a class="toc__item" href="#cta" data-target="cta"><span class="toc__num">17</span><span class="toc__label">Join Round</span></a>
+</aside>
+
+<div class="wrap">
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [01] HERO
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="hero" id="hero" aria-labelledby="hero-title">
+  <div class="hero__meta">
+    <span class="sec__spin hero__spin" aria-hidden="true">&#10240;</span>
+    <span class="hero__num">01 / 17</span>
+    <span class="hero__label">Investor Dataroom · Confidential</span>
+  </div>
+  <h1 class="hero__title" id="hero-title" data-text="AGENT FORGE">AGENT FORGE</h1>
+  <div class="hero__sub" id="heroSub"><span id="heroSubText"></span><span class="hero__cursor"></span></div>
+
+  <div class="g g6 mt24" role="group" aria-label="Key deal metrics">
+    <div class="kpi"><div class="kpi__l">Target Raise</div><div class="kpi__v kpi__v--o">$3.0M</div><div class="kpi__s">Seed round</div></div>
+    <div class="kpi"><div class="kpi__l">TenX Lead</div><div class="kpi__v kpi__v--b">$500K</div><div class="kpi__s">Parent commitment</div></div>
+    <div class="kpi"><div class="kpi__l">TNX Price</div><div class="kpi__v kpi__v--g">$0.17</div><div class="kpi__s">TSXv: TNX</div></div>
+    <div class="kpi"><div class="kpi__l">Warrant Strike</div><div class="kpi__v kpi__v--p">$1.00</div><div class="kpi__s">On parent TNX</div></div>
+    <div class="kpi"><div class="kpi__l">Roadmap</div><div class="kpi__v kpi__v--s">18 MO</div><div class="kpi__s">To public launch</div></div>
+    <div class="kpi"><div class="kpi__l">Year-3 SOM</div><div class="kpi__v">$215M</div><div class="kpi__s">Target market capture</div></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [02] EXECUTIVE THESIS
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="thesis">
+  <header class="sec">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">02 / 17</span></div>
+      <span class="sec__label">DEAL OVERVIEW</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">Deal Overview</h2>
+    </div>
+  </header>
+
+  <div class="g g-2-1">
+    <div class="acc-o">
+      <div class="ph"><span class="pt pt--o">▸ SUMMARY</span><span class="pt">AGENT FORGE · SEED ROUND</span></div>
+      <div class="thesis-body">
+        <p>Agent Forge is the AI-agent subsidiary of <strong>TenX Protocols Inc.</strong> (TSXv: TNX), a publicly-traded crypto staking infrastructure company. The subsidiary is raising a <strong class="o">$3M seed round</strong> to build a platform where individuals can deploy autonomous AI agents that hold their own crypto wallets, execute real tasks, and generate income on the user's behalf.</p>
+        <p>Two converging forces drive demand: <strong>fear</strong> (40% of enterprise software will embed AI agents by end of 2026 — workers need tools to augment, not be replaced) and <strong>greed</strong> ($3–5T projected agent-mediated commerce by 2030 per McKinsey). Agent Forge sits at the intersection of crypto-native wallets and autonomous AI execution — the rails were built in early 2026 (Coinbase Agentic Wallets, x402, ERC-8004).</p>
+        <p><strong class="o">TenX Protocols commits $500K as lead investor</strong>, demonstrating parent-company conviction. Investors receive <strong>three layered upsides</strong>: (1) direct equity in Agent Forge, (2) pro-rata rights to any tokens the subsidiary creates, and (3) warrants on parent TSXv: TNX struck at $1.00 (currently trading ~$0.17 — material upside if parent appreciates).</p>
+      </div>
+    </div>
+    <div>
+      <div class="ph"><span class="pt pt--o">▸ AT A GLANCE</span></div>
+      <div class="thesis-glance">
+        <div class="thesis-glance__row"><span class="thesis-glance__l">Stage</span><span class="thesis-glance__v">Seed</span></div>
+        <div class="thesis-glance__row"><span class="thesis-glance__l">Instrument</span><span class="thesis-glance__v">Equity + Tokens + Warrants</span></div>
+        <div class="thesis-glance__row"><span class="thesis-glance__l">Target</span><span class="thesis-glance__v o">$3,000,000</span></div>
+        <div class="thesis-glance__row"><span class="thesis-glance__l">Lead</span><span class="thesis-glance__v">TenX ($500K)</span></div>
+        <div class="thesis-glance__row"><span class="thesis-glance__l">TNX Price</span><span class="thesis-glance__v g">$0.17</span></div>
+        <div class="thesis-glance__row"><span class="thesis-glance__l">Warrant Strike</span><span class="thesis-glance__v">$1.00</span></div>
+        <div class="thesis-glance__row"><span class="thesis-glance__l">TGE Target</span><span class="thesis-glance__v">Q1 2027</span></div>
+        <div class="thesis-glance__row"><span class="thesis-glance__l">Contact</span><span class="thesis-glance__v o">mat@tenx.inc</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [03] THE PROBLEM — Two Primal Motivators
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="problem">
+  <header class="sec sec--b">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">03 / 17</span></div>
+      <span class="sec__label">THE PROBLEM</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">Two Primal Motivators Driving Demand</h2>
+    </div>
+  </header>
+
+  <div class="g g2">
+    <div class="acc-o">
+      <div class="prob">
+        <div class="prob__icon">[ ◉ FEAR ]</div>
+        <div class="prob__title">Will AI Replace Me?</div>
+        <ul class="prob__list">
+          <li>40% of enterprise software will embed AI agents by end of 2026 <span class="cite">(Gartner, 2025)</span></li>
+          <li>Junior roles seeing 13% employment decline in AI-exposed jobs <span class="cite">(Stanford / ADP, 2025)</span></li>
+          <li>40 job categories with high AI exposure identified <span class="cite">(Microsoft, 2025)</span></li>
+          <li><strong>Workers need tools to augment, not be replaced.</strong></li>
+        </ul>
+      </div>
+    </div>
+    <div class="acc-b">
+      <div class="prob prob--blue">
+        <div class="prob__icon">[ $ GREED ]</div>
+        <div class="prob__title">How Can AI Make Me Money?</div>
+        <ul class="prob__list">
+          <li>92% of early AI adopters report positive ROI (avg 41% return) <span class="cite">(Snowflake / ESG, 2025)</span></li>
+          <li>Agent-mediated commerce projected at $3–5T by 2030 <span class="cite">(McKinsey)</span></li>
+          <li>AI agents processing 100M+ transactions via crypto rails <span class="cite">(Forbes)</span></li>
+          <li><strong>Individuals want their own agents working 24/7.</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [04] MARKET OPPORTUNITY — $52B @ 46% CAGR
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="market">
+  <header class="sec sec--g">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">04 / 17</span></div>
+      <span class="sec__label">MARKET OPPORTUNITY</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">A $52B Market Growing at 46% CAGR</h2>
+    </div>
+  </header>
+
+  <div class="g g-2-1">
+    <div>
+      <div class="ph"><span class="pt pt--o">▸ ADDRESSABLE MARKET</span><span class="pt">TAM → SAM → SOM</span></div>
+      <div class="market">
+
+        <div class="market__layer market__layer--tam">
+          <div class="market__head">
+            <span class="market__tag">TAM</span>
+            <span class="market__dots" aria-hidden="true">· · · · · · · · · · · · · · · · · · · · · · · ·</span>
+          </div>
+          <div class="market__row">
+            <div class="market__val">$52.6B</div>
+            <div class="market__body">
+              <div class="market__desc">AI Agents Market by 2030</div>
+              <div class="market__caption">Total addressable market across all agent categories</div>
+            </div>
+          </div>
+
+          <div class="market__layer market__layer--sam">
+            <div class="market__arrow">▼ 8.2% addressable via crypto-native rails</div>
+            <div class="market__head">
+              <span class="market__tag">SAM</span>
+              <span class="market__dots" aria-hidden="true">· · · · · · · · · · · · · · · ·</span>
+            </div>
+            <div class="market__row">
+              <div class="market__val">$4.3B</div>
+              <div class="market__body">
+                <div class="market__desc">Crypto × AI Agent Sector</div>
+                <div class="market__caption">Agents with native wallet + on-chain execution</div>
+              </div>
+            </div>
+
+            <div class="market__layer market__layer--som">
+              <div class="market__arrow">▼ 5.0% target capture by Year 3</div>
+              <div class="market__head">
+                <span class="market__tag">SOM</span>
+                <span class="market__dots" aria-hidden="true">· · · · · · · ·</span>
+              </div>
+              <div class="market__row">
+                <div class="market__val">$215M</div>
+                <div class="market__body">
+                  <div class="market__desc">Year-3 Target</div>
+                  <div class="market__caption">Platform revenue + marketplace + data licensing</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div>
+      <div class="ph"><span class="pt pt--o">▸ KEY DATA POINTS</span></div>
+      <div class="g" style="grid-template-columns:1fr;border:none">
+        <div class="kpi" style="text-align:left;padding:16px 22px;border-bottom:1px solid var(--bl);background:var(--s)">
+          <div class="kpi__l" style="margin-bottom:4px">CAGR THROUGH 2030</div>
+          <div class="kpi__v kpi__v--o" style="font-size:24px">46.3%</div>
+        </div>
+        <div class="kpi" style="text-align:left;padding:16px 22px;border-bottom:1px solid var(--bl);background:var(--s)">
+          <div class="kpi__l" style="margin-bottom:4px">CRYPTO × AI PROJECTS FUNDED 2025</div>
+          <div class="kpi__v kpi__v--b" style="font-size:24px">282+</div>
+        </div>
+        <div class="kpi" style="text-align:left;padding:16px 22px;border-bottom:1px solid var(--bl);background:var(--s)">
+          <div class="kpi__l" style="margin-bottom:4px">AGENT COMMERCE BY 2030</div>
+          <div class="kpi__v kpi__v--g" style="font-size:24px">$3–5T</div>
+          <div class="kpi__s">Source: McKinsey</div>
+        </div>
+        <div class="kpi" style="text-align:left;padding:16px 22px;background:var(--s)">
+          <div class="kpi__l" style="margin-bottom:4px">ENTERPRISES DEPLOYING AGENTS BY 2027</div>
+          <div class="kpi__v kpi__v--p" style="font-size:24px">50%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [05] THE SOLUTION — Deploy / Transact / Evolve
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="solution">
+  <header class="sec">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">05 / 17</span></div>
+      <span class="sec__label">THE SOLUTION</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">Your Personal AI Workforce</h2>
+      <p class="sec__lead">Agent Forge is a platform where anyone can deploy, manage, and communicate with AI agents that have their own crypto wallets, can execute real tasks, work on documents, and generate income on your behalf.</p>
+    </div>
+  </header>
+
+  <div class="g g3">
+    <div class="acc-o"><div class="pillar">
+      <div class="pillar__icon">[◤◢]</div>
+      <div class="pillar__label">▸ Deploy</div>
+      <div class="pillar__title">Launch Agents Instantly</div>
+      <div class="pillar__body">Choose from pre-built agent templates or create custom agents. Each agent is autonomous, task-oriented, and works 24/7.</div>
+    </div></div>
+
+    <div class="acc-b"><div class="pillar pillar--b">
+      <div class="pillar__icon">[ ⌹ ]</div>
+      <div class="pillar__label">▸ Transact</div>
+      <div class="pillar__title">Crypto-Native Wallets</div>
+      <div class="pillar__body">Every agent gets its own wallet. They can earn, spend, and manage digital assets autonomously with full transparency.</div>
+    </div></div>
+
+    <div class="acc-g"><div class="pillar pillar--g">
+      <div class="pillar__icon">[ ✦ ]</div>
+      <div class="pillar__label">▸ Evolve</div>
+      <div class="pillar__title">Learn &amp; Improve</div>
+      <div class="pillar__body">Agents learn from your workflows, adapt to your needs, and become more effective over time. Your AI workforce grows smarter.</div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [06] PLATFORM FEATURES — 6 capabilities
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="platform">
+  <header class="sec sec--b">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">06 / 17</span></div>
+      <span class="sec__label">PLATFORM FEATURES</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">Everything Users Need to Deploy Their AI Army</h2>
+    </div>
+  </header>
+
+  <div class="g g3">
+    <div class="feat">
+      <div class="feat__icon feat__icon--o">[◤◢]</div>
+      <div class="feat__title feat__title--o">Agent Marketplace</div>
+      <div class="feat__body">Pre-built agents for trading, content creation, research, customer outreach, and more.</div>
+    </div>
+    <div class="feat">
+      <div class="feat__icon feat__icon--o">[ ⌹ ]</div>
+      <div class="feat__title feat__title--o">Integrated Wallets</div>
+      <div class="feat__body">Every agent has a crypto wallet for autonomous transactions and earnings.</div>
+    </div>
+    <div class="feat">
+      <div class="feat__icon feat__icon--b">&lt;/&gt;</div>
+      <div class="feat__title feat__title--b">Agent Builder</div>
+      <div class="feat__body">No-code builder for custom agents tailored to specific workflows and goals.</div>
+    </div>
+    <div class="feat">
+      <div class="feat__icon feat__icon--p">[⊞⊟]</div>
+      <div class="feat__title feat__title--p">Multi-Agent Orchestration</div>
+      <div class="feat__body">Deploy agent teams that collaborate, delegate, and complete complex tasks together.</div>
+    </div>
+    <div class="feat">
+      <div class="feat__icon feat__icon--o">[ ▮▮▮ ]</div>
+      <div class="feat__title feat__title--o">Real-Time Dashboard</div>
+      <div class="feat__body">Monitor all agent activity, earnings, task completion, and performance metrics.</div>
+    </div>
+    <div class="feat">
+      <div class="feat__icon feat__icon--b">[ ⛨ ]</div>
+      <div class="feat__title feat__title--b">Enterprise Security</div>
+      <div class="feat__body">Role-based access, audit trails, and compliance-ready infrastructure.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [07] HOW IT WORKS — 3 steps
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="how">
+  <header class="sec sec--b">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">07 / 17</span></div>
+      <span class="sec__label">HOW IT WORKS</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">Three Steps to Your AI Workforce</h2>
+    </div>
+  </header>
+
+  <div class="g g3">
+    <div class="step">
+      <div class="step__num">01</div>
+      <div class="step__title">Choose Your Agent</div>
+      <div class="step__body">Browse the Agent Marketplace or build a custom agent using our no-code builder. Select from income-generating agents, career-protection agents, or productivity agents.</div>
+      <div class="step__arrow">▸</div>
+    </div>
+    <div class="step">
+      <div class="step__num">02</div>
+      <div class="step__title">Configure &amp; Fund</div>
+      <div class="step__body">Set your agent's objectives, connect your wallet, and fund its operations. Each agent gets its own crypto wallet for transparent, autonomous transactions.</div>
+      <div class="step__arrow">▸</div>
+    </div>
+    <div class="step">
+      <div class="step__num">03</div>
+      <div class="step__title">Deploy &amp; Monitor</div>
+      <div class="step__body">Launch your agent and watch it work. Track performance, earnings, and task completion in real-time. Communicate with your agents via chat interface.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [08] BUSINESS MODEL — Revenue streams
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="business">
+  <header class="sec sec--b">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">08 / 17</span></div>
+      <span class="sec__label">BUSINESS MODEL</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">Multiple Revenue Streams</h2>
+      <p class="sec__lead">Four revenue lines that scale with usage: platform subscription (Free / Pro $29/mo / Enterprise $99/mo), 1–3% transaction fees, a 20% marketplace cut on third-party agents, and anonymized agent-interaction data licensing to AI labs.</p>
+    </div>
+  </header>
+
+  <div class="g" style="grid-template-columns:1fr">
+    <div>
+      <div class="ph"><span class="pt pt--o">▸ REVENUE STREAMS</span><span class="pt">FOUR PRIMARY LINES</span></div>
+      <div class="rev">
+        <div class="rev__row">
+          <div class="rev__bar"></div>
+          <div class="rev__cell">
+            <div class="rev__title">Platform Subscription</div>
+            <div class="rev__body">Monthly SaaS tiers: Free, <strong style="color:#fff">Pro $29/mo</strong>, <strong style="color:#fff">Enterprise $99/mo</strong>. Access to agent deployment, dashboard, and marketplace.</div>
+          </div>
+        </div>
+        <div class="rev__row rev__row--b">
+          <div class="rev__bar"></div>
+          <div class="rev__cell">
+            <div class="rev__title">Transaction Fees</div>
+            <div class="rev__body"><strong style="color:#fff">1–3% fee</strong> on all agent-executed transactions, trades, and earnings processed through the platform.</div>
+          </div>
+        </div>
+        <div class="rev__row rev__row--g">
+          <div class="rev__bar"></div>
+          <div class="rev__cell">
+            <div class="rev__title">Agent Marketplace</div>
+            <div class="rev__body">Revenue share with third-party agent creators. <strong style="color:#fff">20% platform fee</strong> on marketplace agent sales and subscriptions.</div>
+          </div>
+        </div>
+        <div class="rev__row rev__row--p">
+          <div class="rev__bar"></div>
+          <div class="rev__cell">
+            <div class="rev__title">Anonymized Agent Interaction Data</div>
+            <div class="rev__body">Intent-to-action pairs, reasoning traces, and outcome-labeled sessions — licensed to AI labs and Web3 datanets for domain-specific model fine-tuning.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [09] WHY NOW — Convergence of forces
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="whynow">
+  <header class="sec">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">09 / 17</span></div>
+      <span class="sec__label">WHY NOW</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">Perfect Convergence of Forces</h2>
+    </div>
+  </header>
+
+  <div class="g g2">
+    <div class="acc-b">
+      <div class="why why--b">
+        <div class="why__icon">[ ⨀ ]</div>
+        <div class="why__title">AI Agents Hit Mainstream</div>
+        <div class="why__body"><strong>OpenAI, Nvidia, Salesforce</strong> all launching agent platforms in 2025–2026. The infrastructure layer is ready.</div>
+      </div>
+    </div>
+    <div class="acc-o">
+      <div class="why">
+        <div class="why__icon">[ ⌹ ]</div>
+        <div class="why__title">Crypto Wallets for Agents</div>
+        <div class="why__body"><strong>Coinbase Agentic Wallets, x402 protocol, ERC-8004 standard</strong> all launched in early 2026. Agents can now transact autonomously.</div>
+      </div>
+    </div>
+    <div class="acc-g">
+      <div class="why why--g">
+        <div class="why__icon">[ ◉ ]</div>
+        <div class="why__title">Mass Job Anxiety</div>
+        <div class="why__body"><strong>40% of enterprise software</strong> embedding AI by end of 2026. Workers desperately need tools to stay relevant and productive.</div>
+      </div>
+    </div>
+    <div class="acc-p">
+      <div class="why why--p">
+        <div class="why__icon">[ $ ]</div>
+        <div class="why__title">Agent-Mediated Economy</div>
+        <div class="why__body"><strong>McKinsey projects $3–5T</strong> in agent commerce by 2030. Coinbase x402 already processing 100M+ transactions. The rails are built.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [10] 18-MONTH ROADMAP
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="roadmap">
+  <header class="sec sec--g">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">10 / 17</span></div>
+      <span class="sec__label">ROADMAP</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">18-Month Execution Plan</h2>
+    </div>
+  </header>
+
+  <div class="g" style="grid-template-columns:1fr">
+    <div>
+      <div class="ph"><span class="pt pt--o">▸ EXECUTION TIMELINE</span><span class="pt">FOUNDATION → BUILD → LAUNCH → SCALE</span></div>
+      <div class="road">
+        <div class="road__track">
+
+          <div class="road__phase road__phase--current">
+            <div class="road__top">
+              <span class="road__q">Q2 2026</span>
+              <span class="road__status road__status--current">● CURRENT</span>
+            </div>
+            <div class="road__label">Foundation</div>
+            <ul class="road__list">
+              <li>Close seed round</li>
+              <li>Core team hiring (8–10 people)</li>
+              <li>Platform architecture finalization</li>
+              <li>Agent SDK v1 development</li>
+            </ul>
+          </div>
+
+          <div class="road__phase">
+            <div class="road__top">
+              <span class="road__q">Q3–Q4 2026</span>
+              <span class="road__status">○ PHASE 02</span>
+            </div>
+            <div class="road__label">Build</div>
+            <ul class="road__list">
+              <li>Platform beta launch</li>
+              <li>First 10 agent templates</li>
+              <li>Wallet integration (Solana, Base)</li>
+              <li>Community early access program</li>
+            </ul>
+          </div>
+
+          <div class="road__phase">
+            <div class="road__top">
+              <span class="road__q">Q1 2027</span>
+              <span class="road__status">○ PHASE 03</span>
+            </div>
+            <div class="road__label">Launch</div>
+            <ul class="road__list">
+              <li>Public platform launch</li>
+              <li>Agent Marketplace opens</li>
+              <li>Token generation event</li>
+              <li>50+ agent templates live</li>
+            </ul>
+          </div>
+
+          <div class="road__phase">
+            <div class="road__top">
+              <span class="road__q">Q2–Q3 2027</span>
+              <span class="road__status">○ PHASE 04</span>
+            </div>
+            <div class="road__label">Scale</div>
+            <ul class="road__list">
+              <li>Enterprise tier launch</li>
+              <li>Multi-chain expansion</li>
+              <li>Agent creator program</li>
+              <li>Target 10K+ active users</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [11] TEAM & BACKING — Extended (Agent Forge + TenX exec + board)
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="team">
+  <header class="sec sec--p">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">11 / 17</span></div>
+      <span class="sec__label">TEAM & BACKING</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">Backed by Public Market Infrastructure</h2>
+    </div>
+  </header>
+
+  <div class="g g-1-2">
+    <div class="acc-o">
+      <div class="ph"><span class="pt pt--o">▸ PARENT COMPANY</span><span class="pt">TSXv: TNX</span></div>
+      <div class="parent-card">
+        <div class="parent-card__title">TenX Protocols Inc.</div>
+        <div class="parent-card__ticker">TSXv: TNX · Public Since Dec 2025</div>
+        <ul class="parent-card__list">
+          <li>Public since <strong>December 2025</strong>, raised <strong>$33M+</strong></li>
+          <li>Institutional-grade staking infrastructure</li>
+          <li>Validator services on <strong>Solana, Sui, Sei, Tezos</strong></li>
+          <li>DeFi Technologies advisory client</li>
+          <li>Strategic partners: <strong>BONK · Borderless Capital</strong></li>
+        </ul>
+        <div class="parent-card__motto">"<span>Where Networks Become Revenue</span>"</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="ph"><span class="pt pt--o">▸ AGENT FORGE LEADERSHIP</span><span class="pt">3 FOUNDERS</span></div>
+      <div class="team__cards team__cards--3">
+        <div class="team__card">
+          <img class="team__photo" src="assets/team/mat-cybula.jpg" alt="Mat Cybula" loading="lazy">
+          <div>
+            <div class="team__name">Mat Cybula</div>
+            <div class="team__role">Co-Founder &amp; CEO</div>
+          </div>
+          <div class="team__bio">Crypto entrepreneur, 10+ yrs. <strong>MSc, LSE</strong>. Previously CEO/co-founder of <strong>Cryptiv</strong> (acquired by Coinsquare, 2019). Deep crypto/blockchain expertise.</div>
+        </div>
+        <div class="team__card">
+          <img class="team__photo" src="assets/team/filip-cybula.jpg" alt="Filip Cybula" loading="lazy">
+          <div>
+            <div class="team__name">Filip Cybula</div>
+            <div class="team__role">Co-Founder &amp; COO</div>
+          </div>
+          <div class="team__bio">Crypto entrepreneur since 2015. <strong>MSc, Oxford</strong>. Co-founded Cryptiv. Specializes in blockchain fundamentals and crypto-economic structures.</div>
+        </div>
+        <div class="team__card">
+          <img class="team__photo" src="assets/team/geoff-byers.avif" alt="Geoff Byers" loading="lazy">
+          <div>
+            <div class="team__name">Geoff Byers</div>
+            <div class="team__role">CTO</div>
+          </div>
+          <div class="team__bio">Crypto developer, 10+ yrs of building secure systems. Co-founded Cryptiv. Former <strong>CTO of Tetra Trust</strong>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g g2 mt1">
+    <div>
+      <div class="ph"><span class="pt pt--o">▸ TENX PROTOCOLS EXECUTIVE</span><span class="pt">PARENT-CO TEAM</span></div>
+      <div class="team__cards team__cards--2">
+        <div class="team__card">
+          <img class="team__photo" src="assets/team/martin-bui.avif" alt="Martin Bui" loading="lazy">
+          <div>
+            <div class="team__name">Martin Bui</div>
+            <div class="team__role">CFO · TenX Protocols</div>
+          </div>
+          <div class="team__bio">York University, Accounting &amp; Finance. Experience across manufacturing, pharma, crypto. Most recently led financial reporting at <strong>Hut 8 Mining</strong>.</div>
+        </div>
+        <div class="team__card">
+          <img class="team__photo" src="assets/team/jennifer-karkula.png" alt="Jennifer Karkula" loading="lazy">
+          <div>
+            <div class="team__name">Jennifer Karkula</div>
+            <div class="team__role">Head of Comms · TenX</div>
+          </div>
+          <div class="team__bio">Communications leader across <strong>financial services, emerging tech, and publicly traded companies</strong>. Specializes in translating complex concepts into clear narratives.</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="ph"><span class="pt pt--o">▸ BOARD OF DIRECTORS</span><span class="pt">PUBLIC-MARKET OPERATORS</span></div>
+      <div class="team__cards team__cards--2">
+        <div class="team__card">
+          <img class="team__photo" src="assets/team/aydin-kilic.jpg" alt="Aydin Kilic" loading="lazy">
+          <div>
+            <div class="team__name">Aydin Kilic</div>
+            <div class="team__role">Director</div>
+          </div>
+          <div class="team__bio">President/CEO of <strong>HIVE Digital Technologies (TSX-V / NASDAQ: HIVE)</strong>. 20-yr career as entrepreneur and electrical engineer. Founded Fortress Blockchain in 2017.</div>
+        </div>
+        <div class="team__card">
+          <img class="team__photo" src="assets/team/michael-ashby.png" alt="Michael Ashby" loading="lazy">
+          <div>
+            <div class="team__name">Michael Ashby</div>
+            <div class="team__role">Director</div>
+          </div>
+          <div class="team__bio">CEO/CIO of <strong>AlgoQuant</strong> (quant trading firm). Previously led digital asset strategy at <strong>Point72</strong>. Senior roles at multiple investment firms.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [12] TOKEN STRATEGY — Dual-asset upside
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="token">
+  <header class="sec sec--p">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">12 / 17</span></div>
+      <span class="sec__label">TOKEN STRATEGY</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">Token Utility &amp; Mechanics</h2>
+      <p class="sec__lead">The Agent Forge token powers platform execution, governance, and creator incentives. Every agent action consumes tokens, creating persistent demand tied to real platform usage.</p>
+    </div>
+  </header>
+
+  <div class="g g4">
+    <div class="acc-o"><div class="tok tok--o">
+      <div class="tok__icon">[ ⚡ ]</div>
+      <div class="tok__title">Agent Gas Fees</div>
+      <div class="tok__body">Tokens power agent execution. Every agent action consumes tokens, creating persistent demand.</div>
+    </div></div>
+    <div class="acc-b"><div class="tok tok--b">
+      <div class="tok__icon">[ ★ ]</div>
+      <div class="tok__title">Premium Access</div>
+      <div class="tok__body">Stake tokens to unlock advanced agents, higher rate limits, and priority marketplace placement.</div>
+    </div></div>
+    <div class="acc-g"><div class="tok tok--g">
+      <div class="tok__icon">[ ⚖ ]</div>
+      <div class="tok__title">Governance</div>
+      <div class="tok__body">Token holders vote on platform direction, agent marketplace curation, and fee structures.</div>
+    </div></div>
+    <div class="acc-p"><div class="tok tok--p">
+      <div class="tok__icon">[ ♛ ]</div>
+      <div class="tok__title">Creator Rewards</div>
+      <div class="tok__body">Agent developers earn tokens for building popular agents. Incentivizes marketplace growth.</div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [13] USE OF FUNDS — $3M Allocation
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="funds">
+  <header class="sec sec--p">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">13 / 17</span></div>
+      <span class="sec__label">USE OF FUNDS</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">$3M Allocation</h2>
+      <p class="sec__lead">Five-line allocation across product, AI, go-to-market, token infrastructure, and operations. <strong style="color:var(--o)">TenX Protocols commits $500K as lead investor.</strong></p>
+    </div>
+  </header>
+
+  <div class="g" style="grid-template-columns:1fr">
+    <div>
+      <div class="ph"><span class="pt pt--o">▸ ALLOCATION</span><span class="pt">SEED PROCEEDS</span></div>
+      <div class="fund" id="fundChart">
+        <div class="fund__row">
+          <div>
+            <div class="fund__label">Product &amp; Engineering</div>
+            <div class="fund__sub">Core platform build · agent SDK · wallet infrastructure · marketplace</div>
+          </div>
+          <div class="fund__amt fund__amt--o">$1.2M</div>
+          <div class="fund__bar"><div class="fund__bar-fill" data-w="40"></div></div>
+          <div class="fund__pct">40%</div>
+        </div>
+        <div class="fund__row">
+          <div>
+            <div class="fund__label">AI &amp; Agent Development</div>
+            <div class="fund__sub">Agent models · training data · multi-agent orchestration · LLM integration</div>
+          </div>
+          <div class="fund__amt fund__amt--b">$600K</div>
+          <div class="fund__bar"><div class="fund__bar-fill fund__bar-fill--b" data-w="20"></div></div>
+          <div class="fund__pct">20%</div>
+        </div>
+        <div class="fund__row">
+          <div>
+            <div class="fund__label">Go-To-Market &amp; Growth</div>
+            <div class="fund__sub">User acquisition · community building · partnerships · launch campaign</div>
+          </div>
+          <div class="fund__amt fund__amt--g">$540K</div>
+          <div class="fund__bar"><div class="fund__bar-fill fund__bar-fill--g" data-w="18"></div></div>
+          <div class="fund__pct">18%</div>
+        </div>
+        <div class="fund__row">
+          <div>
+            <div class="fund__label">Token &amp; Infrastructure</div>
+            <div class="fund__sub">Token development · smart contracts · security audits · blockchain ops</div>
+          </div>
+          <div class="fund__amt fund__amt--p">$360K</div>
+          <div class="fund__bar"><div class="fund__bar-fill fund__bar-fill--p" data-w="12"></div></div>
+          <div class="fund__pct">12%</div>
+        </div>
+        <div class="fund__row">
+          <div>
+            <div class="fund__label">Operations &amp; Legal</div>
+            <div class="fund__sub">Team ops · regulatory compliance · legal · accounting</div>
+          </div>
+          <div class="fund__amt fund__amt--s">$300K</div>
+          <div class="fund__bar"><div class="fund__bar-fill fund__bar-fill--s" data-w="10"></div></div>
+          <div class="fund__pct">10%</div>
+        </div>
+
+        <div class="fund__callout">
+          ▸ TenX Protocols commits <strong style="color:#fff">$500K</strong> as lead investor, demonstrating strong parent-company conviction
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [14] DEAL STRUCTURE — Triple upside
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="deal">
+  <header class="sec">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">14 / 17</span></div>
+      <span class="sec__label">DEAL STRUCTURE</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">Triple Upside for Investors</h2>
+      <p class="sec__lead">Three layered returns on a single seed check: equity in the Agent Forge subsidiary, pro-rata rights to any tokens the subsidiary issues, and warrants on the public parent TSXv: TNX struck at $1.00 versus the current $0.17 trading price.</p>
+    </div>
+  </header>
+
+  <div class="g g3">
+    <div class="acc-o"><div class="deal deal--o">
+      <div class="deal__num">01</div>
+      <div class="deal__title">Equity</div>
+      <div class="deal__body">Direct equity stake in the Agent Forge subsidiary. Participate in the upside of a focused AI-agent company with a clear path to revenue and a public-market parent.</div>
+    </div></div>
+    <div class="acc-b"><div class="deal deal--b">
+      <div class="deal__num">02</div>
+      <div class="deal__title">Token Rights</div>
+      <div class="deal__body">Proportionate rights to any tokens the subsidiary creates. If Agent Forge launches a utility token, investors receive pro-rata allocation at TGE.</div>
+    </div></div>
+    <div class="acc-g"><div class="deal deal--g">
+      <div class="deal__num">03</div>
+      <div class="deal__title">TNX Warrants</div>
+      <div class="deal__body">Warrants struck at $1.00 on parent TenX Protocols (TSXv: TNX), currently trading at ~$0.17. Material upside if the public parent appreciates toward strike.</div>
+    </div></div>
+  </div>
+
+  <div class="deal__terms">
+    Target: <strong style="color:#fff">$3M</strong> <span>│</span>
+    TenX Lead: <strong style="color:#fff">$500K</strong> <span>│</span>
+    TNX @ <strong style="color:#fff">$0.17</strong> <span>│</span>
+    Warrant Strike: <strong style="color:#fff">$1.00</strong>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [15] CAP STRUCTURE — ASCII flow diagram
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="cap">
+  <header class="sec">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">15 / 17</span></div>
+      <span class="sec__label">CAP STRUCTURE</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">Ownership &amp; Investor Flow</h2>
+      <p class="sec__lead">Agent Forge is a wholly-owned subsidiary of TenX Protocols Inc. (TSXv: TNX). Seed investors receive equity in the subsidiary plus pro-rata token rights and warrants on the public parent.</p>
+    </div>
+  </header>
+
+  <div class="g" style="grid-template-columns:1fr">
+    <div>
+      <div class="ph"><span class="pt pt--o">▸ STRUCTURE DIAGRAM</span><span class="pt">PUBLIC PARENT · PRIVATE SUBSIDIARY</span></div>
+      <div class="cap-diagram" id="capDiagram">
+
+        <!-- Node 1: TenX Parent -->
+        <div class="cap-node cap-node--parent">
+          <span class="gate__corner gate__corner--tl"></span>
+          <span class="gate__corner gate__corner--tr"></span>
+          <span class="gate__corner gate__corner--bl"></span>
+          <span class="gate__corner gate__corner--br"></span>
+          <div class="cap-node__eyebrow">▸ PARENT ENTITY</div>
+          <div class="cap-node__title">TENX PROTOCOLS INC.</div>
+          <div class="cap-node__ticker">TSXv: TNX · Public since Dec 2025</div>
+          <div class="cap-node__facts">
+            <div><span class="cap-fact__k">Raised</span><span class="cap-fact__v">$33M+</span></div>
+            <div><span class="cap-fact__k">Validators</span><span class="cap-fact__v">Solana · Sui · Sei · Tezos</span></div>
+            <div><span class="cap-fact__k">Partners</span><span class="cap-fact__v">BONK · Borderless Capital</span></div>
+          </div>
+        </div>
+
+        <!-- Connector 1 -->
+        <svg class="cap-connector" viewBox="0 0 200 100" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <marker id="capArrow1" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="#d4a017"/>
+            </marker>
+          </defs>
+          <line class="cap-line" x1="100" y1="6" x2="100" y2="94" stroke="#d4a017" stroke-width="1.5" marker-end="url(#capArrow1)" />
+          <line class="cap-line cap-line--ghost" x1="96" y1="6" x2="96" y2="94" stroke="#d4a017" stroke-width="1" opacity="0.35" />
+          <line class="cap-line cap-line--ghost" x1="104" y1="6" x2="104" y2="94" stroke="#d4a017" stroke-width="1" opacity="0.35" />
+        </svg>
+        <div class="cap-connector__label">100% owned subsidiary</div>
+
+        <!-- Node 2: Agent Forge -->
+        <div class="cap-node cap-node--sub">
+          <span class="gate__corner gate__corner--tl"></span>
+          <span class="gate__corner gate__corner--tr"></span>
+          <span class="gate__corner gate__corner--bl"></span>
+          <span class="gate__corner gate__corner--br"></span>
+          <div class="cap-node__eyebrow">▸ SUBSIDIARY</div>
+          <div class="cap-node__title">AGENT FORGE</div>
+          <div class="cap-node__ticker">AI Agent Platform · Private · Seed Round Live</div>
+          <div class="cap-node__facts">
+            <div><span class="cap-fact__k">Target</span><span class="cap-fact__v">$3,000,000</span></div>
+            <div><span class="cap-fact__k">Lead</span><span class="cap-fact__v">TenX Protocols ($500K)</span></div>
+            <div><span class="cap-fact__k">TGE</span><span class="cap-fact__v">Q1 2027</span></div>
+          </div>
+        </div>
+
+        <!-- Connector 2 -->
+        <svg class="cap-connector" viewBox="0 0 200 100" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <marker id="capArrow2" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="#10b981"/>
+            </marker>
+          </defs>
+          <line class="cap-line" x1="100" y1="6" x2="100" y2="94" stroke="#10b981" stroke-width="1.5" marker-end="url(#capArrow2)" />
+          <line class="cap-line cap-line--ghost" x1="96" y1="6" x2="96" y2="94" stroke="#10b981" stroke-width="1" opacity="0.35" />
+          <line class="cap-line cap-line--ghost" x1="104" y1="6" x2="104" y2="94" stroke="#10b981" stroke-width="1" opacity="0.35" />
+        </svg>
+        <div class="cap-connector__label">Equity + Token Rights + TNX Warrants</div>
+
+        <!-- Node 3: Seed Investors -->
+        <div class="cap-node cap-node--invest">
+          <span class="gate__corner gate__corner--tl"></span>
+          <span class="gate__corner gate__corner--tr"></span>
+          <span class="gate__corner gate__corner--bl"></span>
+          <span class="gate__corner gate__corner--br"></span>
+          <div class="cap-node__eyebrow">▸ SEED INVESTORS</div>
+          <div class="cap-node__title">3-WAY UPSIDE</div>
+          <div class="cap-node__ticker">Equity stake · Pro-rata tokens · TNX warrants</div>
+          <div class="cap-badges">
+            <div class="cap-badge cap-badge--o">[ 1 ] Equity in Agent Forge</div>
+            <div class="cap-badge cap-badge--b">[ 2 ] Pro-Rata Token Rights</div>
+            <div class="cap-badge cap-badge--g">[ 3 ] TNX Warrants @ $1.00</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [16] RISK DISCLOSURE (template, marked as pending legal review)
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="risk">
+  <header class="sec sec--g">
+    <div class="sec__meta">
+      <div class="sec__num-row"><span class="sec__spin" aria-hidden="true">⠀</span><span class="sec__num">16 / 17</span></div>
+      <span class="sec__label">RISK DISCLOSURE</span>
+    </div>
+    <div class="sec__body">
+      <h2 class="sec__title">Risk Disclosure</h2>
+      <p class="sec__lead">Forward-looking statements and standard seed-round risk factors. Final language to be confirmed by counsel before close.</p>
+    </div>
+  </header>
+
+  <div class="g" style="grid-template-columns:1fr">
+    <div>
+      <div class="ph"><span class="pt">▸ DISCLAIMER</span></div>
+      <div class="risk">
+        <div class="risk__label">[ TEMPLATE · PENDING LEGAL REVIEW ]</div>
+        <div class="risk__body">
+          This dataroom contains forward-looking information regarding Agent Forge and its parent TenX Protocols Inc. Actual results may differ materially from the projections, plans, and milestones described herein. Nothing in this dataroom constitutes an offer to sell, or the solicitation of an offer to buy, any securities; any offering will be made only through definitive subscription documentation provided directly by Agent Forge / TenX Protocols. Final risk factors, securities-law disclosures, investor suitability requirements, and the binding terms of the offering will be set out in the subscription agreement made available on request. This template language is to be reviewed and finalized by Agent Forge / TenX legal counsel prior to close.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     [17] CTA FOOTER — Join the Seed Round
+     ═══════════════════════════════════════════════════════════════════ -->
+<section class="reveal" id="cta">
+  <div class="cta">
+    <div class="cta__meta">
+      <span class="sec__spin hero__spin" aria-hidden="true">&#10240;</span>
+      <span class="hero__num">17 / 17</span>
+      <span class="hero__label">Agent Forge · Seed · $3M Target</span>
+    </div>
+    <h2 class="cta__title">Join the Seed Round</h2>
+
+    <div class="cta__kpis">
+      <div><div class="cta__kpi-v">$3M</div><div class="cta__kpi-l">Target Raise</div></div>
+      <div><div class="cta__kpi-v">$500K</div><div class="cta__kpi-l">TenX Commitment</div></div>
+      <div><div class="cta__kpi-v">$0.17</div><div class="cta__kpi-l">TNX Price</div></div>
+      <div><div class="cta__kpi-v">$1.00</div><div class="cta__kpi-l">Warrant Strike</div></div>
+    </div>
+
+    <div class="cta__upside">
+      <span class="o">Equity in Agent Forge</span> &nbsp;+&nbsp;
+      <span class="b">Pro-Rata Token Rights</span> &nbsp;+&nbsp;
+      <span class="g">TNX Warrants ($1.00 Strike)</span>
+    </div>
+
+    <div class="cta__contact">
+      <a href="mailto:mat@tenx.inc?subject=Agent%20Forge%20Seed%20Interest" id="ctaContact">▸ mat@tenx.inc</a>
+      <div class="meta">A Subsidiary of TenX Protocols Inc. (TSXv: TNX)</div>
+      <div class="meta">CONFIDENTIAL · Activity logged for security &amp; audit</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    Agent Forge · Built on TenX Protocols infrastructure · Where Networks Become Revenue
+  </div>
+</section>
+
+</div><!-- /.wrap -->
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     CONFIDENTIALITY WATERMARK
+     ═══════════════════════════════════════════════════════════════════ -->
+<div class="watermark" id="watermark">
+  <span>CONFIDENTIAL ·</span> <span class="e" id="wmEmail">Agent Forge · TenX Protocols</span> <span>· SESS</span> <span id="wmSess">PENDING</span> <span>· DO NOT FORWARD</span>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   AGENT FORGE — DATAROOM RUNTIME
+   Self-contained JS. Inherits the braille particle system + spinners
+   from the TenX staking dashboard, with Agent-Forge-orange tinting.
+   ═══════════════════════════════════════════════════════════════════ */
+
+(function() {
+  'use strict';
+
+  // ═══════════════════════════════════════════════════════════════════
+  // CONFIG
+  // ═══════════════════════════════════════════════════════════════════
+  const PARTNER_SLUG = 'agentforge';
+  const PAGE_PATH = '/';
+  const EMAIL_KEY = 'af_email';
+  const EMAIL_TTL_KEY = 'af_email_ttl';
+  const TTL_DAYS = 30;
+  const HEARTBEAT_INTERVAL = 30; // seconds
+
+  // Agent Forge brand orange RGB — used to tint the braille particles
+  // during dissolve/float, mirroring the TenX dashboard's emerald tint
+  const TINT_R = 247, TINT_G = 147, TINT_B = 26;
+
+  // ═══════════════════════════════════════════════════════════════════
+  // STATE
+  // ═══════════════════════════════════════════════════════════════════
+  let visitorId = localStorage.getItem('dr_visitor_id') || null;
+  const sessionId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2));
+  const sessShort = '0x' + sessionId.replace(/-/g, '').slice(0, 8).toUpperCase();
+  let secondsOnPage = 0;
+  let heartbeatTimer = null;
+  let isVisible = true;
+
+  // ═══════════════════════════════════════════════════════════════════
+  // UNICODE CORE — braille density palette + gridToBraille packer
+  // Every visual signature in Agent Forge derives from these two pieces.
+  // ═══════════════════════════════════════════════════════════════════
+  const BRAILLE_DENSITY = ['\u2800','\u2801','\u2803','\u2809','\u280B','\u2813','\u281B','\u2827','\u283F','\u285F','\u287F','\u28FF'];
+  const SCRAMBLE_CHARS = '\u2800\u2801\u2803\u2807\u2809\u280B\u280F\u2813\u2817\u281B\u281F\u2827\u282F\u2837\u283F\u2847\u284F\u2857\u285F\u2867\u286F\u2877\u287F\u2887\u288F\u2897\u289F\u28A7\u28AF\u28B7\u28BF\u28C7\u28CF\u28D7\u28DF\u28E7\u28EF\u28F7\u28FF';
+
+  // Pack a 2x4 boolean sub-grid into one braille glyph.
+  // Braille dot bit layout (Unicode U+2800 base):
+  //   col0row0 = 0x01   col1row0 = 0x08
+  //   col0row1 = 0x02   col1row1 = 0x10
+  //   col0row2 = 0x04   col1row2 = 0x20
+  //   col0row3 = 0x40   col1row3 = 0x80
+  function gridToBraille(grid, rows, cols) {
+    // grid is Uint8Array indexed as row*cols + col, nonzero = on
+    const brailleRows = Math.floor(rows / 4);
+    const brailleCols = Math.floor(cols / 2);
+    const out = new Array(brailleRows * brailleCols);
+    for (let by = 0; by < brailleRows; by++) {
+      for (let bx = 0; bx < brailleCols; bx++) {
+        const y0 = by * 4, x0 = bx * 2;
+        let bits = 0;
+        if (grid[(y0    ) * cols + x0    ]) bits |= 0x01;
+        if (grid[(y0 + 1) * cols + x0    ]) bits |= 0x02;
+        if (grid[(y0 + 2) * cols + x0    ]) bits |= 0x04;
+        if (grid[(y0 + 3) * cols + x0    ]) bits |= 0x40;
+        if (grid[(y0    ) * cols + x0 + 1]) bits |= 0x08;
+        if (grid[(y0 + 1) * cols + x0 + 1]) bits |= 0x10;
+        if (grid[(y0 + 2) * cols + x0 + 1]) bits |= 0x20;
+        if (grid[(y0 + 3) * cols + x0 + 1]) bits |= 0x80;
+        out[by * brailleCols + bx] = String.fromCharCode(0x2800 + bits);
+      }
+    }
+    return { chars: out, brailleRows, brailleCols };
+  }
+
+  function brightnessToBraille(b) {
+    return BRAILLE_DENSITY[Math.floor(Math.max(0, Math.min(1, b)) * (BRAILLE_DENSITY.length - 1))];
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SVG → boolean seed grid
+  // Renders an image source onto an offscreen canvas at the target
+  // resolution and returns a Uint8Array of on/off pixels. Used to bake
+  // the flame shape into the fire simulation at init.
+  // ═══════════════════════════════════════════════════════════════════
+  function sampleImageToGrid(src, cols, rows, threshold) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = cols; c.height = rows;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, cols, rows);
+        try {
+          const data = ctx.getImageData(0, 0, cols, rows).data;
+          const grid = new Uint8Array(cols * rows);
+          for (let i = 0; i < cols * rows; i++) {
+            const a = data[i*4+3] / 255;
+            const r = data[i*4], g = data[i*4+1], b = data[i*4+2];
+            const luma = (r + g + b) / 765;
+            grid[i] = (a > 0.3 && luma > (threshold || 0.1)) ? 1 : 0;
+          }
+          resolve(grid);
+        } catch (e) { reject(e); }
+      };
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // FORGE FLAME — interactive braille fire simulation
+  // Heat grid diffuses upward; mouse velocity becomes wind; clicks
+  // inject radial sparks that rise and fade. Renders the heat grid as
+  // a braille-character overlay on a <canvas>, coloured by local heat.
+  // ═══════════════════════════════════════════════════════════════════
+  class ForgeFlame {
+    constructor(canvas, opts) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d', { alpha: true });
+      this.cellW = opts.cellW || 7;     // px width per braille char
+      this.cellH = opts.cellH || 10;    // px height per braille char
+      this.cols  = opts.cols  || 80;    // sim-grid columns (must be even)
+      this.rows  = opts.rows  || 56;    // sim-grid rows (mult of 4)
+      this.interactive = opts.interactive !== false;
+      this.seedSrc = opts.seedSrc || 'assets/flame.png';
+      this.seedY0 = opts.seedY0 || 0.45; // vertical start of seed injection
+      // Gold ramp: cream white-gold core → bright gold → rich gold → deep bronze ember.
+      // Reads premium on pure black; contrasts cleanly with the blue/green/purple secondary accents.
+      this.hotCol = opts.hotCol || '#fff8dc';  // cream white-gold core
+      this.midCol = opts.midCol || '#f4d03f';  // bright gold
+      this.dimCol = opts.dimCol || '#d4a017';  // rich gold
+      this.farCol = opts.farCol || '#5a3c00';  // deep bronze ember edge
+
+      this.heat = new Float32Array(this.cols * this.rows);
+      this.seed = null;
+      this.ready = false;
+      this.frame = 0;
+
+      // Mouse / wind state
+      this.mouse = { x: -9999, y: -9999, lastX: -9999, lastY: -9999, vx: 0, vy: 0, hover: false };
+      this.wind = { x: 0, y: 0 };
+      this.sparks = []; // {cx,cy,r,t}
+
+      // Font — use the mono font already loaded
+      this.font = `${this.cellH}px "IBM Plex Mono", monospace`;
+
+      // Procedural seed: a wide elliptical ember base at the bottom rows.
+      // The physics simulation rises this base into a tall, tapered flame.
+      const g = new Uint8Array(this.cols * this.rows);
+      const cx = this.cols / 2;
+      // Ember band: bottom ~25% of the canvas
+      const emberTop = Math.floor(this.rows * 0.75);
+      const emberBottom = this.rows - 1;
+      const maxHalfW = this.cols * 0.32;
+      for (let y = emberTop; y <= emberBottom; y++) {
+        // Fuller at the bottom, tapering toward the top of the ember band
+        const t = (y - emberTop) / Math.max(1, emberBottom - emberTop);
+        const halfW = maxHalfW * (0.55 + 0.45 * t);
+        for (let x = 0; x < this.cols; x++) {
+          const dx = (x - cx) / halfW;
+          if (Math.abs(dx) < 1) g[y * this.cols + x] = 1;
+        }
+      }
+      this.seed = g;
+      this.ready = true;
+
+      if (this.interactive) this._bindMouse();
+      this._loop = this._loop.bind(this);
+      requestAnimationFrame(this._loop);
+    }
+
+    _bindMouse() {
+      const c = this.canvas;
+      const toGrid = (e) => {
+        const r = c.getBoundingClientRect();
+        const xRatio = (e.clientX - r.left) / r.width;
+        const yRatio = (e.clientY - r.top) / r.height;
+        return { x: xRatio * this.cols, y: yRatio * this.rows };
+      };
+      c.addEventListener('pointermove', (e) => {
+        const g = toGrid(e);
+        this.mouse.lastX = this.mouse.x;
+        this.mouse.lastY = this.mouse.y;
+        this.mouse.x = g.x; this.mouse.y = g.y;
+        this.mouse.hover = true;
+      });
+      c.addEventListener('pointerleave', () => {
+        this.mouse.hover = false;
+        this.mouse.x = -9999; this.mouse.y = -9999;
+      });
+      c.addEventListener('pointerdown', (e) => {
+        const g = toGrid(e);
+        this.sparks.push({ cx: g.x, cy: g.y, r: 0, t: 0, max: 10 });
+      });
+      // Touch support already covered by pointer events
+    }
+
+    _loop() {
+      this.frame++;
+      if (this.ready) this._step();
+      this._draw();
+      requestAnimationFrame(this._loop);
+    }
+
+    _step() {
+      const cols = this.cols, rows = this.rows;
+      const h = this.heat;
+      // 1. Compute wind from mouse velocity
+      if (this.mouse.hover && this.mouse.lastX > -9000) {
+        const dx = this.mouse.x - this.mouse.lastX;
+        const dy = this.mouse.y - this.mouse.lastY;
+        this.wind.x = this.wind.x * 0.85 + dx * 0.25;
+        this.wind.y = this.wind.y * 0.85 + dy * 0.15;
+        this.mouse.lastX = this.mouse.x;
+        this.mouse.lastY = this.mouse.y;
+      } else {
+        this.wind.x *= 0.9;
+        this.wind.y *= 0.9;
+      }
+
+      // 2. Heat diffusion — fire rises
+      // For each cell, new = sample from row below with wind-offset X
+      // plus tiny random flicker. Write in-place top-down so sources
+      // reference un-updated values.
+      const next = new Float32Array(cols * rows);
+      for (let y = 0; y < rows - 1; y++) {
+        for (let x = 0; x < cols; x++) {
+          // Source row is one below (since fire rises)
+          const sy = y + 1;
+          // Wind displaces source column
+          let sx = x - this.wind.x * (0.3 + 0.7 * (1 - y / rows));
+          // Clamp to grid
+          if (sx < 0) sx = 0;
+          if (sx > cols - 1) sx = cols - 1;
+          const sxi = Math.floor(sx);
+          const sxf = sx - sxi;
+          const a = h[sy * cols + sxi] || 0;
+          const b = h[sy * cols + Math.min(sxi + 1, cols - 1)] || 0;
+          const sample = a * (1 - sxf) + b * sxf;
+          // Row/column-dependent decay: centre stays hot, edges cool faster with height
+          // so the flame tapers as it rises.
+          const heightT = 1 - (y / rows);                  // 1 at top, 0 at bottom
+          const centreT = Math.abs(x - cols / 2) / (cols / 2); // 0 centre, 1 edge
+          const decayEdge = centreT * centreT * heightT * 0.06; // up to 6% extra decay at top edges
+          const decay = 0.988 - decayEdge;
+          const flicker = (Math.random() - 0.5) * 0.10;
+          next[y * cols + x] = Math.max(0, sample * decay + flicker);
+        }
+      }
+      // Clear bottom row
+      for (let x = 0; x < cols; x++) next[(rows - 1) * cols + x] = 0;
+
+      // 3. Mouse push-away: cells within a radius of the mouse get
+      // bumped sideways along the wind direction
+      if (this.mouse.hover) {
+        const mx = this.mouse.x, my = this.mouse.y;
+        const radius = 6;
+        const windMag = Math.sqrt(this.wind.x*this.wind.x + this.wind.y*this.wind.y);
+        const pushX = windMag > 0.01 ? this.wind.x / (windMag + 0.01) : 0;
+        const pushY = windMag > 0.01 ? this.wind.y / (windMag + 0.01) : 0;
+        for (let y = Math.max(0, my - radius); y < Math.min(rows, my + radius); y++) {
+          for (let x = Math.max(0, mx - radius); x < Math.min(cols, mx + radius); x++) {
+            const dx = x - mx, dy = y - my;
+            const d = Math.sqrt(dx*dx + dy*dy);
+            if (d < radius) {
+              const falloff = 1 - d / radius;
+              const idx = Math.floor(y) * cols + Math.floor(x);
+              next[idx] = (next[idx] || 0) * (1 - falloff * 0.6);
+            }
+          }
+        }
+        // And excite a ring of cells OUTWARD from the mouse position
+        for (let i = 0; i < 12; i++) {
+          const angle = (i / 12) * Math.PI * 2;
+          const rx = Math.floor(mx + Math.cos(angle) * (radius + 1));
+          const ry = Math.floor(my + Math.sin(angle) * (radius + 1));
+          if (rx >= 0 && rx < cols && ry >= 0 && ry < rows) {
+            next[ry * cols + rx] = Math.min(1, (next[ry * cols + rx] || 0) + 0.1);
+          }
+        }
+      }
+
+      // 4. Inject seed flame at the bottom rows
+      if (this.seed) {
+        const startY = Math.floor(rows * this.seedY0);
+        for (let y = startY; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+            if (this.seed[y * cols + x]) {
+              const baseHeat = 0.85 + Math.random() * 0.15;
+              next[y * cols + x] = Math.max(next[y * cols + x] || 0, baseHeat);
+            }
+          }
+        }
+      }
+
+      // 5. Sparks — inject and age
+      for (let i = this.sparks.length - 1; i >= 0; i--) {
+        const s = this.sparks[i];
+        s.t++;
+        s.r = Math.min(s.max, s.r + 0.8);
+        // Paint a ring of heat
+        const steps = Math.ceil(s.r * 3);
+        for (let j = 0; j < steps; j++) {
+          const angle = (j / steps) * Math.PI * 2;
+          const rx = Math.floor(s.cx + Math.cos(angle) * s.r);
+          const ry = Math.floor(s.cy + Math.sin(angle) * s.r);
+          if (rx >= 0 && rx < cols && ry >= 0 && ry < rows) {
+            next[ry * cols + rx] = Math.min(1, (next[ry * cols + rx] || 0) + 1.0 - (s.t / 30));
+          }
+        }
+        if (s.t > 30) this.sparks.splice(i, 1);
+      }
+
+      this.heat = next;
+    }
+
+    _draw() {
+      const ctx = this.ctx;
+      const W = this.canvas.width, H = this.canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      if (!this.ready) return;
+
+      // Convert heat → boolean grid (threshold) then pack to braille
+      const cols = this.cols, rows = this.rows;
+      const bool = new Uint8Array(cols * rows);
+      for (let i = 0; i < cols * rows; i++) bool[i] = this.heat[i] > 0.14 ? 1 : 0;
+
+      const { chars, brailleRows, brailleCols } = gridToBraille(bool, rows, cols);
+
+      // Compute avg heat per braille cell for coloring
+      const avgHeat = new Float32Array(brailleRows * brailleCols);
+      for (let by = 0; by < brailleRows; by++) {
+        for (let bx = 0; bx < brailleCols; bx++) {
+          let sum = 0;
+          for (let dy = 0; dy < 4; dy++) {
+            for (let dx = 0; dx < 2; dx++) {
+              sum += this.heat[(by*4+dy)*cols + (bx*2+dx)];
+            }
+          }
+          avgHeat[by * brailleCols + bx] = sum / 8;
+        }
+      }
+
+      // Fit the grid into the canvas
+      const cellW = W / brailleCols;
+      const cellH = H / brailleRows;
+      ctx.font = `${Math.round(cellH * 1.35)}px "IBM Plex Mono", monospace`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+
+      for (let by = 0; by < brailleRows; by++) {
+        for (let bx = 0; bx < brailleCols; bx++) {
+          const ch = chars[by * brailleCols + bx];
+          if (ch === '\u2800') continue; // empty braille = skip
+          const hv = avgHeat[by * brailleCols + bx];
+          let col;
+          if (hv > 0.85) col = this.hotCol;
+          else if (hv > 0.55) col = this.midCol;
+          else if (hv > 0.30) col = this.dimCol;
+          else col = this.farCol;
+          ctx.fillStyle = col;
+          ctx.fillText(ch, bx * cellW, by * cellH);
+        }
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // BRAILLE SCRAMBLE — text decryption hover effect
+  // Inspired by soul.io. Each character has an independent start/end
+  // frame in the scramble window; settles from random braille → real.
+  // ═══════════════════════════════════════════════════════════════════
+  class BrailleScramble {
+    constructor(el, opts) {
+      this.el = el;
+      this.opts = opts || {};
+      this.original = el.textContent;
+      this.final = this.original;
+      this.running = false;
+      this.queue = [];
+      this.frame = 0;
+      this.update = this.update.bind(this);
+    }
+
+    scramble(toText) {
+      if (!toText) toText = this.final;
+      const oldText = this.el.textContent;
+      const length = Math.max(oldText.length, toText.length);
+      this.queue = [];
+      for (let i = 0; i < length; i++) {
+        const from = oldText[i] || '';
+        const to = toText[i] || '';
+        const start = Math.floor(Math.random() * 10);
+        const end = start + 8 + Math.floor(Math.random() * 12);
+        this.queue.push({ from, to, start, end });
+      }
+      this.frame = 0;
+      if (!this.running) {
+        this.running = true;
+        cancelAnimationFrame(this.frameReq);
+        this.update();
+      }
+    }
+
+    update() {
+      let output = '';
+      let complete = 0;
+      for (let i = 0; i < this.queue.length; i++) {
+        const q = this.queue[i];
+        if (this.frame >= q.end) {
+          complete++;
+          output += q.to;
+        } else if (this.frame >= q.start) {
+          if (!q.char || Math.random() < 0.30) {
+            q.char = SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+          }
+          output += q.char;
+        } else {
+          output += q.from;
+        }
+      }
+      this.el.textContent = output;
+      if (complete === this.queue.length) {
+        this.running = false;
+      } else {
+        this.frame++;
+        this.frameReq = requestAnimationFrame(this.update);
+      }
+    }
+  }
+
+  function bindScramble(el, opts) {
+    const s = new BrailleScramble(el, opts);
+    el.addEventListener('mouseenter', () => s.scramble());
+    if (opts && opts.onLoad) {
+      // Pre-seed with braille noise then scramble in
+      el.textContent = SCRAMBLE_CHARS[0].repeat(s.final.length);
+      setTimeout(() => s.scramble(), 50);
+    }
+    return s;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SPINNER BANK — multiplexed micro-animations per section header
+  // One setInterval drives all spinners. Each .sec-spinner element has
+  // data-anim pointing to one of the frame arrays below.
+  // ═══════════════════════════════════════════════════════════════════
+  const SPINNERS = {
+    columns: { frames: ['\u2800\u2800\u2800','\u2840\u2800\u2800','\u28C0\u2800\u2800','\u28C0\u2840\u2800','\u28C0\u28C0\u2800','\u28C0\u28C0\u2840','\u28C0\u28C0\u28C0','\u2840\u28C0\u28C0','\u2800\u28C0\u28C0','\u2800\u2840\u28C0','\u2800\u2800\u28C0','\u2800\u2800\u2840'], iv: 120 },
+    breathe: { frames: ['\u2800','\u2802','\u2812','\u2833','\u28F3','\u28FF','\u28F3','\u2833','\u2812','\u2802'], iv: 100 },
+    rain: { frames: ['\u2801\u2810\u2802','\u2810\u2802\u2801','\u2802\u2801\u2810','\u2820\u2840\u2804','\u2840\u2804\u2820','\u2804\u2820\u2840'], iv: 130 },
+    sparkle: { frames: ['\u2820\u2800\u2802','\u2800\u28A0\u2800','\u2802\u2800\u2820','\u2840\u28A0\u2804','\u2800\u28FF\u2800','\u2804\u28A0\u2840','\u2810\u2800\u2880','\u2800\u28FF\u2800'], iv: 100 },
+    orbit: { frames: ['\u2802\u2800\u2800','\u2820\u2800\u2800','\u2880\u2800\u2800','\u2800\u2880\u2800','\u2800\u2800\u2880','\u2800\u2800\u2820','\u2800\u2800\u2802','\u2800\u2802\u2800'], iv: 110 },
+    dna: { frames: ['\u280C\u2800\u2830','\u2830\u2800\u280C','\u2800\u28DB\u2800','\u2830\u2800\u280C','\u280C\u2800\u2830','\u2800\u28DB\u2800'], iv: 120 },
+    cascade: { frames: ['\u2801\u2800\u2800','\u2803\u2801\u2800','\u2807\u2803\u2801','\u280F\u2807\u2803','\u281F\u280F\u2807','\u283F\u281F\u280F','\u287F\u283F\u281F','\u28FF\u287F\u283F'], iv: 90 },
+    fillsweep: { frames: ['\u2800\u2800\u2800','\u2840\u2800\u2800','\u28C0\u2840\u2800','\u28E0\u28C0\u2840','\u28F0\u28E0\u28C0','\u28F8\u28F0\u28E0','\u28FC\u28F8\u28F0','\u28FE\u28FC\u28F8','\u28FF\u28FE\u28FC'], iv: 100 },
+    pulse: { frames: ['\u2800','\u2802','\u2812','\u2836','\u287F','\u28FF','\u287F','\u2836','\u2812','\u2802'], iv: 110 },
+    snake: { frames: ['\u28C0\u2800\u2800','\u2840\u28C0\u2800','\u2800\u28C0\u2840','\u2800\u2840\u28C0','\u2800\u2800\u28C0','\u2800\u28C0\u2840','\u28C0\u2840\u2800'], iv: 120 },
+    helix: { frames: ['\u280C\u2833','\u2833\u280C','\u28DB\u28DB','\u2833\u280C','\u280C\u2833','\u28DB\u28DB'], iv: 140 },
+    waverows: { frames: ['\u2836\u2809\u2809\u2811','\u2821\u2836\u2809\u2809','\u2830\u2821\u2836\u2809','\u2834\u2830\u2821\u2836','\u2822\u2834\u2830\u2821','\u2819\u2822\u2834\u2830','\u2809\u2819\u2822\u2834','\u280A\u2809\u2819\u2822'], iv: 100 },
+    diagswipe: { frames: ['\u2801\u2800\u2800','\u2802\u2801\u2800','\u2804\u2802\u2801','\u2840\u2804\u2802','\u2880\u2840\u2804','\u2800\u2880\u2840','\u2800\u2800\u2880','\u2800\u2800\u2800'], iv: 100 },
+    scan: { frames: ['\u28E4\u2800\u2800\u2800','\u2800\u28E4\u2800\u2800','\u2800\u2800\u28E4\u2800','\u2800\u2800\u2800\u28E4','\u2800\u2800\u28E4\u2800','\u2800\u28E4\u2800\u2800'], iv: 100 }
+  };
+
+  class SpinnerBank {
+    constructor() {
+      this.items = [];
+      this.tick = 0;
+      this.startInterval();
+    }
+    bind(el, animName) {
+      const anim = SPINNERS[animName] || SPINNERS.columns;
+      this.items.push({ el, anim, frame: 0, lastUpdate: 0 });
+      el.textContent = anim.frames[0];
+    }
+    startInterval() {
+      setInterval(() => {
+        const now = performance.now();
+        for (const it of this.items) {
+          if (now - it.lastUpdate >= it.anim.iv) {
+            it.frame = (it.frame + 1) % it.anim.frames.length;
+            it.el.textContent = it.anim.frames[it.frame];
+            it.lastUpdate = now;
+          }
+        }
+      }, 30);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // (v1 LogoParticleMorph / Particle / PARTICLE_ITEMS removed in v2 —
+  //  replaced by ForgeFlame above)
+  // ═══════════════════════════════════════════════════════════════════
+  /* DEAD_v1_BEGIN — commented out, safe to delete manually later
+    const px = [];
+    const width = 0, height = 0, data = [];
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const i = (y * width + x) * 4;
+        const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+        if (a > 60) {
+          const brightness = (r + g + b) / 765;
+          px.push({ x, y, r, g, b, a, brightness });
+        }
+      }
+    }
+    return px;
+  }
+
+  class Particle {
+    constructor(x, y, r, g, b, a, brightness, canvasW, canvasH) {
+      this.originX = x; this.originY = y;
+      this.x = x; this.y = y;
+      this.vx = 0; this.vy = 0;
+      this.r = r; this.g = g; this.b = b; this.a = a;
+      this.braille = brightnessToBraille(brightness);
+      this.friction = 0.93;
+      this.spring = 0.025;
+      this.state = 'image';
+      this.timer = 0;
+      this.size = 1.8;
+      const angle = Math.random() * Math.PI * 2;
+      const force = 1.5 + Math.random() * 3;
+      this.scatterVx = Math.cos(angle) * force;
+      this.scatterVy = Math.sin(angle) * force;
+      this.driftPhase = Math.random() * Math.PI * 2;
+      this.cw = canvasW; this.ch = canvasH;
+    }
+
+    dissolve() {
+      this.state = 'dissolving';
+      this.vx = this.scatterVx; this.vy = this.scatterVy;
+      this.timer = 0;
+    }
+    reform() { this.state = 'reforming'; this.timer = 0; }
+
+    setOrigin(x, y, r, g, b, a, brightness) {
+      this.originX = x; this.originY = y;
+      this.r = r; this.g = g; this.b = b; this.a = a;
+      this.braille = brightnessToBraille(brightness);
+    }
+
+    update() {
+      this.timer++;
+      switch (this.state) {
+        case 'image':
+          this.x += (this.originX - this.x) * 0.1;
+          this.y += (this.originY - this.y) * 0.1;
+          break;
+        case 'dissolving':
+          this.vx *= this.friction; this.vy *= this.friction;
+          this.x += this.vx; this.y += this.vy;
+          if (this.timer > 50) { this.state = 'text'; this.timer = 0; }
+          break;
+        case 'text':
+          this.x += Math.sin(Date.now() * 0.0008 + this.driftPhase) * 0.25;
+          this.y += Math.cos(Date.now() * 0.001 + this.driftPhase * 1.3) * 0.2;
+          break;
+        case 'reforming': {
+          const dx = this.originX - this.x, dy = this.originY - this.y;
+          this.vx += dx * this.spring; this.vy += dy * this.spring;
+          this.vx *= this.friction; this.vy *= this.friction;
+          this.x += this.vx; this.y += this.vy;
+          if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && this.timer > 25) {
+            this.x = this.originX; this.y = this.originY;
+            this.state = 'image'; this.timer = 0;
+          }
+          break;
+        }
+      }
+    }
+
+    draw(ctx) {
+      const t = Math.min(this.timer / 40, 1);
+      switch (this.state) {
+        case 'image':
+          ctx.fillStyle = `rgba(${this.r},${this.g},${this.b},${this.a/255})`;
+          ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+          break;
+        case 'dissolving': {
+          const pa = 1 - t;
+          const ta = t;
+          if (pa > 0.01) {
+            ctx.fillStyle = `rgba(${this.r},${this.g},${this.b},${pa * this.a/255})`;
+            ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+          }
+          ctx.font = '7px "IBM Plex Mono"';
+          // Tint toward Agent Forge orange during transition
+          const gr = Math.round(this.r * (1-ta*0.5) + TINT_R * ta*0.5);
+          const gg = Math.round(this.g * (1-ta*0.5) + TINT_G * ta*0.5);
+          const gb = Math.round(this.b * (1-ta*0.5) + TINT_B * ta*0.5);
+          ctx.fillStyle = `rgba(${gr},${gg},${gb},${ta * 0.85})`;
+          ctx.fillText(this.braille, this.x - 2, this.y + 2);
+          break;
+        }
+        case 'text': {
+          const shimmer = 0.55 + Math.sin(Date.now() * 0.003 + this.driftPhase) * 0.3;
+          ctx.font = '7px "IBM Plex Mono"';
+          const mr = Math.round(this.r * 0.3 + TINT_R * 0.7);
+          const mg = Math.round(this.g * 0.3 + TINT_G * 0.7);
+          const mb = Math.round(this.b * 0.3 + TINT_B * 0.7);
+          ctx.fillStyle = `rgba(${mr},${mg},${mb},${shimmer})`;
+          // Decryption flicker
+          const flickerChance = Math.sin(Date.now() * 0.005 + this.driftPhase * 7) > 0.85;
+          const ch = flickerChance ? BRAILLE_DENSITY[Math.floor(Math.random() * BRAILLE_DENSITY.length)] : this.braille;
+          ctx.fillText(ch, this.x - 2, this.y + 2);
+          break;
+        }
+        case 'reforming': {
+          const ra = Math.min(t * 1.2, 1);
+          ctx.font = '7px "IBM Plex Mono"';
+          const gr2 = Math.round(TINT_R * (1-ra) + this.r * ra);
+          const gg2 = Math.round(TINT_G * (1-ra) + this.g * ra);
+          const gb2 = Math.round(TINT_B * (1-ra) + this.b * ra);
+          ctx.fillStyle = `rgba(${gr2},${gg2},${gb2},${(1-ra)*0.8})`;
+          ctx.fillText(this.braille, this.x - 2, this.y + 2);
+          if (ra > 0.2) {
+            ctx.fillStyle = `rgba(${this.r},${this.g},${this.b},${ra * this.a/255})`;
+            ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  class LogoParticleMorph {
+    constructor(canvas, items) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d');
+      this.items = items;
+      this.idx = 0;
+      this.particles = [];
+      this.phase = 'loading';
+      this.phaseTimer = 0;
+      this.durations = { show: 90, dissolve: 40, float: 70, reform: 50 };
+      this.transitioning = false;
+      this.cycleEl = document.getElementById('navCycle');
+      this.init();
+    }
+
+    async init() {
+      try {
+        await this.loadItem(0);
+        this.phase = 'show';
+        this.updateLabel();
+        this.runLoop();
+      } catch (e) {
+        console.warn('Particle effect failed to init:', e);
+      }
+    }
+
+    async loadItem(idx) {
+      const item = this.items[idx];
+      const imageData = await loadLogoImage(item.url);
+      const pixels = samplePixels(imageData, 2);
+      const cw = this.canvas.width, ch = this.canvas.height;
+      const imgW = imageData.width, imgH = imageData.height;
+      const ox = (cw - imgW) / 2, oy = (ch - imgH) / 2;
+
+      if (this.particles.length === 0) {
+        this.particles = pixels.map(p => new Particle(
+          p.x + ox, p.y + oy, p.r, p.g, p.b, p.a, p.brightness, cw, ch
+        ));
+      } else {
+        for (let i = 0; i < Math.max(this.particles.length, pixels.length); i++) {
+          if (i < this.particles.length && i < pixels.length) {
+            const p = pixels[i];
+            this.particles[i].setOrigin(p.x + ox, p.y + oy, p.r, p.g, p.b, p.a, p.brightness);
+            this.particles[i].reform();
+          } else if (i >= this.particles.length && i < pixels.length) {
+            const p = pixels[i];
+            const np = new Particle(
+              Math.random() * cw, Math.random() * ch,
+              p.r, p.g, p.b, p.a, p.brightness, cw, ch
+            );
+            np.originX = p.x + ox; np.originY = p.y + oy;
+            np.state = 'reforming'; np.timer = 0;
+            this.particles.push(np);
+          }
+        }
+        if (this.particles.length > pixels.length) this.particles.length = pixels.length;
+      }
+    }
+
+    updateLabel() {
+      if (!this.cycleEl) return;
+      const item = this.items[this.idx];
+      this.cycleEl.innerHTML = `${item.name} <span class="ticker">${item.ticker}</span>`;
+    }
+
+    animate() {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.phaseTimer++;
+
+      switch (this.phase) {
+        case 'show':
+          if (this.phaseTimer >= this.durations.show) {
+            this.particles.forEach(p => p.dissolve());
+            this.phase = 'dissolve'; this.phaseTimer = 0;
+          }
+          break;
+        case 'dissolve':
+          if (this.phaseTimer >= this.durations.dissolve) {
+            this.particles.forEach(p => { p.state = 'text'; p.timer = 0; });
+            this.phase = 'float'; this.phaseTimer = 0;
+          }
+          break;
+        case 'float':
+          if (this.phaseTimer >= this.durations.float && !this.transitioning) {
+            this.transitioning = true;
+            this.idx = (this.idx + 1) % this.items.length;
+            this.updateLabel();
+            this.loadItem(this.idx).then(() => {
+              this.phase = 'reform'; this.phaseTimer = 0;
+              this.transitioning = false;
+            }).catch(() => {
+              this.particles.forEach(p => p.reform());
+              this.phase = 'reform'; this.phaseTimer = 0;
+              this.transitioning = false;
+            });
+          }
+          break;
+        case 'reform':
+          if (this.phaseTimer >= this.durations.reform) {
+            this.particles.forEach(p => { p.state = 'image'; p.timer = 0; p.x = p.originX; p.y = p.originY; });
+            this.phase = 'show'; this.phaseTimer = 0;
+          }
+          break;
+      }
+
+      this.particles.forEach(p => { p.update(); p.draw(this.ctx); });
+    }
+
+    runLoop() {
+      const self = this;
+      setInterval(() => { self.animate(); }, 30);
+    }
+  }
+
+  // Items the nav particle canvas cycles through
+  const PARTICLE_ITEMS = [
+    { name: 'Agent Forge',  ticker: '◤◢',   url: 'assets/flame-64.png' },
+    { name: 'TenX',         ticker: 'TNX',  url: 'assets/tenx-logo.svg' },
+    { name: 'Solana',       ticker: 'SOL',  url: 'https://img.logo.dev/solana.com?token=pk_f5qVCATlRJSbG60gE4wwig&size=128' },
+    { name: 'Sui',          ticker: 'SUI',  url: 'https://img.logo.dev/sui.io?token=pk_f5qVCATlRJSbG60gE4wwig&size=128' },
+    { name: 'Sei',          ticker: 'SEI',  url: 'https://img.logo.dev/sei.io?token=pk_f5qVCATlRJSbG60gE4wwig&size=128' },
+    { name: 'Tezos',        ticker: 'XTZ',  url: 'https://img.logo.dev/tezos.com?token=pk_f5qVCATlRJSbG60gE4wwig&size=128' },
+    { name: 'BONK',         ticker: 'BONK', url: 'https://img.logo.dev/bonkcoin.com?token=pk_f5qVCATlRJSbG60gE4wwig&size=128' }
+  ];
+  DEAD_v1_END */
+
+  // ═══════════════════════════════════════════════════════════════════
+  // TRACKING
+  // ═══════════════════════════════════════════════════════════════════
+  const API = 'https://api-production-b048.up.railway.app';
+
+  function logEvent(eventType, extra) {
+    const payload = {
+      visitor_id: visitorId,
+      event_type: eventType,
+      duration_seconds: secondsOnPage,
+      section: (extra && extra.section) || '',
+      metadata: extra || {}
+    };
+    return fetch(API + '/api/dataroom/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  }
+
+  function sendBeacon(eventType) {
+    const payload = {
+      visitor_id: visitorId,
+      event_type: eventType,
+      duration_seconds: secondsOnPage,
+      metadata: { sections: Array.from(sectionsViewed) }
+    };
+    try {
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      navigator.sendBeacon(API + '/api/dataroom/event', blob);
+    } catch (e) {}
+  }
+
+  // Track which sections the visitor has seen
+  const sectionsViewed = new Set();
+
+  async function registerVisitor(email) {
+    try {
+      // Register/update visit
+      const res = await fetch(API + '/api/dataroom/visit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visitor_id: visitorId || '' })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        visitorId = data.visitor_id;
+        localStorage.setItem('dr_visitor_id', visitorId);
+      }
+      // Submit email via gate endpoint
+      if (email) {
+        await fetch(API + '/api/dataroom/gate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ visitor_id: visitorId, email: email })
+        }).catch(() => {});
+      }
+      await logEvent('page_view');
+    } catch (e) {}
+  }
+
+  function startHeartbeat() {
+    if (heartbeatTimer) return;
+    heartbeatTimer = setInterval(() => {
+      if (isVisible) {
+        secondsOnPage += HEARTBEAT_INTERVAL;
+        logEvent('heartbeat');
+      }
+    }, HEARTBEAT_INTERVAL * 1000);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    isVisible = !document.hidden;
+  });
+
+  window.addEventListener('beforeunload', () => {
+    sendBeacon('page_exit');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════
+  // EMAIL GATE
+  // ═══════════════════════════════════════════════════════════════════
+  const gate = document.getElementById('gate');
+  const gateForm = document.getElementById('gateForm');
+  const gateInput = document.getElementById('gateInput');
+  const gateBtn = document.getElementById('gateBtn');
+  const gateErr = document.getElementById('gateErr');
+
+  function dismissGate() {
+    if (!gate) return;
+    gate.classList.add('hidden');
+    setTimeout(() => { gate.style.display = 'none'; }, 600);
+  }
+
+  function applyEmailUI(email) {
+    const domain = email.split('@')[1] || '';
+    // Nav user
+    const navUser = document.getElementById('navUser');
+    if (navUser) navUser.innerHTML = 'USER <span>' + email + '</span>';
+    // Watermark
+    const wmEmail = document.getElementById('wmEmail');
+    const wmSess = document.getElementById('wmSess');
+    if (wmEmail) wmEmail.textContent = email;
+    if (wmSess) wmSess.textContent = sessShort;
+  }
+
+  // Check TTL on stored email
+  const ttl = localStorage.getItem(EMAIL_TTL_KEY);
+  if (ttl && Date.now() > parseInt(ttl, 10)) {
+    localStorage.removeItem(EMAIL_KEY);
+    localStorage.removeItem(EMAIL_TTL_KEY);
+  }
+  const storedEmail = localStorage.getItem(EMAIL_KEY);
+  if (storedEmail) {
+    applyEmailUI(storedEmail);
+    dismissGate();
+    registerVisitor(storedEmail).then(startHeartbeat);
+    setTimeout(runHeroAnimations, 200);
+  }
+
+  if (gateForm) {
+    gateForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = gateInput.value.trim().toLowerCase();
+      if (!email || !email.includes('@') || !email.includes('.')) {
+        gateErr.textContent = 'Please enter a valid email address.';
+        return;
+      }
+      gateErr.textContent = '';
+      gateBtn.disabled = true;
+      gateBtn.querySelector('span').textContent = 'AUTHENTICATING...';
+
+      localStorage.setItem(EMAIL_KEY, email);
+      localStorage.setItem(EMAIL_TTL_KEY, String(Date.now() + TTL_DAYS * 86400000));
+
+      applyEmailUI(email);
+      await registerVisitor(email);
+      dismissGate();
+      gateBtn.disabled = false;
+      gateBtn.querySelector('span').textContent = 'ACCESS DATAROOM';
+      setTimeout(startHeartbeat, 500);
+      setTimeout(runHeroAnimations, 600);
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // HERO ANIMATIONS — letter-stagger + typewriter tagline
+  // ═══════════════════════════════════════════════════════════════════
+  function runHeroAnimations() {
+    // Hero title fades in as a single block via CSS animation on .hero__title —
+    // no character splitting, no stacking-context issues with the gradient.
+
+    // Typewriter tagline
+    const sub = document.getElementById('heroSubText');
+    if (sub && !sub.dataset.animated) {
+      const message = 'Deploy AI Agents That Work For You.';
+      sub.dataset.animated = '1';
+      let i = 0;
+      const flickerChars = '⠁⠃⠉⠋⠓⠛⠧⠿';
+      const interval = setInterval(() => {
+        if (i < message.length) {
+          // Flicker effect: show random braille briefly before settling
+          const flicker = flickerChars[Math.floor(Math.random() * flickerChars.length)];
+          sub.textContent = message.substring(0, i) + flicker;
+          setTimeout(() => {
+            sub.textContent = message.substring(0, i + 1);
+            i++;
+          }, 30);
+        } else {
+          clearInterval(interval);
+          sub.textContent = message;
+        }
+      }, 55);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SCROLL REVEAL + TOC HIGHLIGHT + PROGRESS BAR
+  // ═══════════════════════════════════════════════════════════════════
+  function initScroll() {
+    const reveals = document.querySelectorAll('.reveal');
+    const tocItems = document.querySelectorAll('.toc__item');
+    const sections = document.querySelectorAll('section[id]');
+    const progress = document.getElementById('navProgress');
+    const fundChart = document.getElementById('fundChart');
+    const rings = document.querySelectorAll('.ring');
+
+    // Reveal observer (one-shot) — reveals sections as they scroll into view
+    const revealObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-visible');
+          revealObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -5% 0px' });
+    reveals.forEach(el => revealObs.observe(el));
+
+    // Safety net: immediately mark visible any section already within 1.5 viewports of
+    // the current scroll position. Fixes programmatic jumps / anchor links / refresh
+    // mid-page where IntersectionObserver can miss mid-frame visibility changes.
+    function flushNearbyReveals() {
+      const vh = window.innerHeight;
+      const margin = vh * 1.5;
+      reveals.forEach(el => {
+        if (el.classList.contains('is-visible')) return;
+        const r = el.getBoundingClientRect();
+        if (r.top < vh + margin && r.bottom > -margin) {
+          el.classList.add('is-visible');
+          revealObs.unobserve(el);
+        }
+      });
+    }
+    flushNearbyReveals();
+    window.addEventListener('scroll', flushNearbyReveals, { passive: true });
+    // Also run once after hero animations settle, in case layout shifted
+    setTimeout(flushNearbyReveals, 400);
+
+    // Fund chart bars animation when visible
+    if (fundChart) {
+      const fundObs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            fundChart.classList.add('is-visible');
+            fundObs.unobserve(fundChart);
+          }
+        });
+      }, { threshold: 0.3 });
+      fundObs.observe(fundChart);
+    }
+
+    // Cap diagram: draw SVG lines in on scroll
+    const capDiagram = document.getElementById('capDiagram');
+    if (capDiagram) {
+      const capObs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            capDiagram.classList.add('is-drawn');
+            capObs.unobserve(capDiagram);
+          }
+        });
+      }, { threshold: 0.25 });
+      capObs.observe(capDiagram);
+    }
+
+    // (v2.1: market rings replaced with static nested boxes; no animation)
+
+    // TOC active highlight — scroll whisperer
+    // Pick the section whose top is CLOSEST to the viewport's anchor line (1/3 down).
+    // This avoids flicker when two sections cross the midpoint simultaneously.
+    const tocByTarget = new Map();
+    tocItems.forEach(item => tocByTarget.set(item.dataset.target, item));
+
+    function updateActiveSection() {
+      const anchor = window.innerHeight * 0.30;
+      let bestId = null;
+      let bestDelta = Infinity;
+      sections.forEach(s => {
+        const r = s.getBoundingClientRect();
+        // Only consider sections whose top is at or above the anchor
+        if (r.top > anchor + 80) return;
+        // Distance from anchor to the top of the section (measured downward from anchor)
+        const delta = anchor - r.top;
+        if (delta >= 0 && delta < bestDelta) {
+          bestDelta = delta;
+          bestId = s.id;
+        }
+      });
+      // Fallback: if nothing matched (very top of page), pick the first section
+      if (!bestId && sections.length) bestId = sections[0].id;
+
+      tocItems.forEach(item => {
+        if (item.dataset.target === bestId) item.classList.add('active');
+        else item.classList.remove('active');
+      });
+    }
+    window.addEventListener('scroll', updateActiveSection, { passive: true });
+    window.addEventListener('resize', updateActiveSection);
+    updateActiveSection();
+
+    // Smooth scroll on TOC click — account for the sticky nav by offsetting
+    const navHeight = () => (document.querySelector('.nav')?.offsetHeight || 0) + 12;
+    tocItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.getElementById(item.dataset.target);
+        if (!target) return;
+        const top = target.getBoundingClientRect().top + window.scrollY - navHeight();
+        window.scrollTo({ top, behavior: 'smooth' });
+      });
+    });
+
+    // Progress bar
+    function updateProgress() {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = max > 0 ? Math.min(100, (window.scrollY / max) * 100) : 0;
+      if (progress) progress.style.width = pct + '%';
+    }
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // NAV CLOCK
+  // ═══════════════════════════════════════════════════════════════════
+  function tickClock() {
+    const el = document.getElementById('navTime');
+    if (!el) return;
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    el.textContent = pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z';
+  }
+  setInterval(tickClock, 1000);
+  tickClock();
+
+  // ═══════════════════════════════════════════════════════════════════
+  // CTA + DOC REQUEST CLICK TRACKING
+  // ═══════════════════════════════════════════════════════════════════
+  function bindClickTracking() {
+    const ctaContact = document.getElementById('ctaContact');
+    if (ctaContact) {
+      ctaContact.addEventListener('click', () => logEvent('cta_click'));
+    }
+    document.querySelectorAll('a[data-doc]').forEach(a => {
+      a.addEventListener('click', () => logEvent('request_doc'));
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // INIT
+  // ═══════════════════════════════════════════════════════════════════
+  const SECTION_ANIMS = {
+    'hero': 'columns',
+    'thesis': 'breathe',
+    'problem': 'rain',
+    'market': 'orbit',
+    'solution': 'dna',
+    'platform': 'cascade',
+    'how': 'snake',
+    'business': 'fillsweep',
+    'whynow': 'pulse',
+    'roadmap': 'waverows',
+    'team': 'orbit',
+    'token': 'helix',
+    'funds': 'cascade',
+    'deal': 'dna',
+    'cap': 'diagswipe',
+    'risk': 'scan',
+    'cta': 'sparkle'
+  };
+
+  function init() {
+    initScroll();
+    bindClickTracking();
+
+    // Track section visibility for analytics
+    const sectionObs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          if (id && !sectionsViewed.has(id)) {
+            sectionsViewed.add(id);
+            logEvent('section_enter', { section: id });
+          }
+        }
+      });
+    }, { threshold: 0.3 });
+    document.querySelectorAll('section[id]').forEach(el => sectionObs.observe(el));
+
+    // Spawn the interactive Forge Flames
+    const gateCanvas = document.getElementById('gateFlame');
+    if (gateCanvas) {
+      window._gateFlame = new ForgeFlame(gateCanvas, {
+        cols: 64,
+        rows: 80,
+        interactive: true
+      });
+    }
+    const navCanvas = document.getElementById('particleCanvas');
+    if (navCanvas) {
+      navCanvas.width = 48;
+      navCanvas.height = 32;
+      navCanvas.style.width = '48px';
+      navCanvas.style.height = '32px';
+      window._navFlame = new ForgeFlame(navCanvas, {
+        cols: 24,
+        rows: 28,
+        interactive: true
+      });
+    }
+
+    // Section spinners — subtle orange braille animation next to each [NN / 18] index.
+    // Each section gets a different animation keyed by SECTION_ANIMS.
+    const spinBank = new SpinnerBank();
+    document.querySelectorAll('section[id]').forEach(sec => {
+      const anim = SECTION_ANIMS[sec.id];
+      if (!anim) return;
+      const spin = sec.querySelector('.sec__spin');
+      if (spin) spinBank.bind(spin, anim);
+    });
+    window._spinBank = spinBank;
+
+    // v2.3: hover burst removed — the SpinnerBank owns all sec__spin updates
+    // and hover causes zero visual change. Keeps the subtle always-on animation.
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>

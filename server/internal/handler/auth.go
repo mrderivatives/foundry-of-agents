@@ -52,7 +52,7 @@ func (h *Handler) handleMagicLink(w http.ResponseWriter, r *http.Request) {
 
 	origin := os.Getenv("CORS_ORIGIN")
 	if origin == "" {
-		origin = "https://forge-of-agents.vercel.app"
+		origin = "https://agentforge.systems"
 	}
 	verifyURL := fmt.Sprintf("%s/auth/verify?token=%s", origin, token)
 

@@ -135,9 +135,9 @@ export default function DataRoomPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-light text-zinc-100">Data Room Analytics</h1>
-          <a href="https://forge-of-agents.vercel.app/dataroom" target="_blank" rel="noopener noreferrer"
+          <a href="https://agentforge.systems/dataroom" target="_blank" rel="noopener noreferrer"
              className="text-xs text-violet-400 hover:text-violet-300 flex items-center gap-1 mt-1">
-            forge-of-agents.vercel.app/dataroom <ExternalLink size={10} />
+            agentforge.systems/dataroom <ExternalLink size={10} />
           </a>
         </div>
         <span className="text-[10px] text-zinc-600">Auto-refreshes every 30s</span>

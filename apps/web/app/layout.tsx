@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: "Foundry of Agents",
     description: "Your AI Agents. Your Crypto. Your Rules.",
     type: "website",
-    url: "https://forge-of-agents.vercel.app",
+    url: "https://agentforge.systems",
   },
   twitter: {
     card: "summary_large_image",

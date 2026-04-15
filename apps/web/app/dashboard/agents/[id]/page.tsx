@@ -404,12 +404,12 @@ export default function AgentDetailPage() {
                 </div>
               </div>
             )}
-            <p className="mt-2 text-[10px] text-zinc-600 leading-relaxed">Transactions are subject to policy limits. Cryptocurrency is volatile — only fund what you can afford to lose.</p>
+
           </div>
         ) : !walletLoading ? (
           <div className="mb-4 space-y-2">
             <button
-              onClick={() => { setShowWalletDialog(true); setRiskAcknowledged(false); setWalletError(null); }}
+              onClick={() => { if (localStorage.getItem('wallet-risk-accepted')) { handleCreateWallet(); } else { setShowWalletDialog(true); setWalletError(null); } }}
               disabled={creatingWallet}
               className="rounded-lg border border-dashed border-white/[0.06] px-4 py-2 text-xs text-zinc-500 hover:border-violet-500/30 hover:text-zinc-300 transition-all duration-200 disabled:opacity-50"
             >
@@ -1088,38 +1088,15 @@ export default function AgentDetailPage() {
             </div>
 
             <div className="space-y-3 text-sm text-zinc-400">
-              <p>This will create a Solana wallet for your agent. Please understand:</p>
-              <ul className="space-y-2.5">
-                <li className="flex items-start gap-2.5">
-                  <Shield className="w-4 h-4 text-zinc-500 mt-0.5 shrink-0" />
-                  <span>Your agent can propose trades within your set spending limits</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <Shield className="w-4 h-4 text-zinc-500 mt-0.5 shrink-0" />
-                  <span>All transactions require policy approval — your agent cannot exceed limits</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <Shield className="w-4 h-4 text-zinc-500 mt-0.5 shrink-0" />
-                  <span>You can freeze the wallet instantly at any time</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-                  <span>Cryptocurrency transactions are irreversible. Only fund with amounts you can afford to lose.</span>
-                </li>
+              <p>By creating this wallet, you acknowledge and agree that:</p>
+              <ul className="space-y-2 list-disc list-inside text-[13px]">
+                <li>This wallet handles <strong className="text-zinc-200">real cryptocurrency</strong> on the Solana blockchain</li>
+                <li>Cryptocurrency is <strong className="text-zinc-200">volatile and high-risk</strong> — values can drop significantly</li>
+                <li>You should <strong className="text-zinc-200">not store large sums</strong> in this wallet</li>
+                <li>Transactions executed by AI agents are <strong className="text-zinc-200">irreversible</strong></li>
+                <li>Only fund this wallet with amounts <strong className="text-zinc-200">you can afford to lose</strong></li>
+                <li>The platform is in <strong className="text-zinc-200">beta</strong> — use at your own risk</li>
               </ul>
-            </div>
-
-            <div className="flex items-center gap-2.5 mt-5 pt-5 border-t border-white/[0.06]">
-              <input
-                type="checkbox"
-                id="risk-ack"
-                checked={riskAcknowledged}
-                onChange={(e) => setRiskAcknowledged(e.target.checked)}
-                className="accent-violet-500 w-4 h-4"
-              />
-              <label htmlFor="risk-ack" className="text-sm text-zinc-300 cursor-pointer">
-                I understand the risks and want to enable the wallet
-              </label>
             </div>
 
             {walletError && (
@@ -1129,16 +1106,16 @@ export default function AgentDetailPage() {
             <div className="flex gap-3 mt-5">
               <button
                 onClick={() => setShowWalletDialog(false)}
-                className="flex-1 px-4 py-2.5 rounded-lg border border-white/[0.06] text-sm text-zinc-400 hover:bg-white/[0.03] transition-all duration-200"
+                className="flex-1 px-4 py-2.5 rounded-lg border border-white/[0.06] text-sm text-zinc-400 hover:text-zinc-200 transition-all duration-200"
               >
-                Cancel
+                Decline
               </button>
               <button
-                onClick={() => { setShowWalletDialog(false); handleCreateWallet(); }}
-                disabled={!riskAcknowledged || creatingWallet}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-violet-500/10 border border-violet-500/50 text-sm text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-violet-500/20 transition-all duration-200"
+                onClick={() => { setShowWalletDialog(false); localStorage.setItem('wallet-risk-accepted','true'); handleCreateWallet(); }}
+                disabled={creatingWallet}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-sm text-white disabled:opacity-50 transition-all duration-200"
               >
-                {creatingWallet ? 'Creating...' : 'Enable Wallet'}
+                {creatingWallet ? 'Creating...' : 'I Understand & Accept'}
               </button>
             </div>
           </div>

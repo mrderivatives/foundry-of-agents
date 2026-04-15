@@ -67,10 +67,17 @@ function SectionBar({ name, count, max }: { name: string; count: number; max: nu
 }
 
 export default function DataRoomPage() {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'last_visit' | 'total_time' | 'visits'>('last_visit');
+
+  useEffect(() => {
+    if (localStorage.getItem('dr-admin-auth') === 'true') setAuthenticated(true);
+  }, []);
 
   const fetchStats = async () => {
     try {
@@ -97,6 +104,22 @@ export default function DataRoomPage() {
   }) || [];
 
   const sectionMax = stats?.section_counts ? Math.max(...Object.values(stats.section_counts), 1) : 1;
+
+  if (!authenticated) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="w-full max-w-sm p-6" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12 }}>
+          <h2 className="text-lg font-medium text-zinc-100 mb-4">Admin Access</h2>
+          <form onSubmit={(e) => { e.preventDefault(); if (password === 'tenx123') { setAuthenticated(true); localStorage.setItem('dr-admin-auth', 'true'); } else { setAuthError('Invalid password'); } }}>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter password" autoFocus
+              className="w-full rounded-lg px-3 py-2 text-sm text-zinc-200 mb-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} />
+            {authError && <p className="text-xs text-red-400 mb-3">{authError}</p>}
+            <button type="submit" className="w-full px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm rounded-lg transition-colors">Access</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

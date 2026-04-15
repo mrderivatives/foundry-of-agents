@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -48,7 +50,11 @@ func (h *Handler) handleMagicLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	verifyURL := fmt.Sprintf("https://forge-of-agents.vercel.app/auth/verify?token=%s", token)
+	origin := os.Getenv("CORS_ORIGIN")
+	if origin == "" {
+		origin = "https://forge-of-agents.vercel.app"
+	}
+	verifyURL := fmt.Sprintf("%s/auth/verify?token=%s", origin, token)
 
 	h.Logger.Info().
 		Str("email", body.Email).
@@ -61,7 +67,8 @@ func (h *Handler) handleMagicLink(w http.ResponseWriter, r *http.Request) {
 			reqBody, _ := json.Marshal(map[string]interface{}{
 				"email": body.Email,
 			})
-			apiURL := h.SupabaseURL + "/auth/v1/magiclink"
+			callbackURL := origin + "/auth/callback"
+			apiURL := h.SupabaseURL + "/auth/v1/magiclink?redirect_to=" + url.QueryEscape(callbackURL)
 			req, _ := http.NewRequest("POST", apiURL, bytes.NewReader(reqBody))
 			req.Header.Set("apikey", h.SupabaseAnonKey)
 			req.Header.Set("Content-Type", "application/json")

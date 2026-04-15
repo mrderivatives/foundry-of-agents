@@ -143,7 +143,7 @@ export default function LandingPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 1.2, ease }}
           >
-            <ForgeFlame width={280} height={224} interactive={true} />
+            <ForgeFlame width={350} height={224} interactive={true} />
           </motion.div>
 
           <motion.h1

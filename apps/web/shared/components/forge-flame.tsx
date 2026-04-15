@@ -265,7 +265,7 @@ export function ForgeFlame({ width = 560, height = 560, interactive = true, clas
     <canvas
       ref={canvasRef}
       className={`cursor-crosshair ${className}`}
-      style={{ width, height, opacity: 0.35 }}
+      style={{ width, height, opacity: 0.21 }}
     />
   );
 }

@@ -187,10 +187,29 @@ func (h *Handler) handleDataroomStats(w http.ResponseWriter, r *http.Request) {
 		visitors = append(visitors, v)
 	}
 
+	// Section view counts
+	sectionCounts := map[string]int{}
+	sRows, _ := h.DB.Query(ctx,
+		`SELECT section, COUNT(*) FROM dataroom_event
+		 WHERE event_type = 'section_enter' AND section IS NOT NULL AND section != ''
+		 GROUP BY section ORDER BY COUNT(*) DESC`)
+	if sRows != nil {
+		defer sRows.Close()
+		for sRows.Next() {
+			var s string
+			var c int
+			sRows.Scan(&s, &c)
+			sectionCounts[s] = c
+		}
+	}
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"total_visitors":   totalVisitors,
-		"total_emails":     totalEmails,
-		"avg_time_seconds": int(avgTime),
-		"visitors":         visitors,
+		"summary": map[string]interface{}{
+			"total_visitors":   totalVisitors,
+			"total_emails":     totalEmails,
+			"avg_time_seconds": int(avgTime),
+		},
+		"visitors":       visitors,
+		"section_counts": sectionCounts,
 	})
 }

@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Network,
+  BarChart3,
 } from "lucide-react";
 import { api } from "@/shared/api/client";
 import { useAgentStore } from "@/features/agents/store";
@@ -210,6 +211,18 @@ export default function DashboardLayout({
           >
             <Settings className="w-4 h-4" />
             Settings
+          </Link>
+          <Link
+            href="/dashboard/dataroom"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+              pathname === "/dashboard/dataroom"
+                ? "bg-primary/10 text-foreground"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" />
+            Data Room
           </Link>
         </div>
 

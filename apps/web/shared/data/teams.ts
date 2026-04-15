@@ -176,7 +176,7 @@ export const TEAMS: TeamTemplate[] = [
       "Your career advancement team — planning, analysis, and strategic networking.",
     lead: {
       role: "Chief of Staff",
-      name: "Chief",
+      name: "Chief of Staff",
       characterId: "chief",
       tagline: "I coordinate. You decide.",
     },
@@ -222,8 +222,8 @@ export const TEAMS: TeamTemplate[] = [
     description:
       "From product vision to fundraising — your full executive team.",
     lead: {
-      role: "Chief of Staff",
-      name: "Nexus",
+      role: "COO",
+      name: "COO",
       characterId: "product-chief",
       tagline: "I keep the machine running.",
     },

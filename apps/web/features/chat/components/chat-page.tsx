@@ -130,6 +130,8 @@ function WalletCard({ event }: { event: {
 }
 
 export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji, agentDescription }: Props) {
+  // Derive avatar URL — if agentEmoji starts with '/', it's a PNG path
+  const agentAvatarUrl = agentEmoji?.startsWith('/') ? agentEmoji : null;
   const router = useRouter();
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState("");
@@ -465,6 +467,9 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
             key={msg.id}
             className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
+            {msg.role === "assistant" && agentAvatarUrl && (
+              <img src={agentAvatarUrl} alt="" className="w-7 h-7 rounded-full object-cover mt-1 mr-2 flex-shrink-0" style={{ border: '1.5px solid rgba(255,255,255,0.1)' }} />
+            )}
             <div className="max-w-[85%] sm:max-w-[75%]">
               <div
                 className={`rounded-2xl px-4 py-3 text-sm ${
@@ -490,6 +495,9 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
         ))}
         {isStreaming && (
           <div className="flex justify-start">
+            {agentAvatarUrl && (
+              <img src={agentAvatarUrl} alt="" className="w-7 h-7 rounded-full object-cover mt-1 mr-2 flex-shrink-0" style={{ border: '1.5px solid rgba(255,255,255,0.1)' }} />
+            )}
             <div className="max-w-[85%] sm:max-w-[75%]">
               <div className="rounded-2xl rounded-bl-md px-4 py-3 text-sm bg-card border border-border">
                 {walletEvent && <WalletCard event={walletEvent} />}

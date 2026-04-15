@@ -6,6 +6,7 @@ import Image from "next/image";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight, Coins, Shield, Brain, Bell, Lock, Puzzle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { ForgeFlame } from "@/shared/components/forge-flame";
 import { TEAMS } from "@/shared/data/teams";
 import { CharacterAvatar } from "@/shared/components/characters";
 import { GlassCard } from "@/shared/components/glass-card";
@@ -136,6 +137,15 @@ export default function LandingPage() {
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
+          <motion.div
+            className="mb-8 flex justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1.2, ease }}
+          >
+            <ForgeFlame width={400} height={320} interactive={true} />
+          </motion.div>
+
           <motion.h1
             className="text-[clamp(32px,6vw,72px)] font-extralight tracking-[-0.03em] leading-[1.05]"
             style={{

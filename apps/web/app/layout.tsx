@@ -19,7 +19,7 @@ export const metadata: Metadata = {
       "Deploy autonomous AI agents for crypto. Built on Solana.",
   },
   icons: {
-    icon: [{ url: "/logo.png", type: "image/png" }],
+    icon: [{ url: "/flame-64.png", type: "image/png" }],
   },
 };
 

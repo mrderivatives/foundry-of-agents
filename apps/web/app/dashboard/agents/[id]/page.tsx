@@ -355,7 +355,7 @@ export default function AgentDetailPage() {
             <span className="hidden sm:inline rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
               {agent.model || "claude-sonnet-4-6"}
             </span>
-            <div className="hidden sm:flex gap-0.5 rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="flex gap-0.5 rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-md text-violet-300" style={{ background: 'rgba(124,58,237,0.15)' }}>
                 <MessageSquare size={11} /> Chat
               </span>

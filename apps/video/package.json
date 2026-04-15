@@ -6,7 +6,7 @@
   "scripts": {
     "preview": "remotion studio",
     "render": "remotion render src/index.tsx AgentForgeDemo out/demo.mp4",
-    "render-preview": "remotion render src/index.tsx AgentForgeDemo out/demo.mp4 --frames=0-90"
+    "render-fast": "remotion render src/index.tsx AgentForgeDemo out/demo.mp4 --concurrency=4"
   },
   "keywords": [],
   "author": "",

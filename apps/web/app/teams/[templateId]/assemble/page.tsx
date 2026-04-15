@@ -439,7 +439,7 @@ export default function AssemblePage({
       if (result.lead_agent_id) {
         router.push(`/dashboard/canvas?agent=${result.lead_agent_id}`);
       } else {
-        router.push("/dashboard");
+        router.push("/dashboard/canvas");
       }
     } catch {
       const teamData = {
@@ -451,7 +451,7 @@ export default function AssemblePage({
         specialists: specialists.map((s) => ({ id: s.id, name: getSpecName(s), role: s.role, characterId: s.characterId, tagline: s.tagline, description: s.description })),
       };
       localStorage.setItem("foundry_team", JSON.stringify(teamData));
-      router.push("/dashboard");
+      router.push("/dashboard/canvas");
     } finally {
       setActivating(false);
     }

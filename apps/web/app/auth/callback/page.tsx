@@ -35,7 +35,7 @@ export default function SupabaseCallbackPage() {
           email: res.user.email,
           name: res.user.email.split("@")[0],
         });
-        router.replace("/dashboard");
+        router.replace("/dashboard/canvas");
       })
       .catch((err) => {
         setError(err.message || "Authentication failed. Please try again.");

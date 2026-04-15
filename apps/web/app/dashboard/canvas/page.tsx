@@ -6,7 +6,7 @@ import './canvas.css';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { api, BASE_URL } from '@/shared/api/client';
-import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList, Shield, Plus, ChevronDown, ChevronUp, Scroll, Cpu, FolderKanban, BookOpen, Mail, X, Loader2, Check, Trash2, Users, Copy, ExternalLink } from 'lucide-react';
+import { Search, BarChart3, Globe, FileText, Brain, Clock, Send, MessageSquare, Bell, Zap, Wallet, LayoutList, Shield, Plus, ChevronDown, ChevronUp, Scroll, Cpu, FolderKanban, BookOpen, Mail, X, Loader2, Check, Trash2, Users, Copy, ExternalLink, Network } from 'lucide-react';
 import type { Agent } from '@/shared/types';
 
 // --- Custom Node Components ---
@@ -835,13 +835,14 @@ export default function CanvasPage() {
     <div className='h-full w-full relative' style={{ background: '#09090b' }}>
       {/* Header overlay */}
       <div className='absolute top-4 left-4 z-10 flex items-center gap-2'>
-        <button
-          onClick={() => router.push(`/dashboard/agents/${agentId}`)}
-          className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-zinc-200 border border-white/[0.06] hover:bg-white/[0.05] transition-all duration-200 backdrop-blur'
-          style={{ background: 'rgba(9,9,11,0.8)' }}
-        >
-          <LayoutList size={13} /> Dashboard
-        </button>
+        <div className='flex gap-0.5 rounded-lg p-0.5 backdrop-blur' style={{ background: 'rgba(9,9,11,0.8)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <button onClick={() => router.push(`/dashboard/agents/${agentId}`)} className='flex items-center gap-1 px-2.5 py-1.5 text-xs text-zinc-500 hover:text-zinc-300 rounded-md transition-colors'>
+            <MessageSquare size={12} /> Chat
+          </button>
+          <span className='flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md text-violet-300' style={{ background: 'rgba(124,58,237,0.15)' }}>
+            <Network size={12} /> Canvas
+          </span>
+        </div>
         {agentName && (
           <span className='text-xs text-zinc-600 ml-1'>{agentName}</span>
         )}

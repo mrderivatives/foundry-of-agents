@@ -45,7 +45,7 @@ function VerifyContent() {
           email: res.user.email,
           name: res.user.email,
         });
-        router.replace("/dashboard");
+        router.replace("/dashboard/canvas");
       })
       .catch((err) => {
         setError(err.message || "Verification failed");

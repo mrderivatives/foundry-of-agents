@@ -355,12 +355,14 @@ export default function AgentDetailPage() {
             <span className="hidden sm:inline rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
               {agent.model || "claude-sonnet-4-6"}
             </span>
-            <button
-              onClick={() => router.push(`/dashboard/canvas?agent=${agentId}`)}
-              className="hidden sm:flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] text-zinc-500 hover:text-zinc-300 border border-white/[0.06] hover:bg-white/[0.03] transition-all duration-200"
-            >
-              <Network size={12} /> Canvas
-            </button>
+            <div className="hidden sm:flex gap-0.5 rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-md text-violet-300" style={{ background: 'rgba(124,58,237,0.15)' }}>
+                <MessageSquare size={11} /> Chat
+              </span>
+              <button onClick={() => router.push(`/dashboard/canvas?agent=${agentId}`)} className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-zinc-500 hover:text-zinc-300 rounded-md transition-colors">
+                <Network size={11} /> Canvas
+              </button>
+            </div>
           </div>
         </div>
 

@@ -143,7 +143,7 @@ export default function LandingPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 1.2, ease }}
           >
-            <ForgeFlame width={400} height={320} interactive={true} />
+            <ForgeFlame width={280} height={224} interactive={true} />
           </motion.div>
 
           <motion.h1
@@ -159,7 +159,7 @@ export default function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease }}
           >
-            Build Your AI Army
+            Agent Forge
           </motion.h1>
 
           <motion.div

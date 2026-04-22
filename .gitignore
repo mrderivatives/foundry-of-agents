@@ -39,3 +39,4 @@ coverage/
 *.log
 tmp/
 .turbo/
+.vercel

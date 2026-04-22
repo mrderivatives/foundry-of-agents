@@ -14,7 +14,7 @@ import type { Agent } from '@/shared/types';
 function CategoryNode({ data }: any) {
   return (
     <div style={{ padding: '0 0 4px 0' }}>
-      <span style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#52525b' }}>
+      <span style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--color-muted-foreground)' }}>
         {data.label}
       </span>
     </div>
@@ -33,26 +33,26 @@ function AgentNode({ data }: { data: any }) {
   const shortRole = data.shortRole || getShortRole(data.role);
   return (
     <div className='group relative'
-      style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', minWidth: 140, maxWidth: 180, backdropFilter: 'blur(8px)', cursor: data.agentId ? 'pointer' : 'default' }}>
+      style={{ padding: '12px 16px', borderRadius: 12, background: 'var(--color-card)', border: '1px solid var(--color-border)', minWidth: 140, maxWidth: 180, backdropFilter: 'blur(8px)', cursor: data.agentId ? 'pointer' : 'default' }}>
       <Handle type='target' position={Position.Top} style={{ background: '#7c3aed', border: 'none', width: 8, height: 8 }} />
       <div className='flex items-center gap-3'>
         {data.avatarUrl ? (
-          <img src={data.avatarUrl} alt='' className='w-10 h-10 rounded-full object-cover flex-shrink-0' style={{ boxShadow: `0 0 12px ${data.accentColor || '#7c3aed'}40`, border: '2px solid rgba(255,255,255,0.1)' }} />
+          <img src={data.avatarUrl} alt='' className='w-10 h-10 rounded-full object-cover flex-shrink-0' style={{ boxShadow: `0 0 12px ${data.accentColor || '#7c3aed'}40`, border: '2px solid var(--color-border)' }} />
         ) : (
           <div className='w-10 h-10 rounded-full bg-violet-500/20 border border-violet-500/30 flex-shrink-0' />
         )}
         <div className='flex-1 min-w-0'>
-          <div className='text-sm font-medium text-zinc-100 truncate'>{data.name}</div>
-          <div className='text-[11px] text-zinc-500 truncate'>{shortRole}</div>
+          <div className='text-sm font-medium text-foreground truncate'>{data.name}</div>
+          <div className='text-[11px] text-muted-foreground truncate'>{shortRole}</div>
         </div>
         <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${statusColor}`} />
       </div>
       <Handle type='source' position={Position.Bottom} style={{ background: '#7c3aed', border: 'none', width: 8, height: 8 }} />
       {/* Hover tooltip */}
       {data.role && data.role !== shortRole && (
-        <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 px-3 py-2 rounded-lg text-xs text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50'
-             style={{ background: '#27272a', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
-          <div className='font-medium text-zinc-100 mb-0.5'>{data.name}</div>
+        <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 px-3 py-2 rounded-lg text-xs text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50'
+             style={{ background: 'var(--color-muted)', border: '1px solid var(--color-border)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+          <div className='font-medium text-foreground mb-0.5'>{data.name}</div>
           <div>{data.role}</div>
         </div>
       )}
@@ -83,23 +83,23 @@ function ToolNode({ data }: { data: any }) {
 
   if (data.isToggle) {
     return (
-      <div style={{ padding: '5px 10px', borderRadius: 6, background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.04)', minWidth: 110, cursor: 'pointer' }}>
+      <div style={{ padding: '5px 10px', borderRadius: 6, background: 'var(--color-card)', border: '1px solid var(--color-border)', minWidth: 110, cursor: 'pointer' }}>
         <div className='flex items-center gap-1.5'>
-          <ChevronDown size={12} className='text-zinc-600' style={{ transform: data.name === 'Show less' ? 'rotate(180deg)' : undefined, transition: 'transform 0.2s' }} />
-          <div className='text-[11px] text-zinc-600'>{data.name}</div>
+          <ChevronDown size={12} className='text-muted-foreground' style={{ transform: data.name === 'Show less' ? 'rotate(180deg)' : undefined, transition: 'transform 0.2s' }} />
+          <div className='text-[11px] text-muted-foreground'>{data.name}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ position: 'relative', padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', minWidth: 130, cursor: 'pointer' }}>
+    <div style={{ position: 'relative', padding: '8px 12px', borderRadius: 8, background: 'var(--color-card)', border: '1px solid var(--color-border)', minWidth: 130, cursor: 'pointer' }}>
       <Handle type='target' position={Position.Top} style={{ background: '#a78bfa', border: 'none', width: 6, height: 6 }} />
       <div className='flex items-center gap-2'>
         <div className='w-7 h-7 rounded flex items-center justify-center' style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}>
           <Icon size={14} className='text-violet-400' />
         </div>
-        <div className='text-xs text-zinc-400'>{data.name}</div>
+        <div className='text-xs text-muted-foreground'>{data.name}</div>
       </div>
       {data.badge > 0 && (
         <span style={{
@@ -122,8 +122,8 @@ function TriggerNode({ data }: { data: any }) {
       <div className='flex items-center gap-2'>
         <Clock size={14} className='text-amber-400' />
         <div>
-          <div className='text-xs text-zinc-300'>{data.name}</div>
-          <div className='text-[10px] text-zinc-600'>{data.schedule}</div>
+          <div className='text-xs text-foreground'>{data.name}</div>
+          <div className='text-[10px] text-muted-foreground'>{data.schedule}</div>
         </div>
       </div>
       <Handle type='source' position={Position.Right} style={{ background: '#f59e0b', border: 'none', width: 6, height: 6 }} />
@@ -141,13 +141,13 @@ const OUTPUT_ICONS: Record<string, any> = {
 function OutputNode({ data }: { data: any }) {
   const Icon = OUTPUT_ICONS[data.channel] || MessageSquare;
   return (
-    <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', minWidth: 120, cursor: 'pointer' }}>
+    <div style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--color-card)', border: '1px solid var(--color-border)', minWidth: 120, cursor: 'pointer' }}>
       <Handle type='target' position={Position.Top} style={{ background: '#a78bfa', border: 'none', width: 6, height: 6 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon size={14} color='#a78bfa' />
         </div>
-        <span style={{ fontSize: 12, color: '#a1a1aa' }}>{data.name}</span>
+        <span style={{ fontSize: 12, color: 'var(--color-muted-foreground)' }}>{data.name}</span>
       </div>
     </div>
   );
@@ -162,8 +162,8 @@ function getAvatarUrl(agent: any): string {
 }
 
 // --- Shared styles ---
-const inputStyle = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' };
-const inputClass = 'w-full rounded-lg px-3 py-2 text-sm text-zinc-200';
+const inputStyle = { background: 'var(--color-card)', border: '1px solid var(--color-border)' };
+const inputClass = 'w-full rounded-lg px-3 py-2 text-sm text-foreground';
 
 // --- Main Page ---
 export default function CanvasPage() {
@@ -513,9 +513,9 @@ export default function CanvasPage() {
             <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}>
               {meta.icon}
             </div>
-            <h2 className="text-lg font-medium text-zinc-100">{meta.title}</h2>
+            <h2 className="text-lg font-medium text-foreground">{meta.title}</h2>
           </div>
-          <button onClick={() => setOpenModal(null)} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+          <button onClick={() => setOpenModal(null)} className="text-muted-foreground hover:text-foreground transition-colors">
             <X size={18} />
           </button>
         </div>
@@ -539,9 +539,9 @@ export default function CanvasPage() {
 
         {/* Footer with Save */}
         {!modalLoading && onSave && (
-          <div className="flex items-center justify-end gap-3 mt-6 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center justify-end gap-3 mt-6 pt-4" style={{ borderTop: '1px solid var(--color-border)' }}>
             {saveSuccess && <span className="text-xs text-emerald-400 flex items-center gap-1"><Check size={14} /> Saved!</span>}
-            <button onClick={() => setOpenModal(null)} className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">Cancel</button>
+            <button onClick={() => setOpenModal(null)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
             <button onClick={onSave} disabled={saving} className="px-4 py-2 text-sm bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white rounded-lg transition-colors flex items-center gap-2">
               {saving && <Loader2 size={14} className="animate-spin" />}
               Save Changes
@@ -551,8 +551,8 @@ export default function CanvasPage() {
 
         {/* Footer without Save */}
         {!modalLoading && !onSave && (
-          <div className="flex justify-end mt-6 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <button onClick={() => setOpenModal(null)} className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">Close</button>
+          <div className="flex justify-end mt-6 pt-4" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <button onClick={() => setOpenModal(null)} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">Close</button>
           </div>
         )}
       </>
@@ -565,19 +565,19 @@ export default function CanvasPage() {
         return modalData ? (
           <div className="space-y-4">
             <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">Agent Name</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Agent Name</label>
               <input className={inputClass} style={inputStyle}
                      value={modalData.name}
                      onChange={e => setModalData((p: any) => ({ ...p, name: e.target.value }))} />
             </div>
             <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">Mission / Instructions</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Mission / Instructions</label>
               <textarea className={`${inputClass} h-32 resize-none`} style={inputStyle}
                         value={modalData.instructions}
                         onChange={e => setModalData((p: any) => ({ ...p, instructions: e.target.value }))} />
             </div>
             <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">Personality</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Personality</label>
               <select className={inputClass} style={inputStyle}>
                 <option>Professional</option><option>Friendly</option><option>Technical</option><option>Creative</option>
               </select>
@@ -588,9 +588,9 @@ export default function CanvasPage() {
       case 'tool-documents':
         return modalData ? (
           <div className="space-y-4">
-            <p className="text-sm text-zinc-400">Documents that provide context to your agent.</p>
+            <p className="text-sm text-muted-foreground">Documents that provide context to your agent.</p>
             {modalData.documents.length === 0 ? (
-              <div className="px-3 py-6 rounded-lg text-center text-sm text-zinc-500" style={{ ...inputStyle }}>
+              <div className="px-3 py-6 rounded-lg text-center text-sm text-muted-foreground" style={{ ...inputStyle }}>
                 No documents uploaded
               </div>
             ) : (
@@ -598,10 +598,10 @@ export default function CanvasPage() {
                 {modalData.documents.map((doc: any) => (
                   <div key={doc.id} className="px-3 py-2 rounded-lg flex items-center justify-between" style={inputStyle}>
                     <div className="flex items-center gap-2 min-w-0">
-                      <FileText size={14} className="text-zinc-500 shrink-0" />
-                      <span className="text-sm text-zinc-300 truncate">{doc.name || doc.filename}</span>
+                      <FileText size={14} className="text-muted-foreground shrink-0" />
+                      <span className="text-sm text-foreground truncate">{doc.name || doc.filename}</span>
                     </div>
-                    <button onClick={() => deleteDoc(doc.id)} className="text-zinc-600 hover:text-red-400 transition-colors shrink-0 ml-2">
+                    <button onClick={() => deleteDoc(doc.id)} className="text-muted-foreground hover:text-red-400 transition-colors shrink-0 ml-2">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -609,8 +609,8 @@ export default function CanvasPage() {
               </div>
             )}
             <input ref={fileInputRef} type="file" className="hidden" onChange={e => { if (e.target.files?.[0]) uploadDoc(e.target.files[0]); }} />
-            <button onClick={() => fileInputRef.current?.click()} className="w-full px-4 py-2 rounded-lg text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
-                    style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
+            <button onClick={() => fileInputRef.current?.click()} className="w-full px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    style={{ border: '1px dashed var(--color-border)' }}>
               + Upload Document
             </button>
           </div>
@@ -620,8 +620,8 @@ export default function CanvasPage() {
         return modalData ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-zinc-500">Status</span>
-              <span className={`text-xs ${modalData.wallet ? 'text-emerald-400' : 'text-zinc-500'}`}>
+              <span className="text-xs text-muted-foreground">Status</span>
+              <span className={`text-xs ${modalData.wallet ? 'text-emerald-400' : 'text-muted-foreground'}`}>
                 {modalData.wallet ? modalData.wallet.status || 'Active' : 'No wallet'}
               </span>
             </div>
@@ -629,18 +629,18 @@ export default function CanvasPage() {
             {/* Deposit Address */}
             {modalData.wallet?.public_key && (
               <div className="space-y-1">
-                <label className="text-xs text-zinc-500">Deposit Address</label>
+                <label className="text-xs text-muted-foreground">Deposit Address</label>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 px-3 py-2 rounded-lg text-xs text-zinc-300 font-mono truncate" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <code className="flex-1 px-3 py-2 rounded-lg text-xs text-foreground font-mono truncate" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
                     {modalData.wallet.public_key}
                   </code>
                   <button
                     onClick={() => navigator.clipboard.writeText(modalData.wallet.public_key)}
-                    className="px-2 py-2 rounded-lg hover:bg-white/[0.06] transition-colors" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <Copy size={14} className="text-zinc-400" />
+                    className="px-2 py-2 rounded-lg hover:bg-accent transition-colors" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+                    <Copy size={14} className="text-muted-foreground" />
                   </button>
                   <a href={`https://solscan.io/account/${modalData.wallet.public_key}`} target="_blank" rel="noopener noreferrer"
-                    className="px-2 py-2 rounded-lg hover:bg-white/[0.06] transition-colors text-zinc-400 hover:text-zinc-200" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    className="px-2 py-2 rounded-lg hover:bg-accent transition-colors text-muted-foreground hover:text-foreground" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
                     <ExternalLink size={14} />
                   </a>
                 </div>
@@ -649,33 +649,33 @@ export default function CanvasPage() {
 
             {/* Balances */}
             <div className="space-y-1">
-              <label className="text-xs text-zinc-500">Balances</label>
+              <label className="text-xs text-muted-foreground">Balances</label>
               <div className="grid grid-cols-2 gap-2">
-                <div className="px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div className="text-[10px] text-zinc-500">SOL</div>
-                  <div className="text-sm font-medium text-zinc-200">{modalData.balance?.sol?.amount ?? '0.0000'}</div>
-                  <div className="text-[10px] text-zinc-600">${modalData.balance?.sol?.usd_value ?? '0.00'}</div>
+                <div className="px-3 py-2 rounded-lg" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+                  <div className="text-[10px] text-muted-foreground">SOL</div>
+                  <div className="text-sm font-medium text-foreground">{modalData.balance?.sol?.amount ?? '0.0000'}</div>
+                  <div className="text-[10px] text-muted-foreground">${modalData.balance?.sol?.usd_value ?? '0.00'}</div>
                 </div>
-                <div className="px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div className="text-[10px] text-zinc-500">USDC</div>
-                  <div className="text-sm font-medium text-zinc-200">{modalData.balance?.usdc?.amount ?? '0.00'}</div>
-                  <div className="text-[10px] text-zinc-600">${modalData.balance?.usdc?.usd_value ?? '0.00'}</div>
+                <div className="px-3 py-2 rounded-lg" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+                  <div className="text-[10px] text-muted-foreground">USDC</div>
+                  <div className="text-sm font-medium text-foreground">{modalData.balance?.usdc?.amount ?? '0.00'}</div>
+                  <div className="text-[10px] text-muted-foreground">${modalData.balance?.usdc?.usd_value ?? '0.00'}</div>
                 </div>
               </div>
               {modalData.balance?.total_usd && (
-                <div className="text-right text-[10px] text-zinc-600">≈ ${modalData.balance.total_usd} total</div>
+                <div className="text-right text-[10px] text-muted-foreground">≈ ${modalData.balance.total_usd} total</div>
               )}
             </div>
 
             {/* Spending Limits */}
             <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">Daily Limit ($)</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Daily Limit ($)</label>
               <input type="number" className={inputClass} style={inputStyle}
                      value={modalData.policy?.daily_limit_usd ?? 50}
                      onChange={e => setModalData((p: any) => ({ ...p, policy: { ...p.policy, daily_limit_usd: Number(e.target.value) } }))} />
             </div>
             <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">Per-TX Limit ($)</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Per-TX Limit ($)</label>
               <input type="number" className={inputClass} style={inputStyle}
                      value={modalData.policy?.per_tx_limit_usd ?? 25}
                      onChange={e => setModalData((p: any) => ({ ...p, policy: { ...p.policy, per_tx_limit_usd: Number(e.target.value) } }))} />
@@ -683,10 +683,10 @@ export default function CanvasPage() {
 
             {/* Allowed Tokens */}
             <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">Allowed Tokens</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Allowed Tokens</label>
               <div className="flex gap-2">
-                <span className="px-2 py-1 rounded text-xs text-zinc-300" style={{ background: 'rgba(255,255,255,0.05)' }}>SOL</span>
-                <span className="px-2 py-1 rounded text-xs text-zinc-300" style={{ background: 'rgba(255,255,255,0.05)' }}>USDC</span>
+                <span className="px-2 py-1 rounded text-xs text-foreground" style={{ background: 'var(--color-card)' }}>SOL</span>
+                <span className="px-2 py-1 rounded text-xs text-foreground" style={{ background: 'var(--color-card)' }}>USDC</span>
               </div>
             </div>
           </div>
@@ -695,8 +695,8 @@ export default function CanvasPage() {
       case 'tool-web-search':
         return (
           <div className="space-y-4">
-            <div className="flex items-center justify-between"><span className="text-sm text-zinc-300">Enabled</span><div className="w-9 h-5 rounded-full bg-violet-600 relative"><div className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-white" /></div></div>
-            <div><label className="text-xs text-zinc-500 mb-1.5 block">Provider</label><select className={inputClass} style={inputStyle}><option>Perplexity Sonar</option><option>Google Search</option></select></div>
+            <div className="flex items-center justify-between"><span className="text-sm text-foreground">Enabled</span><div className="w-9 h-5 rounded-full bg-violet-600 relative"><div className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-white" /></div></div>
+            <div><label className="text-xs text-muted-foreground mb-1.5 block">Provider</label><select className={inputClass} style={inputStyle}><option>Perplexity Sonar</option><option>Google Search</option></select></div>
           </div>
         );
 
@@ -704,7 +704,7 @@ export default function CanvasPage() {
         return modalData ? (
           <div className="space-y-4">
             <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">Model</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Model</label>
               <select className={inputClass} style={inputStyle}
                       value={modalData.model}
                       onChange={e => setModalData((p: any) => ({ ...p, model: e.target.value }))}>
@@ -713,8 +713,8 @@ export default function CanvasPage() {
                 <option value="gpt-4o">GPT-4o</option>
               </select>
             </div>
-            <div><label className="text-xs text-zinc-500 mb-1.5 block">Temperature</label><input type="range" min="0" max="1" step="0.1" defaultValue="0.7" className="w-full accent-violet-500" /></div>
-            <div><label className="text-xs text-zinc-500 mb-1.5 block">Max Tokens</label><input type="number" defaultValue={4096} className={inputClass} style={inputStyle} /></div>
+            <div><label className="text-xs text-muted-foreground mb-1.5 block">Temperature</label><input type="range" min="0" max="1" step="0.1" defaultValue="0.7" className="w-full accent-violet-500" /></div>
+            <div><label className="text-xs text-muted-foreground mb-1.5 block">Max Tokens</label><input type="number" defaultValue={4096} className={inputClass} style={inputStyle} /></div>
           </div>
         ) : null;
 
@@ -722,20 +722,20 @@ export default function CanvasPage() {
         return modalData ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-300">Persistent Memory</span>
-              <span className="text-xs text-zinc-500">{modalData.memories.length} entries</span>
+              <span className="text-sm text-foreground">Persistent Memory</span>
+              <span className="text-xs text-muted-foreground">{modalData.memories.length} entries</span>
             </div>
             {modalData.memories.length === 0 ? (
-              <p className="text-xs text-zinc-500">No memories stored yet.</p>
+              <p className="text-xs text-muted-foreground">No memories stored yet.</p>
             ) : (
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {modalData.memories.map((m: any, i: number) => (
                   <div key={m.id || i} className="px-3 py-2 rounded-lg" style={inputStyle}>
                     <div className="flex items-center gap-2 mb-1">
                       {m.type && <span className="px-1.5 py-0.5 rounded text-[10px] text-violet-300" style={{ background: 'rgba(124,58,237,0.15)' }}>{m.type}</span>}
-                      <span className="text-[10px] text-zinc-600">{m.created_at ? new Date(m.created_at).toLocaleDateString() : ''}</span>
+                      <span className="text-[10px] text-muted-foreground">{m.created_at ? new Date(m.created_at).toLocaleDateString() : ''}</span>
                     </div>
-                    <p className="text-xs text-zinc-400 line-clamp-2">{m.content || m.text || JSON.stringify(m)}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{m.content || m.text || JSON.stringify(m)}</p>
                   </div>
                 ))}
               </div>
@@ -746,31 +746,31 @@ export default function CanvasPage() {
       case 'task-scheduled':
         return modalData ? (
           <div className="space-y-4">
-            <p className="text-sm text-zinc-400">Recurring tasks on a schedule.</p>
+            <p className="text-sm text-muted-foreground">Recurring tasks on a schedule.</p>
             {modalData.cronJobs.length === 0 ? (
-              <div className="px-3 py-4 rounded-lg text-center text-sm text-zinc-500" style={inputStyle}>No scheduled tasks</div>
+              <div className="px-3 py-4 rounded-lg text-center text-sm text-muted-foreground" style={inputStyle}>No scheduled tasks</div>
             ) : (
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {modalData.cronJobs.map((job: any) => (
                   <div key={job.id} className="px-3 py-2 rounded-lg flex items-center justify-between" style={inputStyle}>
                     <div>
-                      <span className="text-sm text-zinc-300">{job.name}</span>
-                      <span className="text-xs text-zinc-500 ml-2">{job.cron_expression}</span>
+                      <span className="text-sm text-foreground">{job.name}</span>
+                      <span className="text-xs text-muted-foreground ml-2">{job.cron_expression}</span>
                     </div>
-                    <button onClick={() => deleteCron(job.id)} className="text-zinc-600 hover:text-red-400 transition-colors">
+                    <button onClick={() => deleteCron(job.id)} className="text-muted-foreground hover:text-red-400 transition-colors">
                       <Trash2 size={14} />
                     </button>
                   </div>
                 ))}
               </div>
             )}
-            <div className="space-y-2 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="space-y-2 pt-2" style={{ borderTop: '1px solid var(--color-border)' }}>
               <input className={inputClass} style={inputStyle} placeholder="Task name" value={newCronName} onChange={e => setNewCronName(e.target.value)} />
               <input className={inputClass} style={inputStyle} placeholder="Cron expression (e.g. 0 7 * * *)" value={newCronExpr} onChange={e => setNewCronExpr(e.target.value)} />
               <textarea className={`${inputClass} h-16 resize-none`} style={inputStyle} placeholder="Prompt" value={newCronPrompt} onChange={e => setNewCronPrompt(e.target.value)} />
               <button onClick={createCron} disabled={!newCronName || !newCronExpr || !newCronPrompt}
-                      className="w-full px-4 py-2 rounded-lg text-sm text-zinc-500 hover:text-zinc-300 disabled:opacity-30 transition-colors"
-                      style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
+                      className="w-full px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+                      style={{ border: '1px dashed var(--color-border)' }}>
                 + Add Schedule
               </button>
             </div>
@@ -781,7 +781,7 @@ export default function CanvasPage() {
         return modalData ? (
           <div className="space-y-4">
             <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">Telegram Chat ID</label>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Telegram Chat ID</label>
               <input className={inputClass} style={inputStyle} placeholder="207851519"
                      value={modalData.chatId}
                      onChange={e => setModalData((p: any) => ({ ...p, chatId: e.target.value }))} />
@@ -794,15 +794,15 @@ export default function CanvasPage() {
 
       // --- Static / Coming Soon modals ---
       case 'com-chat':
-        return (<div className="space-y-3"><p className="text-sm text-zinc-400">Direct chat with your agent.</p><div className="flex items-center justify-between"><span className="text-xs text-zinc-500">Status</span><span className="text-xs text-emerald-400">Connected</span></div></div>);
+        return (<div className="space-y-3"><p className="text-sm text-muted-foreground">Direct chat with your agent.</p><div className="flex items-center justify-between"><span className="text-xs text-muted-foreground">Status</span><span className="text-xs text-emerald-400">Connected</span></div></div>);
       case 'task-projects':
-        return (<div className="space-y-3"><p className="text-sm text-zinc-400">Active projects and objectives.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-zinc-500" style={{ ...inputStyle }}>Coming soon</span></div>);
+        return (<div className="space-y-3"><p className="text-sm text-muted-foreground">Active projects and objectives.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-muted-foreground" style={{ ...inputStyle }}>Coming soon</span></div>);
       case 'task-research':
-        return (<div className="space-y-3"><p className="text-sm text-zinc-400">Research tasks and findings.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-zinc-500" style={{ ...inputStyle }}>Coming soon</span></div>);
+        return (<div className="space-y-3"><p className="text-sm text-muted-foreground">Research tasks and findings.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-muted-foreground" style={{ ...inputStyle }}>Coming soon</span></div>);
       case 'com-email':
-        return (<div className="space-y-3"><p className="text-sm text-zinc-400">Email notifications.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-zinc-500" style={{ ...inputStyle }}>Coming soon</span></div>);
+        return (<div className="space-y-3"><p className="text-sm text-muted-foreground">Email notifications.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-muted-foreground" style={{ ...inputStyle }}>Coming soon</span></div>);
       case 'com-apis':
-        return (<div className="space-y-3"><p className="text-sm text-zinc-400">External API integrations.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-zinc-500" style={{ ...inputStyle }}>Coming soon</span></div>);
+        return (<div className="space-y-3"><p className="text-sm text-muted-foreground">External API integrations.</p><span className="inline-block px-2 py-0.5 rounded text-[10px] text-muted-foreground" style={{ ...inputStyle }}>Coming soon</span></div>);
       default:
         return null;
     }
@@ -814,8 +814,8 @@ export default function CanvasPage() {
         <div className="w-16 h-16 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-4">
           <Users size={28} className="text-violet-400" />
         </div>
-        <h2 className="text-xl font-light text-zinc-200 mb-2">Select or Create a Team</h2>
-        <p className="text-sm text-zinc-500 max-w-sm mb-6">Assemble a team of AI specialists that research, trade, and plan — 24/7.</p>
+        <h2 className="text-xl font-light text-foreground mb-2">Select or Create a Team</h2>
+        <p className="text-sm text-muted-foreground max-w-sm mb-6">Assemble a team of AI specialists that research, trade, and plan — 24/7.</p>
         <Link href="/teams" className="px-6 py-2.5 rounded-xl text-sm font-medium text-white border border-violet-500/50 bg-violet-500/10 hover:bg-violet-500/20 transition-all">
           Choose Your Squad
         </Link>
@@ -832,11 +832,11 @@ export default function CanvasPage() {
   }
 
   return (
-    <div className='h-full w-full relative' style={{ background: '#09090b' }}>
+    <div className='h-full w-full relative' style={{ background: 'var(--color-background)' }}>
       {/* Header overlay */}
       <div className='absolute top-4 left-4 z-10 flex items-center gap-2'>
-        <div className='flex gap-0.5 rounded-lg p-0.5 backdrop-blur' style={{ background: 'rgba(9,9,11,0.8)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <button onClick={() => router.push(`/dashboard/agents/${agentId}`)} className='flex items-center gap-1 px-2.5 py-1.5 text-xs text-zinc-500 hover:text-zinc-300 rounded-md transition-colors'>
+        <div className='flex gap-0.5 rounded-lg p-0.5 backdrop-blur' style={{ background: 'rgba(9,9,11,0.8)', border: '1px solid var(--color-border)' }}>
+          <button onClick={() => router.push(`/dashboard/agents/${agentId}`)} className='flex items-center gap-1 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-md transition-colors'>
             <MessageSquare size={12} /> Chat
           </button>
           <span className='flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md text-violet-300' style={{ background: 'rgba(124,58,237,0.15)' }}>
@@ -844,7 +844,7 @@ export default function CanvasPage() {
           </span>
         </div>
         {agentName && (
-          <span className='text-xs text-zinc-600 ml-1'>{agentName}</span>
+          <span className='text-xs text-muted-foreground ml-1'>{agentName}</span>
         )}
       </div>
       <ReactFlow
@@ -871,10 +871,10 @@ export default function CanvasPage() {
           }
         }}
       >
-        <Background color='rgba(255,255,255,0.02)' gap={24} />
+        <Background color='var(--color-border)' gap={24} />
         <Controls style={{ background: 'transparent' }} />
         <Panel position='bottom-center'>
-          <div className='w-full max-w-2xl' style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px 12px 0 0' }}>
+          <div className='w-full max-w-2xl' style={{ background: 'var(--color-card)', backdropFilter: 'blur(24px)', border: '1px solid var(--color-border)', borderRadius: '12px 12px 0 0' }}>
             <div className='flex items-center justify-between px-4 py-2.5'>
               <span className='text-[11px] text-zinc-500 font-medium uppercase tracking-wider'>Tools & Skills</span>
               <button onClick={() => setPaletteOpen(!paletteOpen)} className='text-zinc-500 hover:text-zinc-300 transition-colors'>
@@ -892,7 +892,7 @@ export default function CanvasPage() {
                   { icon: Zap, label: 'MCP Server', color: 'text-amber-400' },
                   { icon: Plus, label: 'Add Skill', color: 'text-zinc-500' },
                 ].map(t => (
-                  <div key={t.label} className='flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-zinc-400 whitespace-nowrap cursor-default hover:bg-white/[0.03] transition-colors' style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div key={t.label} className='flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-zinc-400 whitespace-nowrap cursor-default hover:bg-accent transition-colors' style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
                     <t.icon size={12} className={t.color} /> {t.label}
                   </div>
                 ))}
@@ -905,7 +905,7 @@ export default function CanvasPage() {
       {/* Onboarding Wizard */}
       {onboardingStep !== null && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-md mx-4">
-          <div className="rounded-2xl p-6 shadow-2xl" style={{ background: '#18181b', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="rounded-2xl p-6 shadow-2xl" style={{ background: 'var(--color-popover)', border: '1px solid var(--color-border)' }}>
             <div className="text-[10px] text-violet-400 font-medium uppercase tracking-wider mb-1">Step {onboardingStep} of 5</div>
             <h3 className="text-base font-medium text-zinc-100 mb-2">
               {onboardingStep === 1 && 'Meet Your Team'}
@@ -960,7 +960,7 @@ export default function CanvasPage() {
       {openModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setOpenModal(null)}>
           <div className="w-full max-w-lg mx-4 rounded-2xl p-6 shadow-2xl"
-               style={{ background: '#18181b', border: '1px solid rgba(255,255,255,0.06)' }}
+               style={{ background: 'var(--color-popover)', border: '1px solid var(--color-border)' }}
                onClick={e => e.stopPropagation()}>
             {renderModalContent(openModal)}
           </div>

@@ -86,7 +86,7 @@ function TeamShowcaseCard({ team }: { team: (typeof TEAMS)[number] }) {
   return (
     <GlassCard className="flex-shrink-0 w-[200px] p-7 cursor-pointer" style={{ borderLeft: `2px solid ${team.accentColor}30` }}>
       <div className="mb-3"><TeamIcon teamId={team.id} size="md" /></div>
-      <h3 className="font-medium text-sm text-[#fafafa] mb-1">{team.name}</h3>
+      <h3 className="font-medium text-sm text-foreground mb-1">{team.name}</h3>
       <div className="flex items-center justify-center gap-3 my-4">
         <CharacterAvatar
           characterId={team.lead.characterId}
@@ -106,7 +106,7 @@ function TeamShowcaseCard({ team }: { team: (typeof TEAMS)[number] }) {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="w-[36px] h-[36px] rounded-full border-2 border-dashed border-white/[0.15] flex items-center justify-center text-[#71717a] text-xs"
+                className="w-[36px] h-[36px] rounded-full border-2 border-dashed border-border flex items-center justify-center text-muted-foreground text-xs"
               >
                 ?
               </div>
@@ -114,21 +114,21 @@ function TeamShowcaseCard({ team }: { team: (typeof TEAMS)[number] }) {
           </>
         )}
       </div>
-      <p className="text-xs text-[#71717a] leading-relaxed">{team.vibe}</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">{team.vibe}</p>
     </GlassCard>
   );
 }
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen" style={{ background: "#09090b" }}>
+    <div className="min-h-screen" style={{ background: "var(--color-background)" }}>
       {/* Hero */}
       <section className="relative flex flex-col items-center justify-center px-6 py-20" style={{ minHeight: '100dvh' }}>
         {/* Hero background — extends beyond hero into team showcase */}
         <div className="absolute inset-0 h-[150vh] overflow-hidden">
           <Image src="/hero-bg-network-complex.png" alt="" fill className="object-cover opacity-[0.12] scale-110" priority />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#09090b]/40 via-transparent to-[#09090b]" />
-          <div className="absolute bottom-0 h-64 w-full bg-gradient-to-t from-[#09090b] to-transparent" />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, color-mix(in srgb, var(--color-background) 40%, transparent), transparent, var(--color-background))" }} />
+          <div className="absolute bottom-0 h-64 w-full" style={{ background: "linear-gradient(to top, var(--color-background), transparent)" }} />
         </div>
 
         {/* Slow-moving gradient orbs */}
@@ -149,7 +149,7 @@ export default function LandingPage() {
           <motion.h1
             className="text-[clamp(28px,5vw,56px)] font-extralight tracking-[-0.03em] leading-[1.15]"
             style={{
-              background: "linear-gradient(135deg, #fff 0%, #7c3aed 50%, rgba(255,255,255,0.4) 100%)",
+              background: "linear-gradient(135deg, var(--color-foreground) 0%, #7c3aed 50%, color-mix(in srgb, var(--color-foreground) 40%, transparent) 100%)",
               backgroundSize: "200% 200%",
               animation: "gradient-shift 8s ease infinite",
               WebkitBackgroundClip: "text",
@@ -168,9 +168,9 @@ export default function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.15, ease }}
           >
-            <p className="text-lg text-[#a1a1aa] leading-loose">A team of AI agents.</p>
-            <p className="text-lg text-[#a1a1aa] leading-loose">Working for you.</p>
-            <p className="text-lg text-[#a1a1aa] leading-loose">24 hours a day.</p>
+            <p className="text-lg text-muted-foreground leading-loose">A team of AI agents.</p>
+            <p className="text-lg text-muted-foreground leading-loose">Working for you.</p>
+            <p className="text-lg text-muted-foreground leading-loose">24 hours a day.</p>
           </motion.div>
 
           <motion.div
@@ -201,15 +201,15 @@ export default function LandingPage() {
           </motion.div>
 
           <motion.div
-            className="mt-8 flex items-center justify-center gap-3 text-2xl font-light text-[#a1a1aa]"
+            className="mt-8 flex items-center justify-center gap-3 text-2xl font-light text-muted-foreground"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.45, ease }}
           >
             <span>8,247 teams</span>
-            <span className="text-[#52525b]">·</span>
+            <span className="text-muted-foreground">·</span>
             <span>47K+ tasks</span>
-            <span className="text-[#52525b]">·</span>
+            <span className="text-muted-foreground">·</span>
             <span>Free to start</span>
           </motion.div>
         </div>
@@ -222,14 +222,14 @@ export default function LandingPage() {
             <h2
               className="text-[clamp(24px,3vw,36px)] font-light tracking-[-0.02em] text-center mb-4"
               style={{
-                background: "linear-gradient(180deg, #fff 40%, rgba(255,255,255,0.5) 100%)",
+                background: "linear-gradient(180deg, var(--color-foreground) 40%, color-mix(in srgb, var(--color-foreground) 50%, transparent) 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
             >
               Why an AI Army?
             </h2>
-            <p className="text-center text-[#71717a] mb-16 max-w-md mx-auto">
+            <p className="text-center text-muted-foreground mb-16 max-w-md mx-auto">
               Two reasons people build teams. Which one are you?
             </p>
           </FadeIn>
@@ -238,19 +238,19 @@ export default function LandingPage() {
             <FadeIn delay={0.1}>
               <GlassCard className="p-8 max-w-xl mx-auto" hover={false}>
                 <div className="mb-4"><FeatureIcon icon={Coins} color="#f59e0b" /></div>
-                <h3 className="text-lg font-medium text-[#fafafa] mb-3">
+                <h3 className="text-lg font-medium text-foreground mb-3">
                   Make Money While You Sleep
                 </h3>
-                <p className="text-[#a1a1aa] text-sm leading-relaxed mb-6">
+                <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                   Your team of AI agents monitors markets 24/7, executes trades
                   at the optimal moment, and catches opportunities you&apos;d miss.
                 </p>
-                <div className="rounded-lg p-4 bg-white/[0.02] border border-white/[0.04]">
-                  <p className="text-sm text-[#71717a] italic">
+                <div className="rounded-lg p-4 bg-card border border-border">
+                  <p className="text-sm text-muted-foreground italic">
                     &ldquo;Foundry&apos;s DCA bot caught the March dip at $88 SOL.
                     I was sleeping.&rdquo;
                   </p>
-                  <p className="text-xs text-[#52525b] mt-2">— @early_user</p>
+                  <p className="text-xs text-muted-foreground mt-2">— @early_user</p>
                 </div>
               </GlassCard>
             </FadeIn>
@@ -258,19 +258,19 @@ export default function LandingPage() {
             <FadeIn delay={0.2}>
               <GlassCard className="p-8 max-w-xl mx-auto" hover={false}>
                 <div className="mb-4"><FeatureIcon icon={Shield} color="#3b82f6" /></div>
-                <h3 className="text-lg font-medium text-[#fafafa] mb-3">
+                <h3 className="text-lg font-medium text-foreground mb-3">
                   Don&apos;t Get Replaced — Lead It
                 </h3>
-                <p className="text-[#a1a1aa] text-sm leading-relaxed mb-6">
+                <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                   Everyone&apos;s hiring AI. The question isn&apos;t whether AI replaces
                   your job — it&apos;s whether you&apos;re the one leading it.
                 </p>
-                <div className="rounded-lg p-4 bg-white/[0.02] border border-white/[0.04]">
-                  <p className="text-sm text-[#71717a] italic">
+                <div className="rounded-lg p-4 bg-card border border-border">
+                  <p className="text-sm text-muted-foreground italic">
                     &ldquo;I run a 4-agent team that does the research output of
                     3 analysts. My boss thinks I&apos;m magic.&rdquo;
                   </p>
-                  <p className="text-xs text-[#52525b] mt-2">— @anon_user</p>
+                  <p className="text-xs text-muted-foreground mt-2">— @anon_user</p>
                 </div>
               </GlassCard>
             </FadeIn>
@@ -285,7 +285,7 @@ export default function LandingPage() {
             <h2
               className="text-[clamp(24px,3vw,36px)] font-light tracking-[-0.02em] text-center mb-16"
               style={{
-                background: "linear-gradient(180deg, #fff 40%, rgba(255,255,255,0.5) 100%)",
+                background: "linear-gradient(180deg, var(--color-foreground) 40%, color-mix(in srgb, var(--color-foreground) 50%, transparent) 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
@@ -311,7 +311,7 @@ export default function LandingPage() {
             <h2
               className="text-[clamp(24px,3vw,36px)] font-light tracking-[-0.02em] text-center mb-20"
               style={{
-                background: "linear-gradient(180deg, #fff 40%, rgba(255,255,255,0.5) 100%)",
+                background: "linear-gradient(180deg, var(--color-foreground) 40%, color-mix(in srgb, var(--color-foreground) 50%, transparent) 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
@@ -340,11 +340,11 @@ export default function LandingPage() {
             ].map((item, i) => (
               <FadeIn key={item.num} delay={i * 0.15}>
                 <div className="flex-1 text-center">
-                  <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center mx-auto mb-4 text-lg font-light text-[#a1a1aa]">
+                  <div className="w-12 h-12 rounded-full border border-border flex items-center justify-center mx-auto mb-4 text-lg font-light text-muted-foreground">
                     {item.num}
                   </div>
                   <h3 className="text-lg font-light mb-2">{item.title}</h3>
-                  <p className="text-sm text-[#71717a] leading-relaxed">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {item.desc}
                   </p>
                 </div>
@@ -365,7 +365,7 @@ export default function LandingPage() {
             ].map((quote, i) => (
               <FadeIn key={i} delay={i * 0.1}>
                 <GlassCard className="p-6" hover={false}>
-                  <p className="text-sm text-[#a1a1aa] italic leading-relaxed">
+                  <p className="text-sm text-muted-foreground italic leading-relaxed">
                     &ldquo;{quote}&rdquo;
                   </p>
                 </GlassCard>
@@ -382,14 +382,14 @@ export default function LandingPage() {
             <h2
               className="text-[clamp(28px,4vw,48px)] font-light tracking-[-0.02em] mb-6"
               style={{
-                background: "linear-gradient(180deg, #fff 40%, rgba(255,255,255,0.5) 100%)",
+                background: "linear-gradient(180deg, var(--color-foreground) 40%, color-mix(in srgb, var(--color-foreground) 50%, transparent) 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
             >
               Ready to Build Your Team?
             </h2>
-            <p className="text-[#71717a] mb-10 max-w-md mx-auto">
+            <p className="text-muted-foreground mb-10 max-w-md mx-auto">
               Join thousands of operators who let AI do the heavy lifting.
             </p>
             <Link
@@ -404,15 +404,15 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] py-16 px-6">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#52525b]">
+      <footer className="border-t border-border py-16 px-6">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <span>TenX Protocols (TSX-V: TNX) &copy; 2026</span>
           <div className="flex items-center gap-6">
-            <span className="hover:text-[#71717a] cursor-pointer transition-colors duration-200">About</span>
-            <span className="hover:text-[#71717a] cursor-pointer transition-colors duration-200">Docs</span>
-            <span className="hover:text-[#71717a] cursor-pointer transition-colors duration-200">Terms</span>
-            <span className="hover:text-[#71717a] cursor-pointer transition-colors duration-200">X/Twitter</span>
-            <span className="hover:text-[#71717a] cursor-pointer transition-colors duration-200">Discord</span>
+            <span className="hover:text-muted-foreground cursor-pointer transition-colors duration-200">About</span>
+            <span className="hover:text-muted-foreground cursor-pointer transition-colors duration-200">Docs</span>
+            <span className="hover:text-muted-foreground cursor-pointer transition-colors duration-200">Terms</span>
+            <span className="hover:text-muted-foreground cursor-pointer transition-colors duration-200">X/Twitter</span>
+            <span className="hover:text-muted-foreground cursor-pointer transition-colors duration-200">Discord</span>
           </div>
         </div>
       </footer>

@@ -43,7 +43,7 @@ function EditableName({
             }
             if (e.key === "Escape") setEditing(false);
           }}
-          className="bg-transparent text-[#fafafa] text-sm font-medium text-center border-b border-white/10 outline-none focus:border-violet-500/50 w-24 transition-all duration-200 py-0.5"
+          className="bg-transparent text-foreground text-sm font-medium text-center border-b border-border outline-none focus:border-violet-500/50 w-24 transition-all duration-200 py-0.5"
         />
         <button
           onClick={() => {
@@ -66,8 +66,8 @@ function EditableName({
       }}
       className="flex items-center justify-center gap-1 group mx-auto"
     >
-      <span className="font-medium text-sm text-[#fafafa]">{value}</span>
-      <Pencil className="w-3 h-3 text-[#71717a] group-hover:text-[#a1a1aa] transition-colors duration-200" />
+      <span className="font-medium text-sm text-foreground">{value}</span>
+      <Pencil className="w-3 h-3 text-muted-foreground group-hover:text-muted-foreground transition-colors duration-200" />
     </button>
   );
 }
@@ -107,12 +107,12 @@ function AgentCard({
     >
       <div className="group relative">
         <div
-          className={`relative p-5 text-center rounded-xl border bg-white/[0.03] backdrop-blur-xl ${isLead ? 'w-[180px] border-white/[0.06]' : 'w-[160px] border-white/[0.06]'}`}
+          className={`relative p-5 text-center rounded-xl border bg-card backdrop-blur-xl ${isLead ? 'w-[180px] border-border' : 'w-[160px] border-border'}`}
         >
           {isLead && (
             <div
               className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] font-medium px-2.5 py-0.5 rounded-full"
-              style={{ background: accentColor, color: "#09090b" }}
+              style={{ background: accentColor, color: 'var(--color-background)' }}
             >
               LEAD
             </div>
@@ -125,8 +125,8 @@ function AgentCard({
             />
           </div>
           <EditableName value={name} onChange={onNameChange} />
-          <p className="text-xs text-[#71717a] mt-1">{role}</p>
-          <p className="text-[10px] text-[#71717a] italic mt-1.5 leading-tight opacity-60">
+          <p className="text-xs text-muted-foreground mt-1">{role}</p>
+          <p className="text-[10px] text-muted-foreground italic mt-1.5 leading-tight opacity-60">
             &ldquo;{tagline}&rdquo;
           </p>
         </div>
@@ -134,8 +134,8 @@ function AgentCard({
         {/* Tooltip */}
         {description && (
           <div
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 px-3 py-2 rounded-lg text-xs text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
-            style={{ background: '#27272a', border: '1px solid rgba(255,255,255,0.08)' }}
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 px-3 py-2 rounded-lg text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+            style={{ background: 'var(--color-muted)', border: '1px solid var(--color-border)' }}
           >
             {description}
           </div>
@@ -162,7 +162,7 @@ function OrgChartLines({ specCount }: { specCount: number }) {
           y1={0}
           x2={pos * spacing}
           y2={48}
-          stroke="#27272a"
+          stroke="var(--color-border)"
           strokeWidth={1}
           initial={{ pathLength: 0 }}
           animate={{ pathLength: 1 }}
@@ -204,40 +204,40 @@ function AddSpecialistModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div
         className="w-full max-w-sm mx-4 rounded-2xl p-6 shadow-2xl"
-        style={{ background: '#18181b', border: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: 'var(--color-popover)', border: '1px solid var(--color-border)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-medium text-zinc-100">Add Specialist</h3>
-          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+          <h3 className="text-base font-medium text-foreground">Add Specialist</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs text-zinc-500 mb-1">Name</label>
+            <label className="block text-xs text-muted-foreground mb-1">Name</label>
             <input
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Scout"
-              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:border-violet-500/50 transition-colors"
+              className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-violet-500/50 transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-zinc-500 mb-1">Description</label>
+            <label className="block text-xs text-muted-foreground mb-1">Description</label>
             <input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. Monitors whale wallets and alerts on moves"
-              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-zinc-100 outline-none focus:border-violet-500/50 transition-colors"
+              className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-violet-500/50 transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-zinc-500 mb-2">Avatar</label>
+            <label className="block text-xs text-muted-foreground mb-2">Avatar</label>
             <div className="flex flex-wrap gap-2">
               {AVAILABLE_AVATARS.map((avatarId) => (
                 <button
@@ -281,7 +281,7 @@ function SpecialistPicker({
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-light text-[#fafafa] tracking-[-0.02em]">Pick 3 Specialists</h3>
+        <h3 className="text-lg font-light text-foreground tracking-[-0.02em]">Pick 3 Specialists</h3>
         <span
           className="text-sm font-medium px-3 py-1 rounded-full"
           style={{
@@ -305,12 +305,12 @@ function SpecialistPicker({
                 if (!isSelected && selected.length >= 3) return;
                 onToggle(spec.id);
               }}
-              className="relative rounded-xl p-3 text-center transition-all duration-200 hover:bg-white/[0.04] active:scale-[0.98]"
+              className="relative rounded-xl p-3 text-center transition-all duration-200 hover:bg-accent active:scale-[0.98]"
               style={{
                 background: isSelected ? `${accentColor}08` : "transparent",
                 border: isSelected
                   ? `2px solid ${accentColor}`
-                  : "1px solid rgba(255,255,255,0.06)",
+                  : "1px solid var(--color-border)",
               }}
             >
               {isSelected && (
@@ -318,7 +318,7 @@ function SpecialistPicker({
                   className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
                   style={{ background: accentColor }}
                 >
-                  <Check className="w-3 h-3 text-[#09090b]" />
+                  <Check className="w-3 h-3" style={{ color: 'var(--color-background)' }} />
                 </div>
               )}
               <div className="flex justify-center mb-1">
@@ -328,10 +328,10 @@ function SpecialistPicker({
                   accentColor={accentColor}
                 />
               </div>
-              <p className="text-xs font-medium text-[#fafafa] truncate">
+              <p className="text-xs font-medium text-foreground truncate">
                 {spec.role}
               </p>
-              <p className="text-[10px] text-[#71717a] flex items-center justify-center gap-1">
+              <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1">
                 {spec.teamId && <TeamIcon teamId={spec.teamId} size="sm" />}
                 {spec.name}
               </p>
@@ -459,25 +459,25 @@ export default function AssemblePage({
 
   if (!team) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#09090b" }}>
-        <p className="text-[#71717a]">Team not found</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-background)' }}>
+        <p className="text-muted-foreground">Team not found</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#09090b" }}>
+    <div className="min-h-screen" style={{ background: 'var(--color-background)' }}>
       {/* Header */}
       <div className="max-w-[640px] mx-auto px-6 pt-12 pb-6">
         <div className="flex items-center justify-between mb-8">
           <Link
             href="/teams"
-            className="flex items-center gap-2 text-sm text-[#71717a] hover:text-[#a1a1aa] transition-colors duration-200"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-muted-foreground transition-colors duration-200"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </Link>
-          <span className="text-xs text-[#71717a] font-mono">
+          <span className="text-xs text-muted-foreground font-mono">
             Step {isCustom && !showOrgChart ? "2/3" : "3/3"}
           </span>
         </div>
@@ -497,7 +497,7 @@ export default function AssemblePage({
           >
             {showOrgChart ? "Your Team" : "Build Your Custom Team"}
           </h1>
-          <p className="text-[#71717a]">
+          <p className="text-muted-foreground">
             {showOrgChart
               ? "Rename your agents. Make them yours."
               : "Pick any 3 specialists from across all teams."}
@@ -513,7 +513,7 @@ export default function AssemblePage({
             animate={{ opacity: 1, y: 0 }}
           >
             <GlassCard className="mb-8 p-6" hover={false}>
-              <p className="text-xs text-[#71717a] font-medium uppercase tracking-wider mb-3">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-3">
                 Your Lead
               </p>
               <div className="flex items-center gap-4">
@@ -524,8 +524,8 @@ export default function AssemblePage({
                 />
                 <div>
                   <EditableName value={leadName} onChange={setLeadName} />
-                  <p className="text-xs text-[#71717a]">{team.lead.role}</p>
-                  <p className="text-[10px] text-[#71717a] italic mt-1 opacity-60">
+                  <p className="text-xs text-muted-foreground">{team.lead.role}</p>
+                  <p className="text-[10px] text-muted-foreground italic mt-1 opacity-60">
                     &ldquo;{team.lead.tagline}&rdquo;
                   </p>
                 </div>
@@ -546,7 +546,7 @@ export default function AssemblePage({
               >
                 <button
                   onClick={() => setShowOrgChart(true)}
-                  className="inline-flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-medium text-[#fafafa] border border-white/[0.1] bg-white/[0.03] hover:bg-white/[0.06] transition-all duration-200 active:scale-[0.98]"
+                  className="inline-flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-medium text-foreground border border-border bg-card hover:bg-accent transition-all duration-200 active:scale-[0.98]"
                 >
                   Assemble Team
                   <ArrowRight className="w-4 h-4" />
@@ -615,13 +615,13 @@ export default function AssemblePage({
                   >
                     <button
                       onClick={() => setShowAddModal(true)}
-                      className="w-[160px] p-5 text-center rounded-xl border-2 border-dashed border-white/[0.1] bg-transparent hover:border-white/[0.2] hover:bg-white/[0.02] transition-all duration-200 active:scale-[0.98] flex flex-col items-center justify-center gap-2"
+                      className="w-[160px] p-5 text-center rounded-xl border-2 border-dashed border-border bg-transparent hover:border-border hover:bg-card transition-all duration-200 active:scale-[0.98] flex flex-col items-center justify-center gap-2"
                       style={{ minHeight: 160 }}
                     >
-                      <div className="w-16 h-16 rounded-full border-2 border-dashed border-white/[0.1] flex items-center justify-center">
-                        <Plus className="w-6 h-6 text-[#71717a]" />
+                      <div className="w-16 h-16 rounded-full border-2 border-dashed border-border flex items-center justify-center">
+                        <Plus className="w-6 h-6 text-muted-foreground" />
                       </div>
-                      <span className="text-xs text-[#71717a]">Add Specialist</span>
+                      <span className="text-xs text-muted-foreground">Add Specialist</span>
                     </button>
                   </motion.div>
                 )}

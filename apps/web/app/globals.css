@@ -23,9 +23,31 @@
   --radius: 0.75rem;
 }
 
+:root.light {
+  --color-background: #faf9f7;
+  --color-foreground: #1a1a2e;
+  --color-card: #ffffff;
+  --color-card-foreground: #1a1a2e;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1a1a2e;
+  --color-primary: #7c3aed;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f0eeeb;
+  --color-secondary-foreground: #52525b;
+  --color-muted: #e8e5e1;
+  --color-muted-foreground: #71717a;
+  --color-accent: #f3f0ed;
+  --color-accent-foreground: #1a1a2e;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-input: rgba(0, 0, 0, 0.06);
+  --color-ring: #7c3aed;
+}
+
 body {
-  background-color: #09090b;
-  color: #fafafa;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
   font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }

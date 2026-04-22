@@ -93,7 +93,7 @@ export default function DashboardLayout({
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-[260px] flex flex-col border-r border-white/[0.06] bg-[#09090b] transform transition-transform lg:translate-x-0 ${
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-[260px] flex flex-col border-r border-border bg-background transform transition-transform lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -104,7 +104,7 @@ export default function DashboardLayout({
             className="flex items-center gap-2.5"
           >
             <img src="/logo.png" alt="Forge" className="w-6 h-6" />
-            <span className="text-sm font-semibold tracking-tight text-zinc-100">Agent <span className="text-zinc-500 font-normal">Forge</span></span>
+            <span className="text-sm font-semibold tracking-tight text-foreground">Agent <span className="text-muted-foreground font-normal">Forge</span></span>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -247,7 +247,7 @@ export default function DashboardLayout({
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
-        <div className="lg:hidden flex items-center gap-3 border-b border-white/[0.06] bg-[#09090b] px-4 py-3">
+        <div className="lg:hidden flex items-center gap-3 border-b border-border bg-background px-4 py-3">
           <button
             onClick={() => setSidebarOpen(true)}
             className="text-muted-foreground hover:text-foreground"
@@ -256,7 +256,7 @@ export default function DashboardLayout({
           </button>
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Forge" className="w-6 h-6" />
-            <span className="text-sm font-semibold tracking-tight text-zinc-100">Agent <span className="text-zinc-500 font-normal">Forge</span></span>
+            <span className="text-sm font-semibold tracking-tight text-foreground">Agent <span className="text-muted-foreground font-normal">Forge</span></span>
           </div>
         </div>
         <main className="flex-1 overflow-y-auto">{children}</main>

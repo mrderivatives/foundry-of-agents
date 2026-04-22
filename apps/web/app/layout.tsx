@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "next-themes";
 
 const inter = Inter({ subsets: ['latin'], display: 'swap', weight: ['200','300','400','500','600'] });
 import { SolanaWalletProvider } from "@/shared/providers/wallet-provider";
@@ -32,12 +33,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
 
       </head>
       <body className={`min-h-screen antialiased ${inter.className}`}>
-        <SolanaWalletProvider>{children}</SolanaWalletProvider>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <SolanaWalletProvider>{children}</SolanaWalletProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

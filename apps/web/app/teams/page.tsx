@@ -35,12 +35,12 @@ function TeamCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-2">
               <TeamIcon teamId={team.id} size="md" />
-              <h3 className="text-lg font-light text-[#fafafa] tracking-[-0.02em]">{team.name}</h3>
+              <h3 className="text-lg font-light text-foreground tracking-[-0.02em]">{team.name}</h3>
             </div>
-            <p className="text-sm text-[#a1a1aa] mb-3">
+            <p className="text-sm text-muted-foreground mb-3">
               {team.vibe}
             </p>
-            <p className="text-sm text-[#71717a] leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               {team.description}
             </p>
 
@@ -59,7 +59,7 @@ function TeamCard({
               {team.specialists.map((s) => (
                 <span
                   key={s.id}
-                  className="text-xs px-2.5 py-1 rounded-full text-[#a1a1aa] border border-white/[0.06] bg-white/[0.02]"
+                  className="text-xs px-2.5 py-1 rounded-full text-muted-foreground border border-border bg-card"
                 >
                   {s.role}
                 </span>
@@ -86,7 +86,7 @@ function TeamCard({
               [1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="w-[48px] h-[48px] rounded-full border-2 border-dashed border-white/[0.1] flex items-center justify-center text-[#71717a] text-sm"
+                  className="w-[48px] h-[48px] rounded-full border-2 border-dashed border-border flex items-center justify-center text-muted-foreground text-sm"
                 >
                   ?
                 </div>
@@ -95,7 +95,7 @@ function TeamCard({
 
           {/* Right: CTA */}
           <div className="sm:ml-4 shrink-0">
-            <div className="flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium text-[#a1a1aa] border border-white/10 transition-all duration-200 group-hover:border-white/20 group-hover:text-white active:scale-[0.98]">
+            <div className="flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium text-muted-foreground border border-border transition-all duration-200 group-hover:border-border group-hover:text-foreground active:scale-[0.98]">
               {team.id === "custom" ? "BUILD" : "SELECT"}
               <ArrowRight className="w-4 h-4" />
             </div>
@@ -112,18 +112,18 @@ export default function TeamsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen" style={{ background: "#09090b" }}>
+    <div className="min-h-screen" style={{ background: 'var(--color-background)' }}>
       {/* Header */}
       <div className="max-w-3xl mx-auto px-6 pt-24 pb-6">
         <div className="flex items-center justify-between mb-8">
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm text-[#71717a] hover:text-[#a1a1aa] transition-colors duration-200"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-muted-foreground transition-colors duration-200"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </Link>
-          <span className="text-xs text-[#71717a] font-mono">Step 1/3</span>
+          <span className="text-xs text-muted-foreground font-mono">Step 1/3</span>
         </div>
 
         <motion.div
@@ -141,7 +141,7 @@ export default function TeamsPage() {
           >
             Choose Your Squad
           </h1>
-          <p className="text-[#71717a]">
+          <p className="text-muted-foreground">
             Pick a pre-built team or build your own. You can always change later.
           </p>
         </motion.div>
@@ -166,7 +166,7 @@ function MoreTeamsToggle() {
     <div className="max-w-3xl mx-auto px-6 pb-24">
       <button
         onClick={() => setShowMore(!showMore)}
-        className="flex items-center gap-2 mx-auto mt-6 mb-6 text-sm text-zinc-600 hover:text-zinc-400 transition-colors"
+        className="flex items-center gap-2 mx-auto mt-6 mb-6 text-sm text-muted-foreground hover:text-muted-foreground transition-colors"
       >
         {showMore ? '▲ Show less' : '▼ More team types'}
       </button>

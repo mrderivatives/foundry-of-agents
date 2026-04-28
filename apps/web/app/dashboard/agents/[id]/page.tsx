@@ -331,7 +331,7 @@ export default function AgentDetailPage() {
   return (
     <div className="flex h-full flex-col">
       {/* Agent Header */}
-      <div className="border-b border-white/[0.06] bg-[#09090b] px-4 sm:px-6 py-4 shrink-0">
+      <div className="border-b border-border bg-background px-4 sm:px-6 py-4 shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <AgentAvatar emoji={agent.avatar_url} size={40} />
@@ -347,7 +347,7 @@ export default function AgentDetailPage() {
                   ? "bg-green-500/10 text-green-400"
                   : agent.status === "working"
                     ? "bg-blue-500/10 text-blue-400"
-                    : "bg-zinc-500/10 text-zinc-400"
+                    : "bg-muted text-muted-foreground"
               }`}
             >
               {agent.status}
@@ -355,11 +355,11 @@ export default function AgentDetailPage() {
             <span className="hidden sm:inline rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
               {agent.model || "claude-sonnet-4-6"}
             </span>
-            <div className="flex gap-0.5 rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="flex gap-0.5 rounded-lg p-0.5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
               <span className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-md text-violet-300" style={{ background: 'rgba(124,58,237,0.15)' }}>
                 <MessageSquare size={11} /> Chat
               </span>
-              <button onClick={() => router.push(`/dashboard/canvas?agent=${agentId}`)} className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-zinc-500 hover:text-zinc-300 rounded-md transition-colors">
+              <button onClick={() => router.push(`/dashboard/canvas?agent=${agentId}`)} className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-muted-foreground hover:text-foreground rounded-md transition-colors">
                 <Network size={11} /> Canvas
               </button>
             </div>
@@ -394,7 +394,7 @@ export default function AgentDetailPage() {
                 <button onClick={loadWallet} className="text-muted-foreground hover:text-primary" title="Refresh"><RefreshCw className="w-3 h-3" /></button>
                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                   walletData.wallet.status === 'active' ? 'bg-green-500/10 text-green-400' :
-                  walletData.wallet.status === 'frozen' ? 'bg-red-500/10 text-red-400' : 'bg-zinc-500/10 text-zinc-400'
+                  walletData.wallet.status === 'frozen' ? 'bg-red-500/10 text-red-400' : 'bg-muted text-muted-foreground'
                 }`}>{walletData.wallet.status}</span>
               </div>
             </div>
@@ -413,7 +413,7 @@ export default function AgentDetailPage() {
             <button
               onClick={() => { if (localStorage.getItem('wallet-risk-accepted')) { handleCreateWallet(); } else { setShowWalletDialog(true); setWalletError(null); } }}
               disabled={creatingWallet}
-              className="rounded-lg border border-dashed border-white/[0.06] px-4 py-2 text-xs text-zinc-500 hover:border-violet-500/30 hover:text-zinc-300 transition-all duration-200 disabled:opacity-50"
+              className="rounded-lg border border-dashed border-border px-4 py-2 text-xs text-muted-foreground hover:border-violet-500/30 hover:text-foreground transition-all duration-200 disabled:opacity-50"
             >
               {creatingWallet ? 'Creating...' : 'Enable Wallet for this Agent'}
             </button>
@@ -425,14 +425,14 @@ export default function AgentDetailPage() {
 
         {/* Roster Strip */}
         {subAgents.length > 0 && (
-          <div className="flex items-center gap-4 px-4 sm:px-6 py-2.5 border-b border-white/[0.06] overflow-x-auto mb-2">
-            <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-medium flex-shrink-0">Team</span>
+          <div className="flex items-center gap-4 px-4 sm:px-6 py-2.5 border-b border-border overflow-x-auto mb-2">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium flex-shrink-0">Team</span>
             {subAgents.map(sub => {
               const charId = sub.avatar_url && sub.avatar_url in {} ? sub.avatar_url : 'default-lead';
               return (
                 <div key={sub.id} className="flex items-center gap-1.5 flex-shrink-0">
                   <CharacterAvatar characterId={charId} size={24} accentColor="#7c3aed" />
-                  <span className="text-xs text-zinc-400">{sub.name}</span>
+                  <span className="text-xs text-muted-foreground">{sub.name}</span>
                   <span className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
                     activeSpecialist === sub.id ? 'bg-blue-400 animate-pulse' :
                     sub.status === 'working' ? 'bg-blue-400' :
@@ -763,7 +763,7 @@ export default function AgentDetailPage() {
                           className={`rounded-full px-2 py-0.5 text-xs font-medium transition-colors ${
                             job.enabled
                               ? "bg-green-500/10 text-green-400 hover:bg-green-500/20"
-                              : "bg-zinc-500/10 text-zinc-400 hover:bg-zinc-500/20"
+                              : "bg-muted text-muted-foreground hover:bg-muted/80"
                           }`}
                         >
                           {job.enabled ? "Active" : "Paused"}
@@ -1054,7 +1054,7 @@ export default function AgentDetailPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">{sub.name}</span>
-                        <span className="rounded-full bg-zinc-500/10 text-zinc-400 px-2 py-0.5 text-[10px] font-medium">Specialist</span>
+                        <span className="rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-[10px] font-medium">Specialist</span>
                       </div>
                       {sub.description && (
                         <p className="text-xs text-muted-foreground mt-0.5 truncate">{sub.description}</p>
@@ -1081,7 +1081,7 @@ export default function AgentDetailPage() {
       {/* Risk Acknowledgment Dialog */}
       {showWalletDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md mx-4 rounded-xl border border-white/[0.06] bg-[#18181b]/95 backdrop-blur-xl p-6">
+          <div className="w-full max-w-md mx-4 rounded-xl border border-border bg-card/95 backdrop-blur-xl p-6">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-amber-400" />
@@ -1089,15 +1089,15 @@ export default function AgentDetailPage() {
               <h2 className="text-lg font-light text-white">Enable Agent Wallet</h2>
             </div>
 
-            <div className="space-y-3 text-sm text-zinc-400">
+            <div className="space-y-3 text-sm text-muted-foreground">
               <p>By creating this wallet, you acknowledge and agree that:</p>
               <ul className="space-y-2 list-disc list-inside text-[13px]">
-                <li>This wallet handles <strong className="text-zinc-200">real cryptocurrency</strong> on the Solana blockchain</li>
-                <li>Cryptocurrency is <strong className="text-zinc-200">volatile and high-risk</strong> — values can drop significantly</li>
-                <li>You should <strong className="text-zinc-200">not store large sums</strong> in this wallet</li>
-                <li>Transactions executed by AI agents are <strong className="text-zinc-200">irreversible</strong></li>
-                <li>Only fund this wallet with amounts <strong className="text-zinc-200">you can afford to lose</strong></li>
-                <li>The platform is in <strong className="text-zinc-200">beta</strong> — use at your own risk</li>
+                <li>This wallet handles <strong className="text-foreground">real cryptocurrency</strong> on the Solana blockchain</li>
+                <li>Cryptocurrency is <strong className="text-foreground">volatile and high-risk</strong> — values can drop significantly</li>
+                <li>You should <strong className="text-foreground">not store large sums</strong> in this wallet</li>
+                <li>Transactions executed by AI agents are <strong className="text-foreground">irreversible</strong></li>
+                <li>Only fund this wallet with amounts <strong className="text-foreground">you can afford to lose</strong></li>
+                <li>The platform is in <strong className="text-foreground">beta</strong> — use at your own risk</li>
               </ul>
             </div>
 
@@ -1108,7 +1108,7 @@ export default function AgentDetailPage() {
             <div className="flex gap-3 mt-5">
               <button
                 onClick={() => setShowWalletDialog(false)}
-                className="flex-1 px-4 py-2.5 rounded-lg border border-white/[0.06] text-sm text-zinc-400 hover:text-zinc-200 transition-all duration-200"
+                className="flex-1 px-4 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground transition-all duration-200"
               >
                 Decline
               </button>

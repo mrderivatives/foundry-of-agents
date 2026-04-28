@@ -455,7 +455,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
               {getSuggestedPrompts(agentDescription).map(prompt => (
                 <button key={prompt} onClick={() => setInput(prompt)}
                   className="px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
                   {prompt}
                 </button>
               ))}
@@ -468,7 +468,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
             className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
             {msg.role === "assistant" && agentAvatarUrl && (
-              <img src={agentAvatarUrl} alt="" className="w-7 h-7 rounded-full object-cover mt-1 mr-2 flex-shrink-0" style={{ border: '1.5px solid rgba(255,255,255,0.1)' }} />
+              <img src={agentAvatarUrl} alt="" className="w-7 h-7 rounded-full object-cover mt-1 mr-2 flex-shrink-0" style={{ border: '1.5px solid var(--color-border)' }} />
             )}
             <div className="max-w-[85%] sm:max-w-[75%]">
               <div
@@ -496,7 +496,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
         {isStreaming && (
           <div className="flex justify-start">
             {agentAvatarUrl && (
-              <img src={agentAvatarUrl} alt="" className="w-7 h-7 rounded-full object-cover mt-1 mr-2 flex-shrink-0" style={{ border: '1.5px solid rgba(255,255,255,0.1)' }} />
+              <img src={agentAvatarUrl} alt="" className="w-7 h-7 rounded-full object-cover mt-1 mr-2 flex-shrink-0" style={{ border: '1.5px solid var(--color-border)' }} />
             )}
             <div className="max-w-[85%] sm:max-w-[75%]">
               <div className="rounded-2xl rounded-bl-md px-4 py-3 text-sm bg-card border border-border">

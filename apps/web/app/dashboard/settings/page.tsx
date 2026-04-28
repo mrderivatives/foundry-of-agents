@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Send, CheckCircle2, AlertCircle } from "lucide-react";
+import { Send, CheckCircle2, AlertCircle, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 import { api } from "@/shared/api/client";
 import { useAuthStore } from "@/features/auth/store";
 
@@ -14,6 +15,9 @@ interface NotifPref {
 
 export default function SettingsPage() {
   const { user } = useAuthStore();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const [chatId, setChatId] = useState("");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -72,6 +76,31 @@ export default function SettingsPage() {
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-6">
       <h2 className="text-lg font-semibold">Settings</h2>
+
+      {/* Appearance */}
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <h3 className="text-sm font-semibold">Appearance</h3>
+        {mounted && (
+          <div className="flex gap-3">
+            <button
+              onClick={() => setTheme("dark")}
+              className="flex flex-col items-center gap-2 rounded-xl border-2 px-6 py-4 transition-colors"
+              style={{ borderColor: theme === "dark" ? "#7c3aed" : "var(--color-border)" }}
+            >
+              <Moon className="w-5 h-5" />
+              <span className="text-xs font-medium">Dark</span>
+            </button>
+            <button
+              onClick={() => setTheme("light")}
+              className="flex flex-col items-center gap-2 rounded-xl border-2 px-6 py-4 transition-colors"
+              style={{ borderColor: theme === "light" ? "#7c3aed" : "var(--color-border)" }}
+            >
+              <Sun className="w-5 h-5" />
+              <span className="text-xs font-medium">Light</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Workspace */}
       <div className="rounded-xl border border-border bg-card p-5 space-y-4">
@@ -198,8 +227,8 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="mt-12 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        <a href="/dashboard/dataroom" className="text-xs text-zinc-700 hover:text-zinc-500 transition-colors">
+      <div className="mt-12 pt-4 border-t border-border">
+        <a href="/dashboard/dataroom" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
           Admin Panel
         </a>
       </div>

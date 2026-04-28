@@ -361,6 +361,21 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	// Add wallet_execute tool for confirming pending swaps
+	if hasWallet && h.Jupiter != nil {
+		availableTools = append(availableTools, bifrost.ToolDef{
+			Name:        "wallet_execute",
+			Description: "Execute a previously proposed and user-confirmed swap transaction. Only call this AFTER the user has explicitly confirmed they want to proceed.",
+			Parameters: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"confirm": map[string]interface{}{"type": "boolean", "description": "Must be true to execute"},
+				},
+				"required": []string{"confirm"},
+			},
+		})
+	}
+
 	// Add dispatch_specialist tool if this agent leads a team
 	if len(teamMembers) > 0 {
 		specNames := []string{}
@@ -476,6 +491,8 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 					}
 				case "wallet_propose":
 					result = h.handleWalletProposeTool(ctx, tc, agentID, wsID, sessionID, assistantMsgID, useSSE, sseFlusher, w)
+				case "wallet_execute":
+					result = h.handleWalletExecuteTool(ctx, tc, agentID, wsID, sessionID, useSSE, sseFlusher, w)
 				case "dispatch_specialist":
 					result = h.handleDispatchSpecialist(ctx, tc, teamMembers, agentID, wsID, sessionID, useSSE, sseFlusher, w)
 				default:
@@ -1052,41 +1069,22 @@ func (h *Handler) handleWalletProposeTool(
 			sseFlusher.Flush()
 		}
 	} else {
-		// Check if live trading is enabled
-		if os.Getenv("ENABLE_LIVE_TRADING") == "true" && h.Vault != nil {
-			// 1. Get swap transaction from Jupiter
-			swapTxBase64, err := h.Jupiter.GetSwapTransaction(ctx, quote, publicKey)
-			if err != nil {
-				h.Logger.Error().Err(err).Msg("jupiter swap tx failed")
-				// Update tx status to failed
-				h.DB.Exec(ctx, `UPDATE wallet_transaction SET status = 'failed', blocked_reason = $1
-					WHERE idempotency_key = $2`, "swap tx build failed: "+err.Error(), idempKey)
-				result = "Transaction approved but swap transaction build failed: " + err.Error()
-			} else {
-				// 2. Decode, sign, and submit the transaction
-				txSig, err := h.signAndSubmitTransaction(ctx, swapTxBase64, walletID, publicKey)
-				if err != nil {
-					h.Logger.Error().Err(err).Msg("sign/submit failed")
-					h.DB.Exec(ctx, `UPDATE wallet_transaction SET status = 'failed', blocked_reason = $1
-						WHERE idempotency_key = $2`, "execution failed: "+err.Error(), idempKey)
-					result = fmt.Sprintf("Transaction approved but execution failed: %s", err.Error())
-				} else {
-					// Success!
-					h.DB.Exec(ctx, `UPDATE wallet_transaction SET status = 'executed', tx_signature = $1, executed_at = NOW()
-						WHERE idempotency_key = $2`, txSig, idempKey)
-					result = fmt.Sprintf("Transaction EXECUTED successfully!\nSwapped: %s %s -> %s %s\nTX: %s\nView: https://solscan.io/tx/%s",
-						input.Amount, input.InputToken, outAmountStr, input.OutputToken, txSig, txSig)
+		// Policy approved — save as pending_confirmation and ask user to confirm
+		h.DB.Exec(ctx, `UPDATE wallet_transaction SET status = 'pending_confirmation',
+			confirmation_expires_at = NOW() + INTERVAL '5 minutes'
+			WHERE idempotency_key = $1`, idempKey)
 
-					// Emit wallet_executed SSE event
-					if useSSE && sseFlusher != nil {
-						fmt.Fprintf(w, "data: {\"type\":\"wallet_executed\",\"tx_signature\":\"%s\",\"input\":\"%s %s\",\"output\":\"%s %s\"}\n\n",
-							txSig, input.Amount, input.InputToken, outAmountStr, input.OutputToken)
-						sseFlusher.Flush()
-					}
-				}
-			}
+		// Emit wallet_pending SSE event
+		if useSSE && sseFlusher != nil {
+			fmt.Fprintf(w, "data: {\"type\":\"wallet_pending\",\"idempotency_key\":\"%s\",\"input\":\"%s %s\",\"output\":\"%s %s\"}\n\n",
+				idempKey, input.Amount, input.InputToken, outAmountStr, input.OutputToken)
+			sseFlusher.Flush()
+		}
+
+		if os.Getenv("ENABLE_LIVE_TRADING") == "true" && h.Vault != nil {
+			result = fmt.Sprintf("Transaction APPROVED by policy engine.\nQuote: %s %s -> %s %s\nPolicy checks: all passed.\n\n⏳ **Awaiting user confirmation.** The user must confirm this swap before it will be submitted on-chain. Ask the user to confirm or cancel. This quote expires in 5 minutes.",
+				input.Amount, input.InputToken, outAmountStr, input.OutputToken)
 		} else {
-			// Simulation mode
 			result = fmt.Sprintf("Transaction APPROVED by policy engine.\nQuote: %s %s -> %s %s\nPolicy checks: all passed\n⚠️ Simulation mode — not submitted on-chain.",
 				input.Amount, input.InputToken, outAmountStr, input.OutputToken)
 		}
@@ -1101,6 +1099,123 @@ func (h *Handler) handleWalletProposeTool(
 		preview = strings.ReplaceAll(preview, "\"", "\\\"")
 		preview = strings.ReplaceAll(preview, "\n", " ")
 		fmt.Fprintf(w, "data: {\"type\":\"tool_use_end\",\"tool\":\"wallet_propose\",\"result_preview\":\"%s\"}\n\n", preview)
+		sseFlusher.Flush()
+	}
+
+	return result
+}
+
+// handleWalletExecuteTool processes the wallet_execute tool call from the LLM.
+// Finds the most recent pending_confirmation transaction for this session's agent,
+// fetches a fresh Jupiter quote, signs, and submits on-chain.
+func (h *Handler) handleWalletExecuteTool(
+	ctx context.Context, tc bifrost.ToolCall,
+	agentID, wsID, sessionID uuid.UUID,
+	useSSE bool, sseFlusher http.Flusher, w http.ResponseWriter,
+) string {
+	if useSSE && sseFlusher != nil {
+		fmt.Fprintf(w, "data: {\"type\":\"tool_use_start\",\"tool\":\"wallet_execute\",\"query\":\"executing confirmed swap\"}\n\n")
+		sseFlusher.Flush()
+	}
+
+	var input struct {
+		Confirm bool `json:"confirm"`
+	}
+	if err := json.Unmarshal(tc.Input, &input); err != nil || !input.Confirm {
+		return "Execution cancelled — confirm must be true."
+	}
+
+	if os.Getenv("ENABLE_LIVE_TRADING") != "true" || h.Vault == nil {
+		return "Live trading is not enabled."
+	}
+
+	// Find the most recent pending_confirmation transaction for this agent
+	var txID uuid.UUID
+	var walletID uuid.UUID
+	var inputToken, outputToken, inputAmount string
+	err := h.DB.QueryRow(ctx,
+		`SELECT wt.id, wt.wallet_id, wt.input_token, wt.output_token, wt.input_amount
+		 FROM wallet_transaction wt
+		 WHERE wt.agent_id = $1 AND wt.workspace_id = $2
+		 AND wt.status = 'pending_confirmation'
+		 AND (wt.confirmation_expires_at IS NULL OR wt.confirmation_expires_at > NOW())
+		 ORDER BY wt.created_at DESC LIMIT 1`, agentID, wsID).Scan(
+		&txID, &walletID, &inputToken, &outputToken, &inputAmount)
+	if err != nil {
+		return "No pending transaction found to execute. The quote may have expired (5 min window). Please propose a new swap."
+	}
+
+	// Get wallet public key
+	var publicKey string
+	err = h.DB.QueryRow(ctx, `SELECT public_key FROM wallet WHERE id = $1`, walletID).Scan(&publicKey)
+	if err != nil {
+		return "Failed to load wallet."
+	}
+
+	// Fetch fresh Jupiter quote (old one may be stale)
+	amount, _ := decimal.NewFromString(inputAmount)
+	inputMint := wallet.TokenMints[inputToken]
+	outputMint := wallet.TokenMints[outputToken]
+	var lamports uint64
+	if inputToken == "SOL" {
+		lamports = uint64(amount.Mul(decimal.NewFromInt(1e9)).IntPart())
+	} else {
+		lamports = uint64(amount.Mul(decimal.NewFromInt(1e6)).IntPart())
+	}
+
+	quote, err := h.Jupiter.GetQuote(ctx, inputMint, outputMint, lamports, 100)
+	if err != nil {
+		h.DB.Exec(ctx, `UPDATE wallet_transaction SET status = 'failed', blocked_reason = $1 WHERE id = $2`,
+			"fresh quote failed: "+err.Error(), txID)
+		return "Failed to get fresh price quote: " + err.Error()
+	}
+
+	// Build swap transaction
+	swapTxBase64, err := h.Jupiter.GetSwapTransaction(ctx, quote, publicKey)
+	if err != nil {
+		h.DB.Exec(ctx, `UPDATE wallet_transaction SET status = 'failed', blocked_reason = $1 WHERE id = $2`,
+			"swap tx build failed: "+err.Error(), txID)
+		return "Transaction build failed: " + err.Error()
+	}
+
+	// Sign and submit
+	txSig, err := h.signAndSubmitTransaction(ctx, swapTxBase64, walletID, publicKey)
+	if err != nil {
+		h.DB.Exec(ctx, `UPDATE wallet_transaction SET status = 'failed', blocked_reason = $1 WHERE id = $2`,
+			"execution failed: "+err.Error(), txID)
+		return fmt.Sprintf("Transaction execution failed: %s", err.Error())
+	}
+
+	// Success!
+	outAmountRaw, _ := decimal.NewFromString(quote.OutAmount)
+	var outAmountHuman decimal.Decimal
+	if outputToken == "SOL" {
+		outAmountHuman = outAmountRaw.Div(decimal.NewFromInt(1e9))
+	} else {
+		outAmountHuman = outAmountRaw.Div(decimal.NewFromInt(1e6))
+	}
+
+	h.DB.Exec(ctx, `UPDATE wallet_transaction SET status = 'executed', tx_signature = $1, executed_at = NOW(),
+		output_amount = $2 WHERE id = $3`, txSig, outAmountHuman.StringFixed(6), txID)
+
+	if useSSE && sseFlusher != nil {
+		fmt.Fprintf(w, "data: {\"type\":\"wallet_executed\",\"tx_signature\":\"%s\",\"input\":\"%s %s\",\"output\":\"%s %s\"}\n\n",
+			txSig, inputAmount, inputToken, outAmountHuman.StringFixed(6), outputToken)
+		sseFlusher.Flush()
+	}
+
+	result := fmt.Sprintf("Transaction EXECUTED successfully!\nSwapped: %s %s -> %s %s\nTX: %s\nView: https://solscan.io/tx/%s",
+		inputAmount, inputToken, outAmountHuman.StringFixed(6), outputToken, txSig, txSig)
+
+	// Emit SSE end event
+	if useSSE && sseFlusher != nil {
+		preview := result
+		if len(preview) > 100 {
+			preview = preview[:100] + "..."
+		}
+		preview = strings.ReplaceAll(preview, "\"", "\\\"")
+		preview = strings.ReplaceAll(preview, "\n", " ")
+		fmt.Fprintf(w, "data: {\"type\":\"tool_use_end\",\"tool\":\"wallet_execute\",\"result_preview\":\"%s\"}\n\n", preview)
 		sseFlusher.Flush()
 	}
 

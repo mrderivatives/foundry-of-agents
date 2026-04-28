@@ -16,8 +16,13 @@ var TokenMints = map[string]string{
 	"USDC": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
 }
 
-// JupiterQuote represents a price quote from Jupiter aggregator.
+// JupiterQuote preserves the FULL Jupiter API response as raw JSON.
+// The /swap endpoint requires ALL fields from the /quote response passed back
+// verbatim — stripping fields causes deserialization errors (e.g., missing otherAmountThreshold).
 type JupiterQuote struct {
+	Raw json.RawMessage `json:"-"`
+
+	// Parsed fields for display/policy evaluation only
 	InputMint      string `json:"inputMint"`
 	OutputMint     string `json:"outputMint"`
 	InAmount       string `json:"inAmount"`
@@ -54,17 +59,26 @@ func (js *JupiterService) GetQuote(ctx context.Context, inputMint, outputMint st
 		return nil, fmt.Errorf("jupiter quote error %d: %s", resp.StatusCode, string(b))
 	}
 
+	// Read the full response body to preserve all fields
+	rawBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read quote body: %w", err)
+	}
+
 	var quote JupiterQuote
-	if err := json.NewDecoder(resp.Body).Decode(&quote); err != nil {
+	if err := json.Unmarshal(rawBody, &quote); err != nil {
 		return nil, fmt.Errorf("decode quote: %w", err)
 	}
+	// Store the raw JSON so /swap gets the complete response
+	quote.Raw = json.RawMessage(rawBody)
 	return &quote, nil
 }
 
 // GetSwapTransaction builds a serialized swap transaction from a quote.
 func (js *JupiterService) GetSwapTransaction(ctx context.Context, quote *JupiterQuote, userPubkey string) (string, error) {
+	// Use the raw quote response to ensure ALL Jupiter fields are passed back
 	body, err := json.Marshal(map[string]interface{}{
-		"quoteResponse":           quote,
+		"quoteResponse":           json.RawMessage(quote.Raw),
 		"userPublicKey":           userPubkey,
 		"dynamicComputeUnitLimit": true,
 		"dynamicSlippage":         true,

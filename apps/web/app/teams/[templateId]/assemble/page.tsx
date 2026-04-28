@@ -459,14 +459,14 @@ export default function AssemblePage({
 
   if (!team) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#09090b', color: '#fafafa' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-background)' }}>
         <p className="text-muted-foreground">Team not found</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#09090b', color: '#fafafa' }}>
+    <div className="min-h-screen" style={{ background: 'var(--color-background)' }}>
       {/* Header */}
       <div className="max-w-[640px] mx-auto px-6 pt-12 pb-6">
         <div className="flex items-center justify-between mb-8">

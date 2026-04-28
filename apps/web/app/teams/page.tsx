@@ -112,7 +112,7 @@ export default function TeamsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen" style={{ background: '#09090b', color: '#fafafa' }}>
+    <div className="min-h-screen" style={{ background: 'var(--color-background)' }}>
       {/* Header */}
       <div className="max-w-3xl mx-auto px-6 pt-24 pb-6">
         <div className="flex items-center justify-between mb-8">

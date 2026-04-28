@@ -4,6 +4,7 @@ import { useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useInView } from "framer-motion";
+
 import { ArrowRight, Coins, Shield, Brain, Bell, Lock, Puzzle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { ForgeFlame } from "@/shared/components/forge-flame";
@@ -25,7 +26,7 @@ function GradientOrbs() {
   return (
     <>
       <motion.div
-        className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-violet-600/[0.04] blur-[120px]"
+        className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full dark:bg-violet-600/[0.04] bg-violet-400/[0.08] blur-[120px]"
         animate={{
           x: [0, 40, -20, 0],
           y: [0, -30, 20, 0],
@@ -34,7 +35,7 @@ function GradientOrbs() {
         transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-blue-600/[0.03] blur-[100px]"
+        className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full dark:bg-blue-600/[0.03] bg-violet-300/[0.06] blur-[100px]"
         animate={{
           x: [0, -30, 25, 0],
           y: [0, 20, -25, 0],
@@ -43,7 +44,7 @@ function GradientOrbs() {
         transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute top-1/2 right-1/3 w-[300px] h-[300px] rounded-full bg-emerald-600/[0.02] blur-[80px]"
+        className="absolute top-1/2 right-1/3 w-[300px] h-[300px] rounded-full dark:bg-emerald-600/[0.02] bg-purple-300/[0.04] blur-[80px]"
         animate={{
           x: [0, 20, -15, 0],
           y: [0, -15, 30, 0],
@@ -121,12 +122,12 @@ function TeamShowcaseCard({ team }: { team: (typeof TEAMS)[number] }) {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen" style={{ background: "#09090b", color: "#fafafa" }}>
+    <div className="min-h-screen bg-background text-foreground">
       {/* Hero */}
       <section className="relative flex flex-col items-center justify-center px-6 py-20" style={{ minHeight: '100dvh' }}>
         {/* Hero background — extends beyond hero into team showcase */}
         <div className="absolute inset-0 h-[150vh] overflow-hidden">
-          <Image src="/hero-bg-network-complex.png" alt="" fill className="object-cover opacity-[0.12] scale-110" priority />
+          <Image src="/hero-bg-network-complex.png" alt="" fill className="object-cover scale-110 dark:opacity-[0.12] opacity-[0.06]" priority />
           <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, color-mix(in srgb, var(--color-background) 40%, transparent), transparent, var(--color-background))" }} />
           <div className="absolute bottom-0 h-64 w-full" style={{ background: "linear-gradient(to top, var(--color-background), transparent)" }} />
         </div>
@@ -181,7 +182,7 @@ export default function LandingPage() {
           >
             <Link
               href="/teams"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-violet-500/50 bg-violet-500/10 text-white font-medium text-lg hover:bg-violet-500/20 hover:border-violet-500/70 transition-all duration-200"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-violet-500/50 bg-violet-500/10 dark:text-white text-violet-700 font-medium text-lg hover:bg-violet-500/20 hover:border-violet-500/70 transition-all duration-200"
             >
               Assemble Your Team
               <ArrowRight className="w-5 h-5" />
@@ -394,7 +395,7 @@ export default function LandingPage() {
             </p>
             <Link
               href="/teams"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-violet-500/50 bg-violet-500/10 text-white font-medium text-lg hover:bg-violet-500/20 hover:border-violet-500/70 transition-all duration-200"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-violet-500/50 bg-violet-500/10 dark:text-white text-violet-700 font-medium text-lg hover:bg-violet-500/20 hover:border-violet-500/70 transition-all duration-200"
             >
               Assemble Your Team
               <ArrowRight className="w-5 h-5" />

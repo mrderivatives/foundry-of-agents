@@ -200,7 +200,7 @@ export default function SettingsPage() {
 
       <div className="mt-12 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
         <a href="/dashboard/dataroom" className="text-xs text-zinc-700 hover:text-zinc-500 transition-colors">
-          Admin
+          Admin Panel
         </a>
       </div>
     </div>

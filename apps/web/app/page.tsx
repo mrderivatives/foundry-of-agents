@@ -121,7 +121,7 @@ function TeamShowcaseCard({ team }: { team: (typeof TEAMS)[number] }) {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen" style={{ background: "var(--color-background)" }}>
+    <div className="min-h-screen" style={{ background: "#09090b", color: "#fafafa" }}>
       {/* Hero */}
       <section className="relative flex flex-col items-center justify-center px-6 py-20" style={{ minHeight: '100dvh' }}>
         {/* Hero background — extends beyond hero into team showcase */}

@@ -321,7 +321,7 @@ function CommandCenter({ team }: { team: TeamData }) {
 
         {/* Activity feed header */}
         <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
+          <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
           <span className="text-xs text-muted-foreground font-medium">
             Activity
           </span>
@@ -456,7 +456,7 @@ function LegacyDashboard() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 rounded-lg bg-[#7c3aed] px-4 py-2 text-sm font-medium text-foreground hover:bg-[#6d28d9] transition-all duration-200 active:scale-[0.98]"
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-foreground hover:bg-primary/90 transition-all duration-200 active:scale-[0.98]"
         >
           <Plus className="w-4 h-4" />
           Create Agent

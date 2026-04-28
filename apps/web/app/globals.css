@@ -24,24 +24,24 @@
 }
 
 :root.light {
-  --color-background: #faf9f7;
-  --color-foreground: #1a1a2e;
+  --color-background: #fafafa;
+  --color-foreground: #18181b;
   --color-card: #ffffff;
-  --color-card-foreground: #1a1a2e;
+  --color-card-foreground: #18181b;
   --color-popover: #ffffff;
-  --color-popover-foreground: #1a1a2e;
+  --color-popover-foreground: #18181b;
   --color-primary: #7c3aed;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #f0eeeb;
+  --color-secondary: #f4f4f5;
   --color-secondary-foreground: #52525b;
-  --color-muted: #e8e5e1;
+  --color-muted: #f4f4f5;
   --color-muted-foreground: #71717a;
-  --color-accent: #f3f0ed;
-  --color-accent-foreground: #1a1a2e;
-  --color-destructive: #dc2626;
+  --color-accent: #f4f4f5;
+  --color-accent-foreground: #18181b;
+  --color-destructive: #ef4444;
   --color-destructive-foreground: #ffffff;
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-input: rgba(0, 0, 0, 0.06);
+  --color-border: #e4e4e7;
+  --color-input: #e4e4e7;
   --color-ring: #7c3aed;
 }
 

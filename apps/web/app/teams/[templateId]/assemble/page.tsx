@@ -50,7 +50,7 @@ function EditableName({
             onChange(draft);
             setEditing(false);
           }}
-          className="text-[#22c55e] hover:text-[#16a34a] transition-colors duration-200"
+          className="text-green-500 hover:text-green-600 transition-colors duration-200"
         >
           <Check className="w-3 h-3" />
         </button>

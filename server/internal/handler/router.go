@@ -18,6 +18,7 @@ var upgrader = websocket.Upgrader{
 
 func MountRoutes(r chi.Router, h *Handler) {
 	r.Get("/health", h.handleHealth)
+	r.Get("/debug/log", h.handleDebugLog)
 
 	// Public auth routes
 	r.Route("/api/auth", func(r chi.Router) {

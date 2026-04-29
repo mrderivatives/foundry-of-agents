@@ -158,6 +158,7 @@ func resolveModel(model string) string {
 
 // POST /api/agents/{agentId}/sessions/{sessionId}/messages
 func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
+	AddDebugLog("info", "chat request", r.URL.Path)
 	wsID, _ := auth.GetWorkspaceID(r.Context())
 	sessionID, err := uuid.Parse(chi.URLParam(r, "sessionId"))
 	if err != nil {
@@ -445,6 +446,7 @@ You have persistent memory that carries across conversations. When users tell yo
 
 		if err == nil && len(firstResp.ToolCalls) > 0 {
 			h.Logger.Info().Int("tool_calls", len(firstResp.ToolCalls)).Msg("tool use detected")
+			AddDebugLog("info", "tool use detected", fmt.Sprintf("%d tool calls", len(firstResp.ToolCalls)))
 
 			// Build assistant message with tool_use blocks
 			assistantParts := []bifrost.ContentPart{}
@@ -590,6 +592,7 @@ You have persistent memory that carries across conversations. When users tell yo
 				Int("total_message_size_bytes", totalMsgSize).
 				Str("model", model).
 				Msg("starting synthesis call")
+			AddDebugLog("info", "starting synthesis call", fmt.Sprintf("tool_results=%d, msg_size=%d bytes, model=%s", len(toolResultParts), totalMsgSize, model))
 
 			// Second call: stream final response without tools
 			ch := make(chan bifrost.StreamChunk, 64)
@@ -627,6 +630,7 @@ You have persistent memory that carries across conversations. When users tell yo
 				// Check if streaming had an error
 				if streamErr := <-streamErrCh; streamErr != nil {
 					h.Logger.Error().Err(streamErr).Str("model", model).Msg("synthesis streaming call failed")
+					AddDebugLog("error", "synthesis streaming failed", streamErr.Error())
 				}
 
 				responseText := fullContent.String()
@@ -637,6 +641,7 @@ You have persistent memory that carries across conversations. When users tell yo
 						Int("tool_results", len(toolResultParts)).
 						Int("total_message_size_bytes", totalMsgSize).
 						Msg("synthesis streaming returned empty, trying non-streaming fallback")
+					AddDebugLog("warn", "synthesis empty", "trying non-streaming fallback")
 
 					fallbackReq := bifrost.CompletionRequest{
 						Model:     model,
@@ -647,6 +652,7 @@ You have persistent memory that carries across conversations. When users tell yo
 					fallbackResp, fallbackErr := h.Router.Route(ctx, fallbackReq)
 					if fallbackErr != nil {
 						h.Logger.Error().Err(fallbackErr).Msg("synthesis non-streaming fallback also failed")
+						AddDebugLog("error", "synthesis fallback failed", fallbackErr.Error())
 						responseText = "I completed the research but encountered an error synthesizing the final report. Please try again."
 					} else {
 						responseText = fallbackResp.Content
@@ -702,6 +708,7 @@ You have persistent memory that carries across conversations. When users tell yo
 		// If no tool calls or error, fall through to normal streaming
 		if err != nil {
 			h.Logger.Warn().Err(err).Msg("tool-use first call failed, falling back to normal stream")
+			AddDebugLog("warn", "first call failed", err.Error())
 		}
 	}
 

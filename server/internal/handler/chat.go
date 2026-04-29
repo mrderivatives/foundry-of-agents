@@ -282,6 +282,18 @@ You have persistent memory that carries across conversations. When users tell yo
 		}
 	}
 
+	// Check if this message was triggered by a prompt action (system prompt override)
+	actionSlug := r.Header.Get("X-Prompt-Action-Slug")
+	if actionSlug != "" {
+		var sysOverride string
+		overrideErr := h.DB.QueryRow(ctx,
+			"SELECT system_prompt_override FROM prompt_action WHERE slug = $1 AND system_prompt_override IS NOT NULL",
+			actionSlug).Scan(&sysOverride)
+		if overrideErr == nil && sysOverride != "" {
+			systemPrompt = sysOverride + "\n\n" + systemPrompt
+		}
+	}
+
 	// Retrieve and inject relevant memories
 	memoryContext := h.retrieveMemories(ctx, agentID, body.Content)
 	h.Logger.Info().Str("agent_id", agentID.String()).Int("memory_len", len(memoryContext)).Str("memory_preview", memoryContext[:min(len(memoryContext), 100)]).Msg("memory context loaded")
@@ -461,7 +473,15 @@ You have persistent memory that carries across conversations. When users tell yo
 			}
 
 			toolResultParts := []bifrost.ContentPart{}
-			for _, tc := range firstResp.ToolCalls {
+			totalTools := len(firstResp.ToolCalls)
+			for toolIdx, tc := range firstResp.ToolCalls {
+				// Emit action_progress if triggered by a prompt action
+				if actionSlug != "" && useSSE && sseFlusher != nil {
+					escapedName := strings.ReplaceAll(tc.Name, "\"", "\\\"")
+					fmt.Fprintf(w, "data: {\"type\":\"action_progress\",\"step\":%d,\"total\":%d,\"label\":\"%s processing...\"}\n\n",
+						toolIdx+1, totalTools+1, escapedName)
+					sseFlusher.Flush()
+				}
 				var result string
 				switch tc.Name {
 				case "web_search":
@@ -510,6 +530,13 @@ You have persistent memory that carries across conversations. When users tell yo
 				})
 			}
 			messages = append(messages, bifrost.Message{Role: "user", ContentParts: toolResultParts})
+
+			// Emit final progress step: synthesizing
+			if actionSlug != "" && useSSE && sseFlusher != nil {
+				fmt.Fprintf(w, "data: {\"type\":\"action_progress\",\"step\":%d,\"total\":%d,\"label\":\"Synthesizing response...\"}\n\n",
+					totalTools+1, totalTools+1)
+				sseFlusher.Flush()
+			}
 
 			// Second call: stream final response without tools
 			ch := make(chan bifrost.StreamChunk, 64)

@@ -1,143 +1,214 @@
+export interface PromptActionVariable {
+  name: string;
+  type: string;
+  label: string;
+  suggestions?: string[];
+  placeholder?: string;
+}
+
 export interface PromptAction {
   id: string;
+  slug: string;
   name: string;
-  icon: string; // emoji
+  icon: string;
   description: string;
-  promptText: string;
+  promptTemplate: string;
   category: 'trending' | 'quick';
-  teamIds: string[]; // which team templates this applies to
+  teamIds: string[];
+  variables: PromptActionVariable[];
+  estimatedSeconds: number;
+}
+
+export function hasVariables(action: PromptAction): boolean {
+  return action.variables.length > 0;
+}
+
+export function composePrompt(action: PromptAction, values: Record<string, string>): string {
+  let prompt = action.promptTemplate;
+  Object.entries(values).forEach(([key, val]) => {
+    prompt = prompt.replace(new RegExp(`\\{${key}\\}`, 'g'), val);
+  });
+  return prompt;
 }
 
 export const PROMPT_ACTIONS: PromptAction[] = [
-  // Crypto team actions
   {
     id: 'crypto-deep-dive',
+    slug: 'crypto-deep-dive',
     name: 'Deep Dive Report',
     icon: '📊',
     description: 'Comprehensive token research & analysis',
-    promptText: 'Create a comprehensive research report on SOL. Include: price action, market cap, volume, key metrics, recent news, sentiment analysis, competitive landscape, and risk assessment.',
+    promptTemplate: 'Create a comprehensive research report on {token}. Include: price action, market cap, volume, key metrics, recent news, sentiment analysis, competitive landscape, and risk assessment.',
     category: 'trending',
     teamIds: ['crypto', 'markets-finance'],
+    variables: [{ name: 'token', type: 'select+freetext', label: 'Token', suggestions: ['SOL', 'ETH', 'BTC', 'BONK', 'WIF', 'JUP', 'RENDER', 'ONDO'], placeholder: 'Enter token symbol...' }],
+    estimatedSeconds: 180,
   },
   {
     id: 'crypto-daily-briefing',
+    slug: 'crypto-daily-briefing',
     name: 'Daily Briefing',
     icon: '📈',
     description: 'Morning market summary',
-    promptText: 'Give me a daily briefing on the crypto market. Summarize: top movers, major news, market sentiment, and what I should watch today.',
+    promptTemplate: 'Give me a daily briefing on {token}. Summarize: price change, volume, major news, whale movements, and social sentiment.',
     category: 'trending',
     teamIds: ['crypto', 'markets-finance'],
+    variables: [{ name: 'token', type: 'select+freetext', label: 'Token', suggestions: ['SOL', 'ETH', 'BTC', 'Market Overview'], placeholder: 'Enter token or topic...' }],
+    estimatedSeconds: 120,
   },
   {
     id: 'crypto-compare',
+    slug: 'crypto-compare',
     name: 'Token Comparison',
     icon: '🔍',
     description: 'Side-by-side token analysis',
-    promptText: 'Compare SOL vs ETH: market cap, volume, recent performance, use case, team, ecosystem, and which is the better hold right now.',
+    promptTemplate: 'Compare {tokenA} vs {tokenB}: market cap, volume, recent performance, use case, team, ecosystem, and which is the better hold right now.',
     category: 'trending',
     teamIds: ['crypto', 'markets-finance'],
+    variables: [
+      { name: 'tokenA', type: 'select+freetext', label: 'Token A', suggestions: ['SOL', 'ETH', 'BTC'], placeholder: 'First token...' },
+      { name: 'tokenB', type: 'select+freetext', label: 'Token B', suggestions: ['ETH', 'SOL', 'BTC'], placeholder: 'Second token...' },
+    ],
+    estimatedSeconds: 180,
   },
   {
     id: 'crypto-swap',
+    slug: 'crypto-swap',
     name: 'Swap Tokens',
     icon: '💰',
     description: 'Execute a token swap',
-    promptText: 'Swap 1 SOL to USDC',
+    promptTemplate: 'Swap {amount} {inputToken} to {outputToken}',
     category: 'quick',
     teamIds: ['crypto'],
+    variables: [
+      { name: 'amount', type: 'freetext', label: 'Amount', placeholder: '1.0' },
+      { name: 'inputToken', type: 'select+freetext', label: 'From', suggestions: ['SOL', 'USDC', 'USDT'], placeholder: 'Token to sell...' },
+      { name: 'outputToken', type: 'select+freetext', label: 'To', suggestions: ['USDC', 'SOL', 'USDT'], placeholder: 'Token to buy...' },
+    ],
+    estimatedSeconds: 30,
   },
   {
     id: 'crypto-portfolio',
+    slug: 'crypto-portfolio',
     name: 'Portfolio Check',
     icon: '💼',
-    description: "Check your wallet balance",
-    promptText: "What's my portfolio worth? Show me all balances, current prices, 24h change, and total value in USD.",
+    description: 'Check your wallet balance',
+    promptTemplate: "What's my portfolio worth? Show me all balances, current prices, 24h change, and total value in USD.",
     category: 'quick',
     teamIds: ['crypto', 'markets-finance'],
+    variables: [],
+    estimatedSeconds: 10,
   },
   {
     id: 'crypto-market-pulse',
+    slug: 'crypto-market-pulse',
     name: 'Market Pulse',
     icon: '🌍',
     description: "Today's crypto headlines",
-    promptText: 'What happened in crypto today? Top movers, major news, market sentiment, and any notable events.',
+    promptTemplate: 'What happened in crypto today? Top movers, major news, market sentiment, and any notable events.',
     category: 'quick',
     teamIds: ['crypto', 'markets-finance'],
+    variables: [],
+    estimatedSeconds: 120,
   },
   {
     id: 'crypto-price-alert',
+    slug: 'crypto-price-alert',
     name: 'Price Alert',
     icon: '🔔',
     description: 'Set a price notification',
-    promptText: 'Set up a price alert: notify me on Telegram when SOL hits $200.',
+    promptTemplate: 'Set up a price alert: notify me on Telegram when {token} hits ${price}.',
     category: 'quick',
     teamIds: ['crypto'],
+    variables: [
+      { name: 'token', type: 'select+freetext', label: 'Token', suggestions: ['SOL', 'ETH', 'BTC'], placeholder: 'Token...' },
+      { name: 'price', type: 'freetext', label: 'Target Price ($)', placeholder: '200' },
+    ],
+    estimatedSeconds: 10,
   },
-  // Research/business team actions
   {
     id: 'research-company',
+    slug: 'research-company',
     name: 'Company Brief',
     icon: '🏢',
     description: 'Full company research & analysis',
-    promptText: 'Research OpenAI and give me a full briefing: what they do, leadership, funding, traction, recent news, and competitive position.',
+    promptTemplate: 'Research {company} and give me a full briefing: what they do, leadership, funding, traction, recent news, and competitive position.',
     category: 'trending',
     teamIds: ['markets-finance', 'product-business', 'career-pro'],
+    variables: [{ name: 'company', type: 'freetext', label: 'Company', placeholder: 'e.g. OpenAI, Stripe, Coinbase...' }],
+    estimatedSeconds: 180,
   },
   {
     id: 'research-person',
+    slug: 'research-person',
     name: 'Person Brief',
     icon: '👤',
     description: 'Background research on anyone',
-    promptText: 'Who is Sam Altman? Full background: career history, key achievements, controversies, current role, and why they matter.',
+    promptTemplate: 'Who is {person}? Full background: career history, key achievements, controversies, current role, and why they matter.',
     category: 'trending',
     teamIds: ['markets-finance', 'product-business', 'career-pro'],
+    variables: [{ name: 'person', type: 'freetext', label: 'Person', placeholder: 'e.g. Sam Altman, Jensen Huang...' }],
+    estimatedSeconds: 180,
   },
   {
     id: 'research-competitive',
+    slug: 'research-competitive',
     name: 'Competitive Analysis',
     icon: '⚔️',
     description: 'Compare against top competitors',
-    promptText: 'Analyze OpenAI against their top 3-5 competitors: product comparison, pricing, traction, team strength, and market position.',
+    promptTemplate: 'Analyze {company} against their top 3-5 competitors: product comparison, pricing, traction, team strength, and market position.',
     category: 'trending',
     teamIds: ['markets-finance', 'product-business'],
+    variables: [{ name: 'company', type: 'freetext', label: 'Company', placeholder: 'e.g. Figma, Notion...' }],
+    estimatedSeconds: 180,
   },
   {
     id: 'research-news',
+    slug: 'research-news',
     name: 'News Digest',
     icon: '📰',
     description: "This week's key developments",
-    promptText: 'What happened with AI this week? Key developments, product launches, funding rounds, and what to watch next.',
+    promptTemplate: 'What happened with {topic} this week? Key developments, product launches, funding rounds, and what to watch next.',
     category: 'quick',
     teamIds: ['markets-finance', 'product-business', 'career-pro', 'predictions-sports'],
+    variables: [{ name: 'topic', type: 'freetext', label: 'Topic', placeholder: 'e.g. AI, crypto, fintech...' }],
+    estimatedSeconds: 120,
   },
-  // Predictions/sports
   {
     id: 'sports-picks',
+    slug: 'sports-picks',
     name: "Today's Picks",
     icon: '🎯',
     description: 'Best bets and predictions',
-    promptText: "What are today's best sports picks? Analyze the matchups, odds, and give me your top 3 predictions with confidence levels.",
+    promptTemplate: "What are today's best sports picks? Analyze the matchups, odds, and give me your top 3 predictions with confidence levels.",
     category: 'trending',
     teamIds: ['predictions-sports'],
+    variables: [],
+    estimatedSeconds: 120,
   },
   {
     id: 'sports-fantasy',
+    slug: 'sports-fantasy',
     name: 'Fantasy Advice',
     icon: '🏆',
     description: 'Waiver wire & lineup help',
-    promptText: 'Who should I pick up off waivers this week? Analyze trending players, matchups, and give me your top 5 pickups with reasoning.',
+    promptTemplate: 'Who should I pick up off waivers this week? Analyze trending players, matchups, and give me your top 5 pickups with reasoning.',
     category: 'trending',
     teamIds: ['predictions-sports'],
+    variables: [],
+    estimatedSeconds: 120,
   },
-  // Custom team — generic
   {
     id: 'custom-ask-team',
+    slug: 'custom-ask-team',
     name: 'Ask the Team',
     icon: '🧠',
     description: 'Get multi-perspective analysis',
-    promptText: 'I need your team to research and analyze: What are the biggest trends shaping the next 12 months in our space? Have each specialist contribute their perspective.',
+    promptTemplate: 'I need your team to research and analyze: {question}. Have each specialist contribute their perspective, then synthesize.',
     category: 'trending',
     teamIds: ['custom'],
+    variables: [{ name: 'question', type: 'freetext', label: 'Question', placeholder: 'What should the team research?' }],
+    estimatedSeconds: 180,
   },
 ];
 
@@ -145,7 +216,6 @@ export function getActionsForTeam(teamId: string): PromptAction[] {
   return PROMPT_ACTIONS.filter(a => a.teamIds.includes(teamId));
 }
 
-// Fallback: if no team ID, try to infer from agent description
 export function getActionsForDescription(description?: string): PromptAction[] {
   const desc = (description || '').toLowerCase();
   if (desc.includes('crypto') || desc.includes('trading') || desc.includes('defi'))
@@ -158,6 +228,5 @@ export function getActionsForDescription(description?: string): PromptAction[] {
     return getActionsForTeam('career-pro');
   if (desc.includes('product') || desc.includes('business') || desc.includes('startup'))
     return getActionsForTeam('product-business');
-  // Default: show crypto actions (most popular)
   return getActionsForTeam('crypto');
 }

@@ -1,4 +1,6 @@
 export { PromptActionGrid } from './PromptActionGrid';
 export { PromptActionBar } from './PromptActionBar';
-export { getActionsForTeam, getActionsForDescription } from './prompt-action-data';
-export type { PromptAction } from './prompt-action-data';
+export { VariablePicker } from './VariablePicker';
+export { ActionProgressCard } from './ActionProgressCard';
+export { getActionsForTeam, getActionsForDescription, hasVariables, composePrompt } from './prompt-action-data';
+export type { PromptAction, PromptActionVariable } from './prompt-action-data';

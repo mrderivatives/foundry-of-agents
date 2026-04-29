@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ArrowRight, Loader2 } from 'lucide-react';
+import { X, ArrowRight, Loader2, type LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Variable {
@@ -14,14 +14,14 @@ interface Variable {
 
 interface Props {
   actionName: string;
-  actionIcon: string;
+  actionIcon: LucideIcon;
   variables: Variable[];
   promptTemplate: string;
   onSubmit: (composedPrompt: string) => void;
   onClose: () => void;
 }
 
-export function VariablePicker({ actionName, actionIcon, variables, promptTemplate, onSubmit, onClose }: Props) {
+export function VariablePicker({ actionName, actionIcon: ActionIcon, variables, promptTemplate, onSubmit, onClose }: Props) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -66,7 +66,9 @@ export function VariablePicker({ actionName, actionIcon, variables, promptTempla
           </button>
 
           <div className="flex items-center gap-3 mb-6">
-            <span className="text-2xl">{actionIcon}</span>
+            <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <ActionIcon className="w-5 h-5 text-primary" />
+            </div>
             <h3 className="text-lg font-medium text-foreground">{actionName}</h3>
           </div>
 

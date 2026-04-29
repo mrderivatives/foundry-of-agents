@@ -140,8 +140,8 @@ func main() {
 		Addr:         ":" + port,
 		Handler:      r,
 		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 60 * time.Second,
-		IdleTimeout:  60 * time.Second,
+		WriteTimeout: 5 * time.Minute,
+		IdleTimeout:  120 * time.Second,
 	}
 
 	sigCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

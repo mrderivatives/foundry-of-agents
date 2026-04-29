@@ -179,6 +179,7 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	useSSE := strings.Contains(r.Header.Get("Accept"), "text/event-stream")
+	var toolPingCancel context.CancelFunc
 
 	// Insert user message
 	var userMsgID uuid.UUID
@@ -470,6 +471,25 @@ You have persistent memory that carries across conversations. When users tell yo
 				// message_start
 				fmt.Fprintf(w, "data: {\"type\":\"message_start\",\"message_id\":\"%s\"}\n\n", assistantMsgID)
 				if sseFlusher != nil { sseFlusher.Flush() }
+
+				// Start keepalive ping goroutine
+				var toolPingCtx context.Context
+				toolPingCtx, toolPingCancel = context.WithCancel(ctx)
+				go func() {
+					ticker := time.NewTicker(15 * time.Second)
+					defer ticker.Stop()
+					for {
+						select {
+						case <-toolPingCtx.Done():
+							return
+						case <-ticker.C:
+							fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n")
+							if f, ok := w.(http.Flusher); ok {
+								f.Flush()
+							}
+						}
+					}
+				}()
 			}
 
 			toolResultParts := []bifrost.ContentPart{}
@@ -623,6 +643,10 @@ You have persistent memory that carries across conversations. When users tell yo
 		streamErr <- h.Router.StreamRoute(ctx, req, ch)
 	}()
 
+	// Cancel tool-phase keepalive before starting stream-phase keepalive
+	if toolPingCancel != nil {
+		toolPingCancel()
+	}
 	h.streamResponse(w, r, ch, streamErr, wsID, sessionID, assistantMsgID, model, agentID, body.Content, useSSE)
 }
 
@@ -650,6 +674,25 @@ func (h *Handler) streamResponse(
 		if flusher != nil {
 			flusher.Flush()
 		}
+
+		// Start keepalive ping goroutine
+		pingCtx, pingCancel := context.WithCancel(ctx)
+		defer pingCancel()
+		go func() {
+			ticker := time.NewTicker(15 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-pingCtx.Done():
+					return
+				case <-ticker.C:
+					fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n")
+					if f, ok := w.(http.Flusher); ok {
+						f.Flush()
+					}
+				}
+			}
+		}()
 
 		var fullContent strings.Builder
 		var inputTokens, outputTokens int

@@ -7,7 +7,9 @@ import { ArrowUp, RotateCcw, RefreshCw, Search, CheckCircle2, XCircle, Loader2 }
 import { api } from "@/shared/api/client";
 import type { ChatMessage } from "@/shared/types";
 import { AgentAvatar } from "@/shared/components/agent-avatar";
-import { PromptActionGrid, PromptActionBar, ActionProgressCard, getActionsForDescription } from '@/shared/components/prompt-actions';
+import { PromptActionGrid, PromptActionBar, getActionsForDescription } from '@/shared/components/prompt-actions';
+import { WorkingCard } from '@/shared/components/prompt-actions/WorkingCard';
+import { ReportCard, isReport } from '@/shared/components/chat/ReportCard';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -146,6 +148,8 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
   const dispatchesRef = useRef<Map<string, { specialist: string; task: string; status: string; query?: string }>>(new Map());
   const [actionProgress, setActionProgress] = useState<{ step: number; total: number; label: string } | null>(null);
   const activeActionSlugRef = useRef<string | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const elapsedRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -215,6 +219,9 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
     setStreamingContent("");
     setActionProgress(null);
     activeActionSlugRef.current = actionSlug || null;
+    setElapsedSeconds(0);
+    if (elapsedRef.current) clearInterval(elapsedRef.current);
+    elapsedRef.current = setInterval(() => setElapsedSeconds(s => s + 1), 1000);
 
     // Best-effort usage tracking
     if (actionSlug && token) {
@@ -265,6 +272,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
             if (!line.startsWith("data: ")) continue;
             try {
               const evt = JSON.parse(line.slice(6));
+              if (evt.type === "ping") continue; // keepalive, ignore
               if (evt.type === "message_start") {
                 assistantMsgId = evt.message_id || crypto.randomUUID();
               } else if (evt.type === "tool_use_start") {
@@ -342,6 +350,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
                 accumulated += evt.delta;
                 setStreamingContent(accumulated);
               } else if (evt.type === "message_end") {
+                if (elapsedRef.current) clearInterval(elapsedRef.current);
                 // Capture wallet event before clearing
                 const savedWalletEvent = walletEventRef.current;
                 setWalletEvent(null);
@@ -368,6 +377,35 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
               // skip malformed SSE lines
             }
           }
+        }
+      }
+
+      // SSE died before we got content — try REST fallback
+      if (!accumulated && isStreaming) {
+        try {
+          const fallbackRes = await fetch(
+            `${BASE_URL}/api/agents/${agentId}/sessions/${sessionId}/messages`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (fallbackRes.ok) {
+            const msgs = await fallbackRes.json();
+            const lastUserMsg = messages[messages.length - 1];
+            const newMsgs = msgs.filter((m: any) =>
+              m.role === 'assistant' && new Date(m.created_at) > new Date(lastUserMsg?.timestamp || 0)
+            );
+            if (newMsgs.length > 0) {
+              const latest = newMsgs[newMsgs.length - 1];
+              accumulated = latest.content;
+              setMessages(prev => [...prev, {
+                id: latest.id,
+                role: 'assistant',
+                content: latest.content,
+                timestamp: latest.created_at,
+              }]);
+            }
+          }
+        } catch {
+          // REST fallback also failed
         }
       }
 
@@ -409,6 +447,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
         ]);
       }
     } finally {
+      if (elapsedRef.current) clearInterval(elapsedRef.current);
       setSending(false);
       setIsStreaming(false);
       setStreamingContent("");
@@ -498,7 +537,9 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
                 }`}
               >
                 {msg.walletCard && <WalletCard event={msg.walletCard} />}
-                {msg.role === "assistant" ? (
+                {msg.role === "assistant" && isReport(msg.content) ? (
+                  <ReportCard content={msg.content} timestamp={msg.timestamp} />
+                ) : msg.role === "assistant" ? (
                   <div className="prose prose-sm prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_pre]:bg-background [&_pre]:border [&_pre]:border-border [&_pre]:rounded-lg [&_pre]:p-3 [&_code]:text-primary [&_code]:bg-primary/10 [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5 [&_pre_code]:bg-transparent [&_pre_code]:p-0">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
@@ -542,27 +583,19 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
                     ))}
                   </div>
                 )}
-                {actionProgress && (
-                  <ActionProgressCard step={actionProgress.step} total={actionProgress.total} label={actionProgress.label} />
-                )}
-                {toolStatus && (
-                  <div className={`flex items-center gap-2 text-xs mb-2 px-2 py-1.5 rounded-lg ${toolStatus.done ? 'bg-green-500/5 text-green-400' : 'bg-primary/5 text-muted-foreground'}`}>
-                    {toolStatus.done ? <span>✓</span> : <Search className="w-3 h-3" />}
-                    <span className={!toolStatus.done ? 'animate-pulse' : ''}>
-                      {toolStatus.done ? 'Searched' : 'Searching'}: "{toolStatus.query}"
-                    </span>
-                  </div>
-                )}
                 {streamingContent ? (
                   <div className="prose prose-sm prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_pre]:bg-background [&_pre]:border [&_pre]:border-border [&_pre]:rounded-lg [&_pre]:p-3 [&_code]:text-primary [&_code]:bg-primary/10 [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5 [&_pre_code]:bg-transparent [&_pre_code]:p-0">
                     <ReactMarkdown>{streamingContent}</ReactMarkdown>
                     <span className="inline-block w-2 h-4 bg-primary/70 animate-pulse ml-0.5 align-text-bottom" />
                   </div>
-                ) : !toolStatus ? (
-                  <span className="inline-flex items-center gap-1 text-muted-foreground">
-                    <span className="inline-block w-2 h-4 bg-primary/70 animate-pulse" />
-                  </span>
-                ) : null}
+                ) : (
+                  <WorkingCard
+                    toolStatus={toolStatus}
+                    actionProgress={actionProgress}
+                    actionSlug={activeActionSlugRef.current}
+                    elapsedSeconds={elapsedSeconds}
+                  />
+                )}
               </div>
             </div>
           </div>

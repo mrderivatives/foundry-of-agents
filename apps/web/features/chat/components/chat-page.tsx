@@ -7,7 +7,7 @@ import { ArrowUp, RotateCcw, RefreshCw, Search, CheckCircle2, XCircle, Loader2 }
 import { api } from "@/shared/api/client";
 import type { ChatMessage } from "@/shared/types";
 import { AgentAvatar } from "@/shared/components/agent-avatar";
-import { PromptActionGrid, PromptActionBar, getActionsForDescription } from '@/shared/components/prompt-actions';
+import { PromptActionGrid, PromptActionBar, ActionProgressCard, getActionsForDescription } from '@/shared/components/prompt-actions';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -144,6 +144,8 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
   const walletEventRef = useRef<WalletEventData | null>(null);
   const [dispatches, setDispatches] = useState<Map<string, { specialist: string; task: string; status: string; query?: string }>>(new Map());
   const dispatchesRef = useRef<Map<string, { specialist: string; task: string; status: string; query?: string }>>(new Map());
+  const [actionProgress, setActionProgress] = useState<{ step: number; total: number; label: string } | null>(null);
+  const activeActionSlugRef = useRef<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -193,7 +195,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
     }
   }, []);
 
-  const handleSend = async (overrideContent?: string) => {
+  const handleSend = async (overrideContent?: string, actionSlug?: string) => {
     const content = (overrideContent ?? input).trim();
     if (!content || sending) return;
 
@@ -211,17 +213,33 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
     setSending(true);
     setIsStreaming(true);
     setStreamingContent("");
+    setActionProgress(null);
+    activeActionSlugRef.current = actionSlug || null;
+
+    // Best-effort usage tracking
+    if (actionSlug && token) {
+      fetch(`${BASE_URL}/api/prompt-actions/${actionSlug}/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ workspace_id: '00000000-0000-0000-0000-000000000000', agent_id: agentId }),
+      }).catch(() => {});
+    }
 
     try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        Accept: "text/event-stream",
+      };
+      if (actionSlug) {
+        headers["X-Prompt-Action-Slug"] = actionSlug;
+      }
+
       const res = await fetch(
         `${BASE_URL}/api/agents/${agentId}/sessions/${sessionId}/messages`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            Accept: "text/event-stream",
-          },
+          headers,
           body: JSON.stringify({ content }),
         }
       );
@@ -315,8 +333,12 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
               } else if (evt.type === "specialist_active") {
                 // Flash specialist status in roster strip
                 window.dispatchEvent(new CustomEvent('specialist-active', { detail: { agentId: evt.agent_id, name: evt.name } }));
+              } else if (evt.type === "action_progress") {
+                setActionProgress({ step: evt.step, total: evt.total, label: evt.label });
+                return;
               } else if (evt.type === "content_delta" && evt.delta) {
                 setToolStatus(null); // Clear tool status when content starts
+                setActionProgress(null);
                 accumulated += evt.delta;
                 setStreamingContent(accumulated);
               } else if (evt.type === "message_end") {
@@ -327,6 +349,8 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
                 walletEventRef.current = null;
                 setDispatches(new Map());
                 dispatchesRef.current = new Map();
+                setActionProgress(null);
+                activeActionSlugRef.current = null;
                 setMessages((prev) => [
                   ...prev,
                   {
@@ -388,7 +412,8 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
       setSending(false);
       setIsStreaming(false);
       setStreamingContent("");
-      // Re-focus input for next message
+      setActionProgress(null);
+      activeActionSlugRef.current = null;
       setTimeout(() => textareaRef.current?.focus(), 50);
     }
   };
@@ -404,8 +429,8 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
     }
   };
 
-  const handlePromptAction = (promptText: string) => {
-    handleSend(promptText);
+  const handlePromptAction = (promptText: string, slug?: string) => {
+    handleSend(promptText, slug);
   };
 
   const formatTime = (iso: string) => {
@@ -516,6 +541,9 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
                       </div>
                     ))}
                   </div>
+                )}
+                {actionProgress && (
+                  <ActionProgressCard step={actionProgress.step} total={actionProgress.total} label={actionProgress.label} />
                 )}
                 {toolStatus && (
                   <div className={`flex items-center gap-2 text-xs mb-2 px-2 py-1.5 rounded-lg ${toolStatus.done ? 'bg-green-500/5 text-green-400' : 'bg-primary/5 text-muted-foreground'}`}>

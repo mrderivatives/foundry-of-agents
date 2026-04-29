@@ -22,6 +22,7 @@
   --color-border: rgba(255, 255, 255, 0.06);
   --color-input: rgba(255, 255, 255, 0.06);
   --color-ring: #7c3aed;
+  --color-card-hover: rgba(255, 255, 255, 0.05);
   --radius: 0.75rem;
 }
 
@@ -45,6 +46,7 @@
   --color-border: #c8c8cd;
   --color-input: #c8c8cd;
   --color-ring: #7c3aed;
+  --color-card-hover: #e0e0e4;
 }
 
 body {
@@ -53,6 +55,10 @@ body {
   font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Scrollbar hide utility */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }

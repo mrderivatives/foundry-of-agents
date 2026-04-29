@@ -7,6 +7,7 @@ import { ArrowUp, RotateCcw, RefreshCw, Search, CheckCircle2, XCircle, Loader2 }
 import { api } from "@/shared/api/client";
 import type { ChatMessage } from "@/shared/types";
 import { AgentAvatar } from "@/shared/components/agent-avatar";
+import { PromptActionGrid, PromptActionBar, getActionsForDescription } from '@/shared/components/prompt-actions';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -146,6 +147,8 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const promptActions = getActionsForDescription(agentDescription);
+
   // Auto-focus chat input on mount and agent/session change
   useEffect(() => {
     setTimeout(() => textareaRef.current?.focus(), 100);
@@ -190,8 +193,8 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
     }
   }, []);
 
-  const handleSend = async () => {
-    const content = input.trim();
+  const handleSend = async (overrideContent?: string) => {
+    const content = (overrideContent ?? input).trim();
     if (!content || sending) return;
 
     const userMsg: DisplayMessage = {
@@ -401,6 +404,10 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
     }
   };
 
+  const handlePromptAction = (promptText: string) => {
+    handleSend(promptText);
+  };
+
   const formatTime = (iso: string) => {
     try {
       return new Date(iso).toLocaleTimeString([], {
@@ -447,20 +454,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-3">
         {messages.length === 0 && !isStreaming && (
-          <div className="flex h-full flex-col items-center justify-center text-center gap-4 p-8">
-            <p className="text-zinc-500 text-sm">
-              {agentName ? `Start a conversation with ${agentName}` : "Send a message to get started"}
-            </p>
-            <div className="flex flex-wrap gap-2 justify-center max-w-md">
-              {getSuggestedPrompts(agentDescription).map(prompt => (
-                <button key={prompt} onClick={() => setInput(prompt)}
-                  className="px-3 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
-                  style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-                  {prompt}
-                </button>
-              ))}
-            </div>
-          </div>
+          <PromptActionGrid actions={promptActions} onSelect={handlePromptAction} />
         )}
         {messages.map((msg) => (
           <div
@@ -548,6 +542,11 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
         <div ref={bottomRef} />
       </div>
 
+      {/* Prompt Action Bar */}
+      {messages.length > 0 && (
+        <PromptActionBar actions={promptActions} onSelect={handlePromptAction} />
+      )}
+
       {/* Input */}
       <div className="border-t border-border p-3 sm:p-4 shrink-0">
         <div className="max-w-3xl mx-auto relative">
@@ -570,7 +569,7 @@ export function ChatPage({ agentId, sessionId, agentName, agentModel, agentEmoji
             className="w-full rounded-xl border border-input bg-background pl-4 pr-12 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 resize-none"
           />
           <button
-            onClick={handleSend}
+            onClick={() => handleSend()}
             disabled={sending || !input.trim()}
             className="absolute right-2 bottom-2 rounded-lg bg-primary p-2 text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-30"
           >

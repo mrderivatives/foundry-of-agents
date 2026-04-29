@@ -605,14 +605,26 @@ You have persistent memory that carries across conversations. When users tell yo
 
 			streamErrCh := make(chan error, 1)
 			go func() {
-				streamErrCh <- h.Router.StreamRoute(ctx, secondReq, ch)
+				AddDebugLog("info", "synthesis goroutine started", "calling StreamRoute")
+				err := h.Router.StreamRoute(ctx, secondReq, ch)
+				if err != nil {
+					AddDebugLog("error", "StreamRoute returned error", err.Error())
+				} else {
+					AddDebugLog("info", "StreamRoute completed", "no error")
+				}
+				streamErrCh <- err
 			}()
 
 			if useSSE && sseFlusher != nil {
 				// Continue SSE stream (headers already written, message_start already sent)
 				var fullContent strings.Builder
 				var inputTokens, outputTokens int
+				chunkCount := 0
 				for chunk := range ch {
+					chunkCount++
+					if chunkCount == 1 {
+						AddDebugLog("info", "first synthesis chunk received", fmt.Sprintf("delta_len=%d", len(chunk.Delta)))
+					}
 					if chunk.Delta != "" {
 						fullContent.WriteString(chunk.Delta)
 						escaped := strings.ReplaceAll(chunk.Delta, "\\", "\\\\")
@@ -626,6 +638,8 @@ You have persistent memory that carries across conversations. When users tell yo
 						outputTokens = chunk.Usage.OutputTokens
 					}
 				}
+
+				AddDebugLog("info", "synthesis stream loop ended", fmt.Sprintf("chunks=%d, content_len=%d", chunkCount, fullContent.Len()))
 
 				// Check if streaming had an error
 				if streamErr := <-streamErrCh; streamErr != nil {

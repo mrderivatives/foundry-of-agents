@@ -224,7 +224,12 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 
 	// Build system prompt with memory injection
 	var systemPrompt string
-	basePrompt := "You have persistent memory that carries across conversations. When users tell you things to remember, you WILL remember them in future sessions. Your memory is shown below under '## Your Memory'. Trust it — it is real and accurate."
+	now := time.Now()
+	basePrompt := fmt.Sprintf(`## Current Date & Time
+Today is %s. The current time is %s UTC. ALWAYS use this date when searching for recent data, news, or market information. NEVER reference dates from your training data as "recent" — use web search to get current information.
+
+You have persistent memory that carries across conversations. When users tell you things to remember, you WILL remember them in future sessions. Your memory is shown below under '## Your Memory'. Trust it — it is real and accurate.`,
+		now.Format("Monday, January 2, 2006"), now.Format("15:04"))
 	if agentInstructions != nil && *agentInstructions != "" {
 		systemPrompt = fmt.Sprintf("You are %s. %s\n\n%s", agentName, *agentInstructions, basePrompt)
 	} else if agentName != "" {
@@ -787,9 +792,10 @@ func (h *Handler) handleDispatchSpecialist(
 		wsID, sessionID, agentID, spec.ID, input.Task).Scan(&taskID)
 
 	// Build specialist prompt
-	specSystem := fmt.Sprintf("You are %s, a specialist agent.", spec.Name)
+	specNow := time.Now()
+	specSystem := fmt.Sprintf("You are %s, a specialist agent.\n\nToday is %s (%s UTC). Always use current dates when searching.", spec.Name, specNow.Format("January 2, 2006"), specNow.Format("15:04"))
 	if spec.Instructions != nil && *spec.Instructions != "" {
-		specSystem = fmt.Sprintf("You are %s. %s", spec.Name, *spec.Instructions)
+		specSystem = fmt.Sprintf("You are %s. %s\n\nToday is %s (%s UTC). Always use current dates when searching.", spec.Name, *spec.Instructions, specNow.Format("January 2, 2006"), specNow.Format("15:04"))
 	}
 
 	// Load specialist skills

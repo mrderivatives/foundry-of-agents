@@ -120,6 +120,13 @@ func MountRoutes(r chi.Router, h *Handler) {
 			r.Post("/upload", h.handleUploadDocument)
 			r.Delete("/{docId}", h.handleDeleteDocument)
 		})
+
+		// Prompt Actions
+		r.Route("/api/prompt-actions", func(r chi.Router) {
+			r.Get("/", h.handleListPromptActions)
+			r.Post("/{slug}/execute", h.handleExecutePromptAction)
+			r.Post("/executions/{id}/complete", h.handleCompletePromptExecution)
+		})
 	})
 
 	r.Get("/ws", func(w http.ResponseWriter, r *http.Request) {

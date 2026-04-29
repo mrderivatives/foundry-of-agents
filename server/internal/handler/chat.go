@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -180,6 +181,7 @@ func (h *Handler) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	useSSE := strings.Contains(r.Header.Get("Accept"), "text/event-stream")
 	var toolPingCancel context.CancelFunc
+	var sseWriteMu sync.Mutex // protects concurrent writes to ResponseWriter during SSE
 
 	// Insert user message
 	var userMsgID uuid.UUID
@@ -483,13 +485,21 @@ You have persistent memory that carries across conversations. When users tell yo
 						case <-toolPingCtx.Done():
 							return
 						case <-ticker.C:
+							sseWriteMu.Lock()
 							fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n")
 							if f, ok := w.(http.Flusher); ok {
 								f.Flush()
 							}
+							sseWriteMu.Unlock()
 						}
 					}
 				}()
+			}
+
+			// Cancel keepalive during tool execution — tool events serve as keepalive
+			if toolPingCancel != nil {
+				toolPingCancel()
+				toolPingCancel = nil
 			}
 
 			toolResultParts := []bifrost.ContentPart{}
@@ -558,6 +568,29 @@ You have persistent memory that carries across conversations. When users tell yo
 				sseFlusher.Flush()
 			}
 
+			// Cancel keepalive pings before synthesis to avoid data race on ResponseWriter
+			if toolPingCancel != nil {
+				toolPingCancel()
+				toolPingCancel = nil // prevent double-cancel later
+			}
+
+			// Log what we're sending to the synthesis call
+			totalMsgSize := 0
+			for _, m := range messages {
+				for _, p := range m.ContentParts {
+					if s, ok := p.Content.(string); ok {
+						totalMsgSize += len(s)
+					}
+				}
+				totalMsgSize += len(m.Content)
+			}
+			h.Logger.Info().
+				Int("tool_results", len(toolResultParts)).
+				Int("total_messages", len(messages)).
+				Int("total_message_size_bytes", totalMsgSize).
+				Str("model", model).
+				Msg("starting synthesis call")
+
 			// Second call: stream final response without tools
 			ch := make(chan bifrost.StreamChunk, 64)
 			secondReq := bifrost.CompletionRequest{
@@ -567,8 +600,9 @@ You have persistent memory that carries across conversations. When users tell yo
 				Stream:    true,
 			}
 
+			streamErrCh := make(chan error, 1)
 			go func() {
-				h.Router.StreamRoute(ctx, secondReq, ch)
+				streamErrCh <- h.Router.StreamRoute(ctx, secondReq, ch)
 			}()
 
 			if useSSE && sseFlusher != nil {
@@ -589,7 +623,49 @@ You have persistent memory that carries across conversations. When users tell yo
 						outputTokens = chunk.Usage.OutputTokens
 					}
 				}
+
+				// Check if streaming had an error
+				if streamErr := <-streamErrCh; streamErr != nil {
+					h.Logger.Error().Err(streamErr).Str("model", model).Msg("synthesis streaming call failed")
+				}
+
 				responseText := fullContent.String()
+
+				// If synthesis returned empty, try a non-streaming fallback
+				if responseText == "" {
+					h.Logger.Warn().
+						Int("tool_results", len(toolResultParts)).
+						Int("total_message_size_bytes", totalMsgSize).
+						Msg("synthesis streaming returned empty, trying non-streaming fallback")
+
+					fallbackReq := bifrost.CompletionRequest{
+						Model:     model,
+						Messages:  messages,
+						MaxTokens: 4096,
+						Stream:    false,
+					}
+					fallbackResp, fallbackErr := h.Router.Route(ctx, fallbackReq)
+					if fallbackErr != nil {
+						h.Logger.Error().Err(fallbackErr).Msg("synthesis non-streaming fallback also failed")
+						responseText = "I completed the research but encountered an error synthesizing the final report. Please try again."
+					} else {
+						responseText = fallbackResp.Content
+						inputTokens = fallbackResp.Usage.InputTokens
+						outputTokens = fallbackResp.Usage.OutputTokens
+						h.Logger.Info().Int("content_len", len(responseText)).Msg("synthesis fallback succeeded")
+					}
+
+					// Send the fallback content as a single delta
+					if responseText != "" {
+						escaped := strings.ReplaceAll(responseText, "\\", "\\\\")
+						escaped = strings.ReplaceAll(escaped, "\"", "\\\"")
+						escaped = strings.ReplaceAll(escaped, "\n", "\\n")
+						fmt.Fprintf(w, "data: {\"type\":\"content_delta\",\"delta\":\"%s\"}\n\n", escaped)
+						sseFlusher.Flush()
+					}
+				} else {
+					h.Logger.Info().Int("content_len", len(responseText)).Msg("synthesis streaming succeeded")
+				}
 
 				// Emit specialist_active for any team members mentioned
 				h.emitSpecialistActive(ctx, agentID, responseText, w, sseFlusher)
@@ -675,6 +751,9 @@ func (h *Handler) streamResponse(
 			flusher.Flush()
 		}
 
+		// Mutex to protect concurrent writes to ResponseWriter (keepalive vs content)
+		var wMu sync.Mutex
+
 		// Start keepalive ping goroutine
 		pingCtx, pingCancel := context.WithCancel(ctx)
 		defer pingCancel()
@@ -686,10 +765,12 @@ func (h *Handler) streamResponse(
 				case <-pingCtx.Done():
 					return
 				case <-ticker.C:
+					wMu.Lock()
 					fmt.Fprintf(w, "data: {\"type\":\"ping\"}\n\n")
 					if f, ok := w.(http.Flusher); ok {
 						f.Flush()
 					}
+					wMu.Unlock()
 				}
 			}
 		}()
@@ -704,10 +785,12 @@ func (h *Handler) streamResponse(
 				escaped := strings.ReplaceAll(chunk.Delta, "\\", "\\\\")
 				escaped = strings.ReplaceAll(escaped, "\"", "\\\"")
 				escaped = strings.ReplaceAll(escaped, "\n", "\\n")
+				wMu.Lock()
 				fmt.Fprintf(w, "data: {\"type\":\"content_delta\",\"delta\":\"%s\"}\n\n", escaped)
 				if flusher != nil {
 					flusher.Flush()
 				}
+				wMu.Unlock()
 			}
 			if chunk.Usage != nil {
 				inputTokens = chunk.Usage.InputTokens
@@ -723,6 +806,9 @@ func (h *Handler) streamResponse(
 				})
 			}
 		}
+
+		// Stop keepalive before final writes
+		pingCancel()
 
 		// Emit specialist_active for any team members mentioned
 		responseText := fullContent.String()

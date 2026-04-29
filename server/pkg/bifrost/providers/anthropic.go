@@ -204,6 +204,7 @@ func (a *Anthropic) Stream(ctx context.Context, req bifrost.CompletionRequest, c
 	}
 
 	scanner := bufio.NewScanner(resp.Body)
+	scanner.Buffer(make([]byte, 0, 256*1024), 1024*1024) // 1MB max line size
 	var msgID string
 	var eventType string
 	var inputTokens, outputTokens int

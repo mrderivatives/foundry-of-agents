@@ -40,3 +40,4 @@ coverage/
 tmp/
 .turbo/
 .vercel
+server/server
